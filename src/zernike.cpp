@@ -1,0 +1,620 @@
+/** \file zernike.cpp
+  Implementation of zernike.hpp.
+  \author J. Houdayer
+*/
+#include "iotools.hpp"
+#include "zernike_data.hpp"
+#include "zernike.hpp"
+#include <sstream>
+#include <iomanip>
+#include <numeric>
+
+#ifndef M_PI
+#define M_PI 3.141592653589793238
+#endif
+
+/** Constructor.
+  @param n Maximum order N for the computation. Should be positive.
+*/
+spherical_harmonics::spherical_harmonics(int n):
+N(n), sh((N + 1) * (N + 1), 0), help((N + 1) * (N + 2)  / 2, {0, 0})
+{
+  for (int l = 1, i = 1 ; l <= N ; l++) {
+    for (int m = 0 ; m < l - 1 ; m++, i++) {
+      const double a = (2 * l + 1) / (double) ((l + m) * (l - m));
+      help[i].c1 = sqrt(a * (2 * l - 1));
+      help[i].c2 = sqrt(a * (l + m - 1) * (l - m - 1) / (double) (2 * l - 3));
+    }
+    help[i++].c1 = sqrt(2 * l + 1);
+    help[i++].c1 = sqrt(1 + 0.5 / l);
+  }
+}
+
+/** Runs the computation.
+
+  Evaluates all spherical harmonics up to order N. For the given parameters.
+  Results are accessed by spherical_harmonics::get.
+  The normalization is the usual one:
+  spherical harmonics form an orthonormal base.
+
+  @param theta The colatitude. Must be between 0 and pi.
+  @param phi The longitude. Should be between -pi and pi (but works in any case).
+*/
+void spherical_harmonics::eval_sh(double theta, double phi)
+{
+  const double x = cos(theta);
+  const double sx = - sin(theta);
+  double mm = 1 / sqrt(4 * M_PI);
+
+  sh[0] = mm;
+  mm *= sqrt(2);
+  for (int l = 1, i = 2, j = 1 ; l <= N ; l++, i += 2 * l) {
+    for (int m = 0 ; m < l - 1 ; m++, j++) {
+      const double xc1 = x * help[j].c1, c2 = help[j].c2;
+      sh[i + m] = xc1 * sh[i + m - 2 * l] - c2 * sh[i + m - 4 * l + 2];
+      sh[i - m] = xc1 * sh[i - m - 2 * l] - c2 * sh[i - m - 4 * l + 2];
+    }
+    const double xc1 = x * help[j++].c1;
+    sh[i + l - 1] = xc1 * sh[i - 1 - l];
+    sh[i - l + 1] = xc1 * sh[i - 3 * l + 1];
+    mm *= sx * help[j++].c1;
+    const double lphi = l * phi;
+    sh[i + l] = mm * cos(lphi);
+    sh[i - l] = mm * sin(lphi);
+  }
+}
+
+/** Constructor.
+  @param n Maximum order needed. Should be positive.
+*/
+zernike_radial::zernike_radial(int n):
+N(n), z((N / 2 + 1) * (N / 2 + 2), 0)
+{}
+
+void zhelp::set(int n, int l)
+{
+  if (n > l) {
+    const double np1 = 2 * n + 1;
+    const double nm1 = np1 - 2;
+    const double nm3 = np1 - 4;
+    const double lp1 = 2 * l + 1;
+    c1 = nm1 * np1 / (double) ((n - l) * (n + l + 1));
+    c2 = lp1 * lp1 / (2 * nm3 * np1) + 0.5;
+    c3 = (n - l - 2) * (n + l - 1) / (nm3 * nm1);
+  }
+}
+
+/** Constructor.
+  @param n Maximum order needed. Should be positive.
+*/
+zernike_r::zernike_r(int n):
+zernike_radial(n), help((N / 2 + 1) * (N / 2 + 2), {0, 0, 0})
+{
+  int i = 0;
+  for (int n2 = 0 ; n2 <= N / 2 ; n2++)
+    for (int l2 = 0 ; l2 <= n2 ; l2++) {
+      help[i++].set(2 * n2, 2 * l2);
+      help[i++].set(2 * n2 + 1, 2 * l2 + 1);
+    }
+}
+
+/** Runs the computation.
+  @param r The radial parameter. Between 0 and 1.
+*/
+void zernike_r::eval_z(double r)
+{
+  const double r2 = r * r;
+  const zhelp *h;
+  double rn = r2;
+
+  z[0] = 1;
+  z[1] = r;
+  for (int n2 = 1, i = 2 ; n2 <= N / 2 ; n2++, rn *= r2, i++) {
+    for (int l = 0 ; l < 2 * n2 - 2 ; l++, i++) {
+      h = &(help[i]);
+      z[i] = h->c1 * ((r2 - h->c2) * z[i - 2 * n2]
+                      - h->c3 * z[i - 4 * n2 + 2]);
+    }
+    h = &(help[i]);
+    z[i] = h->c1 * (r2 - h->c2) * z[i - 2 * n2];
+    h = &(help[++i]);
+    z[i] = h->c1 * (r2 - h->c2) * z[i - 2 * n2];
+    z[++i] = rn;
+    z[++i] = r * rn;
+  }
+}
+
+/** Constructor.
+  @param n Maximum order needed. Should be positive.
+*/
+zernike_int::zernike_int(int n): zernike_radial(n)
+{}
+
+/** Runs the computation.
+  @param r The radial parameter. Between 0 and 1.
+*/
+void zernike_int::eval_z(double r)
+{
+  int idx = 0;
+  int idxv = 0;
+  for (int n2 = 0 ; n2 <= N / 2 ; n2++) {
+    double rl = 1;
+    for (int l = 0 ; l <= 2 * n2 + 1 ; l++, idx++, rl *= r) {
+      const int nrr = zri_n_roots[idx];
+      double zri = rl * zri_roots[idxv++];
+      for (int j = 0 ; j < nrr ; j++) {
+        const double a = zri_roots[idxv++];
+        zri *= (r - a) * (r + a);
+      }
+      for (int j = 0 ; j < (n2 - l / 2 - nrr) / 2 ; j++) {
+        const double a = zri_roots[idxv++];
+        const double b = zri_roots[idxv++];
+        const double rma = r - a, rpa = r + a;
+        zri *= (rma * rma + b) * (rpa * rpa + b);
+      }
+      z[idx] = zri;
+    }
+  }
+}
+
+/** Output operator for \a zm_norm. */
+std::ostream &operator <<(std::ostream &os, zm_norm norm)
+{
+  switch (norm) {
+    case zm_norm::raw:
+      os << "RAW";
+      break;
+    case zm_norm::ortho:
+      os << "ORTHO";
+      break;
+    case zm_norm::dual:
+      os << "DUAL";
+      break;
+  }
+  return os;
+}
+
+/** Input operator for \a zm_norm. */
+std::istream &operator >>(std::istream &is, zm_norm &norm)
+{
+  std::string s;
+  is >> s;
+  if (s=="RAW") {
+    norm = zm_norm::raw;
+    return is;
+  }
+  if (s=="ORTHO") {
+    norm = zm_norm::ortho;
+    return is;
+  }
+  if (s=="DUAL") {
+    norm = zm_norm::dual;
+    return is;
+  }
+  return failed(is);
+}
+
+/** Constructor.
+  @param n Maximum order needed. Should be positive.
+*/
+zernike::zernike(int n):
+N(n), norm(zm_norm::raw), odd_clean(false),
+zm(2 * (n / 2 + 1) * (n / 2 + 2) * (2 * (n / 2) + 3) / 3, 0)
+{}
+
+/** Constructor.
+  @param n Maximum order needed. Should be positive.
+  @param source Moments to copy from (truncated at N = n.).
+*/
+zernike::zernike(int n, const zernike &source):
+N(n), norm(source.norm), odd_clean(false),
+zm(2 * (n / 2 + 1) * (n / 2 + 2) * (2 * (n / 2) + 3) / 3, 0)
+{
+  std::copy(source.get_zm().begin(), source.get_zm().begin() + zm.size(),
+  zm.begin());
+  finish();
+}
+
+/** The core of the computation.
+  Nearly all computation time is concentrated here.
+
+  This multiplies the radial part with the spherical harmonics
+  and adds it with the corresponding weight.
+
+  @param z The radial part. Its maximum order should be the same (or larger).
+  @param sh The spherical harmonics. Its maximum order should be the same (or larger).
+  @param weight The weight.
+*/
+void zernike::add_core(const std::vector<double> &z,
+                       const std::vector<double> &sh,
+                       double weight)
+{
+  int idzr = 0;
+  int idz = 0;
+  for (int n2 = 0 ; n2 <= N / 2 ; n2++) {
+    int idsh = 0;
+    for (int l = 0 ; l <= 2 * n2 + 1 ; l++, idzr++) {
+      double r = weight * z[idzr];
+      for (int m = -l ; m <= l ; m++, idsh++, idz++)
+        zm[idz] += r * sh[idsh];
+    }
+  }
+}
+
+/** Reset the computation to 0. */
+void zernike::reset()
+{
+  norm = zm_norm::raw;
+  odd_clean = false;
+  for (auto &i: zm)
+    i = 0;
+}
+
+/** Normalizes so that element 0, 0, 0 is set to new_scale.
+  Element 0, 0, 0 should not be null.
+  Do not use this before the computation of the moments is over.
+
+  @param new_scale The new value for element 0, 0, 0.
+*/
+void zernike::rescale(double new_scale)
+{
+  const double c = new_scale / zm[0];
+  for (auto &i: zm)
+    i *= c;
+  finish();
+}
+
+/** To use to get the correct normalization for orthonormal Zernike polynomials.
+  Do not use this before the computation of the moments is over.
+*/
+void zernike::normalize(zm_norm new_norm)
+{
+  finish();
+  int dn = (int)new_norm - (int)norm;
+  if (dn == 0) return;
+  bool r = dn < 0;
+  int f = abs(dn);
+  double sn[2];
+  int idz = 0;
+  for (int n2 = 0 ; n2 <= N / 2 ; n2++) {
+    if (f==1) {
+      sn[0] = sqrt(4 * n2 + 3);
+      sn[1] = sqrt(4 * n2 + 5);
+    }
+    else {
+      sn[0] = 4 * n2 + 3;
+      sn[1] = 4 * n2 + 5;
+    }
+    if (r) {
+      sn[0] = 1 / sn[0];
+      sn[1] = 1 / sn[1];
+    }
+    for (int l = 0 ; l <= 2 * n2 + 1 ; l++) {
+      double s = sn[l & 1]; // s = sqrt(2n+3)^dn
+      for (int m = -l ; m <= l ; m++, idz++)
+        zm[idz] *= s;
+    }
+  }
+  norm = new_norm;
+}
+
+/** Remove moments smaller than espilon in absolute value. */
+void zernike::chop(double epsilon)
+{
+  for (auto &i: zm)
+    if (fabs(i) <= epsilon)
+      i = 0;
+}
+
+/** Call this after the moments have been computed and before using them.
+ \a rescale and \a normalize do it for you.
+ It is ok but useless to do it more than once.
+*/
+void zernike::finish()
+{
+  if (odd_clean || (N & 1) == 1) return;
+  int n = N - 1;
+  int idx = 2 * (n / 2 + 1) * (n / 2 + 2) * (2 * (n / 2) + 3) / 3;
+    for (int l = 0 ; l <= N + 1 ; l++) {
+      if ((l & 1) == 0)
+        idx += 2 * l + 1;
+      else
+        for (int m = -l ; m <= l ; m++, idx++)
+          zm[idx] = 0;
+    }
+  odd_clean = true;
+}
+
+zernike operator -(const zernike &z1, const zernike &z2)
+{
+  if (z1.norm != z2.norm)
+    return zernike();
+  int n1 = z1.order();
+  int n2 = z2.order();
+  int n = (n1 < n2) ? n1 : n2;
+  zernike z(n);
+  z.norm = z1.norm;
+  for (size_t i = 0 ; i<z.zm.size() ; i++)
+    z.zm[i] = z1.zm[i] - z2.zm[i];
+  z.finish();
+  return z;
+}
+
+/** Writes a zernike in ZM format.
+ Format:
+ ZM     <-- just the two letters
+ norm N
+ n1 m1 l1 z1
+ n2 m2 l2 z2
+ ...
+ zero entries are not output
+
+*/
+std::ostream &operator <<(std::ostream &os, const zernike &zm)
+{
+  os << "ZM" << std::endl;
+  os << zm.get_norm() << " " << zm.order() << std::endl;
+  for (int n = 0 ; n <= zm.order() ; n++)
+    for (int l = n & 1 ; l <= n ; l+=2)
+      for (int m = -l ; m <= l ; m++) {
+        double z = zm.get(n, l ,m);
+        if (z != 0)
+          os << n << " " << l << " " << m << " " << z << std::endl;
+      }
+  return os;
+}
+
+/** Reads a zernike in ZM format.
+ See format in operator >> doc.
+*/
+std::istream &operator >>(std::istream &is, zernike &z)
+{
+  std::istringstream s;
+  if (!next_line(is, s)) //remove first line containing "ZM"
+    return failed(is);
+  if (!next_line(is, s))
+    return failed(is);
+  int n0;
+  zm_norm norm;
+  s >> norm >> n0;
+  if (!is || n0 < 0)
+    return failed(is);
+  zernike z0(n0);
+  z0.norm = norm;
+  z0.odd_clean = true;
+  while(next_line(is, s)) {
+    int n, l, m;
+    double z;
+    s >> n >> l >> m >> z;
+    if (!s || n < 0 || n > n0 || l < 0 || l > n || (l | n) == 1
+        || m < -l || m > l)
+      return failed(is);
+    z0.zm[z0.index(n, l, m)] = z;
+  }
+  if (is.eof()) {
+    z = z0;
+    is.clear();
+  } 
+  return is;
+}
+
+/** Constructor.
+  @param n Maximum order needed. Should be positive.
+*/
+zernike_m_r::zernike_m_r(int n) :
+zernike_r(n), spherical_harmonics(n), zernike(n)
+{}
+
+/** Add Zernike polynomials for the given point and weight.
+  @param p The weight point to use.
+*/
+void zernike_m_r::add(const w_vec &p)
+{
+  s_vec sp = p.v.spherical();
+  eval_z(sp.r);
+  eval_sh(sp.theta, sp.phi);
+  add_core(z, sh, p.weight);
+}
+
+/** Constructor.
+  @param n Maximum order needed. Should be positive.
+*/
+zernike_m_int::zernike_m_int(int n):
+zernike_int(n), spherical_harmonics(n), zernike(n)
+{}
+
+/** Add integrated Zernike polynomials for the given point and weight.
+  @param p The weight point to use.
+*/
+void zernike_m_int::add(const w_vec &p)
+{
+  s_vec sp = p.v.spherical();
+  eval_z(sp.r);
+  eval_sh(sp.theta, sp.phi);
+  add_core(z, sh, p.weight);
+}
+
+/** Constructor.
+ @param mom The Zernike moments of the density to build.
+*/
+zernike_build::zernike_build(const zernike &mom):
+zernike_m_r(mom.order()), moments(mom)
+{
+  moments.normalize(zm_norm::dual);
+}
+
+/** Evaluation of the build density.
+ @param v The position where the density must be evaluated.
+ @return The value of the density at \a v.
+*/
+double zernike_build::operator()(const vec &v)
+{
+  if (v.length_square() > 1)
+    return 0;
+  
+  reset();
+  add({1, v});
+  return std::inner_product(zm.begin(), zm.end(), moments.get_zm().begin(), 0.);
+}
+
+/** Dummy constructor for operator >>.
+ @param n The maximum order available. 
+*/
+rotational_invariants::rotational_invariants(int n):
+N(n), norm(zm_norm::raw),
+ri((N / 2 + 1) * (N  / 2 + 2) * (N / 2 + 3) / 3, 0)
+{}
+
+/** Constructor.
+ @param zm The moments to use to compute the rotational invariants.
+ You can normalize it first if needed.
+*/
+rotational_invariants::rotational_invariants(const zernike &zm):
+N(zm.order()), norm(zm.get_norm()),
+ri((N / 2 + 1) * (N  / 2 + 2) * (N / 2 + 3) / 3, 0)
+{
+  const std::vector<double> &z = zm.get_zm();
+  for (int n1_2 = 0, i = 0 ; n1_2 <= N / 2 ; n1_2++)
+    for (int n2_2 = 0 ; n2_2 <= n1_2 ; n2_2++)
+      for (int l = 0 ; l <= 2 * n2_2 + 1 ; l++, i++) {
+        int idx1 = zm.index(2 * n1_2 + (l & 1), l, 0);
+        int idx2 = zm.index(2 * n2_2 + (l & 1), l, 0);
+        double sum = 0;
+        for (int m = -l ; m <= l ; m++)
+          sum += z[idx1 + m] * z[idx2 + m];
+        ri[i] = sum;
+      }
+}
+
+rotational_invariants operator -(const rotational_invariants &r1, const rotational_invariants &r2)
+{
+  if (r1.norm != r2.norm)
+    return rotational_invariants();
+  int n1 = r1.order();
+  int n2 = r2.order();
+  int n = (n1 < n2) ? n1 : n2;
+  rotational_invariants r(n);
+  r.norm = r1.norm;
+  for (size_t i = 0 ; i<r.ri.size() ; i++)
+    r.ri[i] = r1.ri[i] - r2.ri[i];
+  return r;
+}
+
+std::ostream &operator <<(std::ostream &os, const rotational_invariants &ri)
+{
+  os << "ZRI" << std::endl;
+  os << ri.get_norm() << " " << ri.order() << std::endl;
+  for (int n1 = 0 ; n1 <= ri.order() ; n1++)
+    for (int n2 = (n1 & 1) ; n2 <= n1 ; n2+=2)
+      for (int l = n1 & 1 ; l <= n2 ; l+=2) {
+        double z = ri.get(n1, n2, l);
+        if (z != 0)
+          os << n1 << " " << n2 << " " << l << " " << z << std::endl;
+      }
+  return os;
+}
+
+std::istream &operator >>(std::istream &is, rotational_invariants &ri)
+{
+  std::istringstream s;
+  if (!next_line(is, s)) //remove first line containing "ZRI"
+    return failed(is);
+  if (!next_line(is, s))
+    return failed(is);
+  int n0;
+  zm_norm norm;
+  s >> norm >> n0;
+  if (!s || n0 < 0)
+    return failed(is);
+  rotational_invariants ri0(n0);
+  ri.norm = norm;
+  while(next_line(is, s)) {
+    int n1, n2, l;
+    double z;
+    s >> n1 >> n2 >> l >> z;
+    if (!s || n1 < 0 || n1 > n0 || n2 < 0 || n2 > n1 || l < 0 || l > n2
+        || (n1 | n2) == 1 || (l | n2) ==1)
+      return failed(is);
+    ri0.ri[ri0.index(n1, n2, l)] = z;
+  }
+  if (is.eof())
+    ri = ri0;
+  return is;
+}
+
+/** Dummy constructor for operator >>.
+ @param n The maximum order available. 
+*/
+signature_invariants::signature_invariants(int n):
+N(n), norm(zm_norm::raw), si(n + 1, 0)
+{}
+
+/** Constructor.
+ @param zm The moments to use to compute the signature invariants.
+ You can normalize it first if needed.
+*/
+signature_invariants::signature_invariants(const zernike &zm):
+N(zm.order()), norm(zm.get_norm()),
+si(N + 1, 0)
+{
+  rotational_invariants ri(zm);
+  for (int n = 0 ; n <= N ; n++) {
+    double sum = 0;
+    for (int l = n % 2 ; l <= n ; l += 2)
+      sum += ri.get(n, n, l);
+    si[n] = sum;
+  }
+}
+
+signature_invariants operator -(const signature_invariants &s1, const signature_invariants &s2)
+{
+  if (s1.norm != s2.norm)
+    return signature_invariants();
+  int n1 = s1.order();
+  int n2 = s2.order();
+  int n = (n1 < n2) ? n1 : n2;
+  signature_invariants s(n);
+  s.norm = s1.norm;
+  for (size_t i = 0 ; i<s.si.size() ; i++)
+    s.si[i] = s1.si[i] - s2.si[i];
+  return s;
+}
+
+std::ostream &operator <<(std::ostream &os, const signature_invariants &si)
+{
+  os << "ZSI" << std::endl;
+  os << si.get_norm() << " " << si.order() << std::endl;
+  for (int n = 0 ; n <= si.order() ; n++) {
+    double z =si.get(n);
+    if (z != 0)
+      os << n << " " << z << std::endl;
+  }
+  return os;
+}
+
+std::istream &operator >>(std::istream &is, signature_invariants &si)
+{
+  std::istringstream s;
+  if (!next_line(is, s)) //remove first line containing "ZSI"
+    return failed(is);
+  if (!next_line(is, s))
+    return failed(is);
+  int n0;
+  zm_norm norm;
+  s >> norm >> n0;
+  if (!s || n0 < 0)
+    return failed(is);
+  signature_invariants si0(n0);
+  si.norm = norm;
+  while(next_line(is, s)) {
+    int n;
+    double z;
+    s >> n >> z;
+    if (!s || n < 0 || n > n0)
+      return failed(is);
+    si0.si[n] = z;
+  }
+  if (is.eof())
+    si = si0;
+  return is;
+}
