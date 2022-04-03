@@ -35,3 +35,4 @@
 build/
 refman.pdf
 index.html
+.vscode/
