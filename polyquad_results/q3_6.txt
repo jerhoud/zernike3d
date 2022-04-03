@@ -1,0 +1,6 @@
+# Rule degree: 3
+# Residual norm: 2.28878e-16
+# Refined residual norm: 2.28878e-16
+0 0 1
+0.10903900907287716882
+0.23193336855303056665

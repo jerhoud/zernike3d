@@ -1,0 +1,16 @@
+This directory is not necessary to the functionning of the code (you can remove it)
+It archives the results of the polyquad program (https://github.com/PyFR/Polyquad)
+used to compute the quadrature rules used in triangle.cpp
+
+the q* files are the direct result of polyquad:
+for example the file q9_19.txt was produced by command akin to
+polyquad find -s tri -p -V -q 9 -n 19
+then the result was refined by repeated use of
+polyquad eval -s tri -r -V -P20 -q 9
+
+the r* files are the expanded rules also produced by polyquad
+by command of the type (same example)
+polyquad expand -s tri -P 16 -q 9
+
+build_c_rule.nb is the little Mathematica program used to convert them to the format
+expected by scheme_selector::scheme_selector() in triangle.cpp
