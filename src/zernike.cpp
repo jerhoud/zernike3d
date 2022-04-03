@@ -386,7 +386,7 @@ std::istream &operator >>(std::istream &is, zernike &z)
     int n, l, m;
     double z;
     s >> n >> l >> m >> z;
-    if (!s || n < 0 || n > n0 || l < 0 || l > n || (l | n) == 1
+    if (!s || n < 0 || n > n0 || l < 0 || l > n || (l ^ n) == 1
         || m < -l || m > l)
       return failed(is);
     z0.zm[z0.index(n, l, m)] = z;
