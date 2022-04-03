@@ -500,13 +500,6 @@ public:
   int component(int sig) const;
 };
 
-#define CORNER(x) x, ((x) & 0x1555) << 1 | ((x) & 0x2aaa) >> 1
-
-int corners[14] = {
-  CORNER(0x155), CORNER(0x1405), CORNER(0x2411), CORNER(0x1841),
-  CORNER(0x2901), CORNER(0x694), CORNER(0x1264)
-};
-
 neighbors::neighbors(int dx, int dy, int dz)
 {
   ngh = {
@@ -528,15 +521,9 @@ neighbors::neighbors(int dx, int dy, int dz)
   collapse.assign(16384, false);
   for (int sig = 0 ; sig < 16384 ; sig++) {
     int n = count_bit(sig);
-    if (n < 2 || n > 10)
+    if (n < 2 || n > 12)
       continue;
-    bool ok = false;
-    for (auto c: corners)
-      if ((c & sig) == 0) {
-        ok = true;
-        break;
-      }
-    if (ok && component(sig) == 2)
+    if (component(sig) == 2)
       collapse[sig] = true;
   }
 }
