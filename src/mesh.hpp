@@ -5,6 +5,7 @@
 #ifndef MESH_HPP
 #define MESH_HPP
 
+#include <functional>
 #include "triangle.hpp"
 
 /** A cloud of points. */
@@ -139,28 +140,10 @@ class marching_tetrahedra
 public:
   const mt_coord szx, szy, szz;
   const double threshold;
+  const std::function<double(const vec &)> func;
 
-  template<class T> marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord &sz, T &f, double thresh):
-  szx(sx), szy(sy), szz(sz), threshold(thresh), node(2*szx.maxN()*szy.maxN()*szz.maxN())
-  {
-    int idx = 0;
-    int s = 0;
-    for (int nz = 0 ; nz < szz.maxN() * 2 ; nz++, s = 1 - s) {
-      for (int ny = 0 ; ny < szy.maxN() - s ; ny++) // remove one line every two layers 
-        for (int nx = 0 ; nx < szx.maxN() ; nx++, idx++) {
-          mt_node &nd = node[idx];
-          nd.pos = { szx.pos(nx, s), szy.pos(ny, s), szz.pos(nz / 2, s) };
-          nd.val = f(nd.pos);
-          nd.inside = nd.val > thresh 
-                        && nx > 0 && nx < szx.maxN() - 1
-                        && ny > 0 && ny < szy.maxN() - 1;
-          if (nd.inside) // select all inside points
-            in_node.push_back(idx);
-        }
-      if (s == 1) // remove one point every two layers
-        idx--;
-    }
-  }
+  marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord &sz,
+                      std::function<double(const vec &)> f, double thresh);
 
   mesh build();
 
