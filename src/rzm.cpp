@@ -33,23 +33,6 @@ int digit = 6;
 int res;
 double thresh = 0.5;
 
-/*
-double f(const vec &v) {
-  vec av = {fabs(v.x), fabs(v.y), fabs(v.z)};
-  double m = av.x;
-  if (m < av.y)
-    m = av.y;
-  if (m < av.z)
-    m = av.z;
-  return 1 - m;
-}
-*/
-
-double f(const vec &v) {
-  double r = sqrt(v.x * v.x + v.y * v.y) - 0.7;
-  return 1 - (v.z * v.z + r * r) / 0.08; 
-}
-
 int main (int argc, char *argv[])
 {
   string filename = "-";
@@ -87,7 +70,7 @@ int main (int argc, char *argv[])
   }
   zm.normalize(zm_norm::dual);
 
-//  zernike_build f(zernike(N, zm));
+  zernike_build f(zernike(N, zm));
   marching_tetrahedra mt({-1, 1, res}, {-1, 1, res}, {-1, 1, res}, f, thresh);
   cout << mt.build();
 }
