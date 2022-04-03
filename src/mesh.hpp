@@ -89,6 +89,7 @@ public:
     if (!t.collapsed())
       triangles.push_back(t);
   }
+  void add_polygon(const std::vector<int> &p);
 
   void read_triangle(std::istream &is);
   void add(const mesh &m);

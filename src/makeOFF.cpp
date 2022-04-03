@@ -43,7 +43,7 @@ string cub_help = "creates a cube with 12 facets";
 string ico_help = "creates a regular icosahedron with 20 facets";
 string oct_help = "creates a regular octahedron with 8 facets";
 string tet_help = "creates a regular tetrhedron with 4 facets";
-string dod_help = "creates a regular dodecahedron with 36 facets";
+string dod_help = "creates a regular dodecahedron with 60 facets";
 
 int main (int argc, char *argv[])
 {

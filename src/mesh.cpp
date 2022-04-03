@@ -226,6 +226,22 @@ void mesh::add(const mesh &m)
     i->move(offset);
 }
 
+void mesh::add_polygon(const std::vector<int> &p)
+{
+  if (p.size() <= 2)
+    return;
+  vec mid;
+  for (auto i: p)
+    mid += points[i];
+  
+  mid /= p.size();
+  int i0 = points.size();
+  add_point(mid);
+  add_triangle({p.back(), p.front(), i0});
+  for (size_t i = 0 ; i < p.size() - 1 ; i++)
+    add_triangle({p[i], p[i+1], i0});
+}
+
 class edge {
 public:
   int i1, i2;
@@ -411,14 +427,16 @@ mesh make_dodecahedron(double r)
      {0, h, g}, {0, -h, g}, {0, h, -g}, {0, -h, -g},
      {g, 0, h}, {g, 0, -h}, {-g, 0, h}, {-g, 0, -h},
      {h, g, 0}, {-h, g, 0}, {h, -g, 0}, {-h, -g, 0}};
-  m.triangles =
-    {PT(8, 9, 3, 12, 0),   PT(8, 1, 14, 2, 9),
-     PT(10, 11, 6, 15, 5), PT(10, 4, 13, 7, 11),
-     PT(12, 13, 4, 16, 0), PT(12, 3, 18, 7, 13),
-     PT(14, 15, 6, 19, 2), PT(14, 1, 17, 5, 15),
-     PT(16, 17, 1, 8, 0),  PT(16, 4, 10, 5, 17),
-     PT(18, 19, 6, 11, 7), PT(18, 3, 9, 2, 19)
+  const std::vector<int> facets[12] =
+    {{8, 9, 3, 12, 0},   {8, 1, 14, 2, 9},
+     {10, 11, 6, 15, 5}, {10, 4, 13, 7, 11},
+     {12, 13, 4, 16, 0}, {12, 3, 18, 7, 13},
+     {14, 15, 6, 19, 2}, {14, 1, 17, 5, 15},
+     {16, 17, 1, 8, 0},  {16, 4, 10, 5, 17},
+     {18, 19, 6, 11, 7}, {18, 3, 9, 2, 19}
     };
+  for (auto &f: facets)
+    m.add_polygon(f);
   m *= r / sqrt(3);
   return m;
 }
