@@ -15,7 +15,7 @@
 #define stringify(x) strgf(x)
 
 #ifndef VERSION
-#define VERSION undefined
+#define VERSION undefined version
 #endif
 
 namespace argparse {
@@ -302,7 +302,7 @@ public:
   void show_usage(ostream &os);
   void show_help(ostream &os);
   void show_version(ostream &os)
-  { os << prog_name << " version: " << version_text << endl; }
+  { os << prog_name << " " << version_text << endl; }
 
   void flag(const string &s, const string &l, const string &h)
   { opts.push_back(new option_desc_base(s, l, "", h)); }
