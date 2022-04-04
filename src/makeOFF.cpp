@@ -21,7 +21,6 @@ string eh =
   "makeOFF -v \"1 0 0\" file: translates the given form with the given vector.\n"
   "makeOFF file1 file2 file3: creates a form containing the 3 forms given in files.\n"
   "makeOFF --icosahedron -s4: creates a sphere with 5120 facets.\n";
-string ver = "Version 0.1";
 string FILES_help =  "reads files FILES in OFF format";
 string c_help = "centers the shape around the center of mass";
 string r_help = "rescales the shape to fix the radius to R";
@@ -55,7 +54,7 @@ int main (int argc, char *argv[])
   double a = 0;
   vector<string> fs;
 
-  parser p(sh, eh, ver);
+  parser p(sh, eh);
   p.prog_name = "makeOFF";
   p.rest_arg("FILES", fs, FILES_help);
   p.flag("", "cube", cub_help);

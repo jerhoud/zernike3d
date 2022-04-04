@@ -11,6 +11,13 @@
 #include <algorithm>
 #include <ctime>
 
+#define strgf(x) #x
+#define stringify(x) strgf(x)
+
+#ifndef VERSION
+#define VERSION undefined
+#endif
+
 namespace argparse {
 
 using namespace std;
@@ -263,7 +270,7 @@ public:
   vector<vector<string> > exclusions;
   vector<vector<string> > selections;
 
-  parser(const string &sh, const string &eh, const string &v, bool std_help_version = true):
+  parser(const string &sh, const string &eh, const string &v=stringify(VERSION), bool std_help_version = true):
   start_help(sh), end_help(eh), version_text(v)
   {
     if (std_help_version) {
@@ -295,7 +302,7 @@ public:
   void show_usage(ostream &os);
   void show_help(ostream &os);
   void show_version(ostream &os)
-  { os << prog_name << ": " << version_text << endl; }
+  { os << prog_name << " version: " << version_text << endl; }
 
   void flag(const string &s, const string &l, const string &h)
   { opts.push_back(new option_desc_base(s, l, "", h)); }

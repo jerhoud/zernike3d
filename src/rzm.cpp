@@ -17,7 +17,6 @@ string sh =
   "Computes a mesh from Zernike moments.\n"
   "Input should be in ZM format as produced by zm.";
 string eh = "";
-string v = "version 0.1";
 string f_help = "Numerical precision in fixed notation";
 string e_help = "Numerical precision in scientific notation";
 string t_help = "Threshold value which separates the inside from the outside (default is 1/2)";
@@ -27,7 +26,7 @@ string FILE_help = "Reads FILE in ZM format (default is standard input)";
 string die_N_msg = "N must be positive.";
 string warn_N_msg = "N larger than maximum moment available. Adapting.";
 
-parser p(sh, eh, v);
+parser p(sh, eh);
 int N = 0;
 int digit = 6;
 int res;
@@ -57,7 +56,7 @@ int main (int argc, char *argv[])
   if (N < 0)
     p.die(die_N_msg);
 
-  cout << "# Produced by rzm (" << v << ") from file: " << filename << endl;
+  cout << "# Produced by rzm (" << p.version_text << ") from file: " << filename << endl;
   cout << "# Date: " << now() << endl;
 
   zernike zm;

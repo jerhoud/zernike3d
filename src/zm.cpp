@@ -19,7 +19,6 @@ string sh =
   "Input should be in OFF format.";
 string eh = "Currently works up to N = " + nmax
             + " for the computation of the moments.";
-string v = "version 0.1";
 string t_help = "runs internal sanity checks and exits";
 string m_help = "Computes Zernike moments";
 string i_help = "Computes Zernike rotational invariants";
@@ -37,7 +36,7 @@ string radius_warning =
 string f_help = "Numerical precision in fixed notation";
 string e_help = "Numerical precision in scientific notation";
 
-parser p(sh, eh, v);
+parser p(sh, eh);
 int N = 0;
 int digit = 6;
 s_vec coord = {0, 0, 0};
@@ -78,7 +77,7 @@ int main (int argc, char *argv[])
     return 0;
   }
 
-  cout << "# Produced by zm (" << v << ") from file: " << filename << endl;
+  cout << "# Produced by zm (" << p.version_text << ") from file: " << filename << endl;
   cout << "# Date: " << now() << endl;
   
   zernike zm;
