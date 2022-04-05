@@ -21,12 +21,12 @@ string eh =
   "makeOFF -cr 1 file: reads shape from file, centers it and fixes its radius to 1.\n"
   "makeOFF -v \"1 0 0\" file: translates the given form with the given vector.\n"
   "makeOFF file1 file2 file3: creates a form containing the 3 forms given in files.\n"
-  "makeOFF --icosahedron -s4: creates a sphere with 5120 facets.\n";
+  "makeOFF --sphere -s4: creates a sphere with 5120 facets.\n";
 string FILES_help =  "reads files FILES in OFF format";
 string c_help = "centers the shape around the center of mass";
 string r_help = "rescales the shape to fix the radius to R";
-string m_help = "multiplies the number of facets by four N times";
-string s_help = "same as -m but projects the points on the unit sphere at each step";
+string s_help = "multiplies the number of facets by four N times,\n"
+                "projects the new points for the sphere and the torus";
 string v_help =
   "translates the shape along the given vector (3 numbers inside a quote)\n"
   "when used with -a, sets the rotation axis instead";
@@ -34,7 +34,7 @@ string a_help =
   "rotates the shape with the given angle in degrees\n"
   "the axis is given with -v (default is vertical axis)";
 string d_help =
-  "applies a diagonal matrix (i.e. expands along the axis)"
+  "applies a diagonal matrix (i.e. expands along the axis)\n"
   "the three expansion factors are given inside a quote";
 string f_help = "numerical precision in fixed notation";
 string e_help = "numerical precision in scientific notation";
@@ -44,7 +44,9 @@ string ico_help = "creates a regular icosahedron with 20 facets";
 string oct_help = "creates a regular octahedron with 8 facets";
 string tet_help = "creates a regular tetrhedron with 4 facets";
 string dod_help = "creates a regular dodecahedron with 60 facets";
-string tor_help = "creates a torus with the given inner radius";
+string sph_help = "creates a sphere with 24 facets";
+string tor_help = "creates a torus with the given inner radius\n"
+                  "the number of facets increases with radius starting at 123";
 
 int main (int argc, char *argv[])
 {
@@ -56,6 +58,7 @@ int main (int argc, char *argv[])
   double a = 0;
   double tor_radius;
   vector<string> fs;
+  bool project = true;
 
   parser p(sh, eh);
   p.prog_name = "makeOFF";
@@ -65,11 +68,11 @@ int main (int argc, char *argv[])
   p.flag("", "octahedron", oct_help);
   p.flag("", "tetrahedron", tet_help);
   p.flag("", "dodecahedron", dod_help);
+  p.flag("", "sphere", sph_help);
   p.option("", "torus", "RADIUS", tor_radius, tor_help);
+  p.option("s", "", "N", s, s_help);
   p.flag("c", "", c_help);
   p.option("r", "", "R", r, r_help);
-  p.option("m", "", "N", s, m_help);
-  p.option("s", "", "N", s, s_help);
   p.option("d", "", "FACTORS", d, d_help);
   p.option("v", "", "VEC", v, v_help);
   p.option("a", "", "ANG", a, a_help);
@@ -77,12 +80,11 @@ int main (int argc, char *argv[])
   p.option("e", "", "DIGITS", digit, e_help);
   p.flag("i", "", i_help);
 
-  p.exclusion({"m", "s"});
-
   p.run(argc, argv);
 
   if (fs.empty() &&
-      p.none({"cube", "icosahedron", "octahedron", "tetrahedron", "dodecahedron", "torus"}))
+      p.none({"cube", "icosahedron", "octahedron", "tetrahedron",
+              "dodecahedron", "sphere", "torus"}))
     fs.push_back("-");
 
   mesh m;
@@ -102,22 +104,30 @@ int main (int argc, char *argv[])
     m.add(make_tetrahedron());
   if (p("dodecahedron"))
     m.add(make_dodecahedron());
-  if (p("torus"))
+  if (p("sphere")) {
+    project = m.empty();
+    m.add(make_icosahedron());
+  }
+  if (p("torus")) {
+    project = m.empty();
     m.add(make_torus(tor_radius));
+  }
+
+  for (int i = 0 ; i < s ; i++) {
+    m = m.split();
+    if (project) {
+      if (p("sphere"))
+        m.sphere_project();
+      else if (p("torus"))
+        m.torus_project(tor_radius);
+    }
+  }
 
   if (p("c"))
     m -= m.mass_center();
 
   if (p("r"))
     m *= r / m.radius();
-
-  if (p("s"))
-    m.sphere_project(1);
-  for (int i = 0 ; i < s ; i++) {
-    m = m.split();
-    if (p("s"))
-      m.sphere_project(1);
-  }
 
   if (p("d"))
     m.apply(diag_mat(d));

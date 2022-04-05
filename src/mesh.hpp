@@ -14,6 +14,9 @@ class cloud
 public:
   std::vector<vec> points; /**< The points. */
 
+  bool empty() const
+  { return points.empty(); }
+ 
   /** Adds a point to the cloud. */
   int add_point(const vec &pt)
   {
@@ -29,7 +32,8 @@ public:
   cloud &apply(const mat &m);
   vec mass_center() const;
   double radius() const;
-  void sphere_project(double r);
+  void sphere_project();
+  void torus_project(double r);
 };
 
 /** A cloud of weighted points. */

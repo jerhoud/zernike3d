@@ -75,11 +75,34 @@ double cloud::radius() const
   return sqrt(max);
 }
 
-/** projects all points on the centered sphere of given radius.*/
-void cloud::sphere_project(double r)
+/** projects all points on the unit sphere.*/
+void cloud::sphere_project()
 {
-  for (auto &pt: points)
-    pt *= r / pt.length();
+  for (auto &pt: points) {
+    const double l = pt.length();
+    if (l != 0)
+      pt /= l;
+  }
+}
+
+/** projects all points on the torus of outer radius one and inner radius r.*/
+void cloud::torus_project(double r)
+{
+  const double r0 = (1 + r) / 2;
+  const double r1 = (1 - r) / 2;
+  for (auto &pt: points) {
+    vec v = {pt.x, pt.y, 0};
+    const double vl = v.length();
+    if (vl != 0) {
+      v *= r0 / vl;
+      vec w = pt - v;
+      double const wl = w.length();
+      if (wl != 0) {
+        w *= r1 / wl;
+        pt = v + w;
+      }
+    }
+  }
 }
 
 /** reads a point and adds it to the cloud. */
