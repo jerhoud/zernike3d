@@ -15,8 +15,11 @@ public:
   std::vector<vec> points; /**< The points. */
 
   /** Adds a point to the cloud. */
-  void add_point(const vec &pt)
-  { points.push_back(pt); }
+  int add_point(const vec &pt)
+  {
+    points.push_back(pt);
+    return points.size() - 1;
+  }
 
   void read_point(std::istream &is);
   cloud &operator += (const vec &v);
@@ -85,12 +88,17 @@ public:
   double area() const;
 
   /** Adds a triangle to the mesh, by giving the indices of the vertices. */
-  void add_triangle(const t_mesh &t)
+  void add_triangle(const t_mesh &t, bool rev=false)
   { 
-    if (!t.collapsed())
+    if (t.collapsed())
+      return;
+    if (rev)
+      triangles.push_back({t.i1, t.i3, t.i2});
+    else
       triangles.push_back(t);
   }
   void add_polygon(const std::vector<int> &p);
+  void add_strip(const std::vector<int> &l1, const std::vector<int> &l2, bool rev);
 
   void read_triangle(std::istream &is);
   void add(const mesh &m);
@@ -101,11 +109,12 @@ public:
 std::istream &operator >>(std::istream &is, mesh &m);
 std::ostream &operator <<(std::ostream &os, const mesh &m);
 
-mesh make_cube(double r);
-mesh make_tetrahedron(double r);
-mesh make_icosahedron(double r);
-mesh make_octahedron(double r);
-mesh make_dodecahedron(double r);
+mesh make_cube();
+mesh make_tetrahedron();
+mesh make_icosahedron();
+mesh make_octahedron();
+mesh make_dodecahedron();
+mesh make_torus(double r);
 
 class mt_coord
 {

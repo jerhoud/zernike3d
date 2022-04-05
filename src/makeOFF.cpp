@@ -14,7 +14,8 @@ string sh =
 string eh =
   "Operations are executed in the order presented above.\n"
   "One can read or create multiple shapes into one.\n"
-  "If no file is given and no shapes created, then reads standard input.\n\n"
+  "If no file is given and no shapes created, then reads standard input.\n"
+  "The shapes created by makeOFF have originally a radius equal to one.\n\n"
   "Examples:\n"
   "makeOFF --cube: creates a cube.\n"
   "makeOFF -cr 1 file: reads shape from file, centers it and fixes its radius to 1.\n"
@@ -43,6 +44,7 @@ string ico_help = "creates a regular icosahedron with 20 facets";
 string oct_help = "creates a regular octahedron with 8 facets";
 string tet_help = "creates a regular tetrhedron with 4 facets";
 string dod_help = "creates a regular dodecahedron with 60 facets";
+string tor_help = "creates a torus with the given inner radius";
 
 int main (int argc, char *argv[])
 {
@@ -52,6 +54,7 @@ int main (int argc, char *argv[])
   vec v = {0, 0, 1};
   vec d;
   double a = 0;
+  double tor_radius;
   vector<string> fs;
 
   parser p(sh, eh);
@@ -62,6 +65,7 @@ int main (int argc, char *argv[])
   p.flag("", "octahedron", oct_help);
   p.flag("", "tetrahedron", tet_help);
   p.flag("", "dodecahedron", dod_help);
+  p.option("", "torus", "RADIUS", tor_radius, tor_help);
   p.flag("c", "", c_help);
   p.option("r", "", "R", r, r_help);
   p.option("m", "", "N", s, m_help);
@@ -78,7 +82,7 @@ int main (int argc, char *argv[])
   p.run(argc, argv);
 
   if (fs.empty() &&
-      p.none({"cube", "icosahedron", "octahedron", "tetrahedron", "dodecahedron"}))
+      p.none({"cube", "icosahedron", "octahedron", "tetrahedron", "dodecahedron", "torus"}))
     fs.push_back("-");
 
   mesh m;
@@ -89,15 +93,17 @@ int main (int argc, char *argv[])
   }
  
   if (p("cube"))
-    m.add(make_cube(1));
+    m.add(make_cube());
   if (p("icosahedron"))
-    m.add(make_icosahedron(1));
+    m.add(make_icosahedron());
   if (p("octahedron"))
-    m.add(make_octahedron(1));
+    m.add(make_octahedron());
   if (p("tetrahedron"))
-    m.add(make_tetrahedron(1));
+    m.add(make_tetrahedron());
   if (p("dodecahedron"))
-    m.add(make_dodecahedron(1));
+    m.add(make_dodecahedron());
+  if (p("torus"))
+    m.add(make_torus(tor_radius));
 
   if (p("c"))
     m -= m.mass_center();

@@ -6,6 +6,9 @@
 #include "iotools.hpp"
 #include "mesh.hpp"
 
+#ifndef M_PI
+#define M_PI 3.141592653589793238
+#endif
 
 /** Displaces the cloud by adding a vector. */
 cloud &cloud::operator += (const vec &v)
@@ -235,11 +238,26 @@ void mesh::add_polygon(const std::vector<int> &p)
     mid += points[i];
   
   mid /= p.size();
-  int i0 = points.size();
-  add_point(mid);
+  int i0 = add_point(mid);
   add_triangle({p.back(), p.front(), i0});
   for (size_t i = 0 ; i < p.size() - 1 ; i++)
     add_triangle({p[i], p[i+1], i0});
+}
+
+void mesh::add_strip(const std::vector<int> &l1, const std::vector<int> &l2, bool rev)
+{
+  const int s1 = l1.size() - 1;
+  const int s2 = l2.size() - 1;
+
+  int i1 = 0;
+  int i2 = 0;
+  for (; i1 < s1 ; i1++) {
+    for (; i2 < s2 && i2 * s1 <= (i1 + 0.5) * s2 ; i2++)
+      add_triangle({l2[i2], l2[i2+1], l1[i1]}, rev);
+    add_triangle({l1[i1], l2[i2], l1[i1+1]}, rev);
+  }
+  for (; i2 < s2 && i2 * s1 <= (i1 + 0.5) * s2 ; i2++)
+      add_triangle({l2[i2], l2[i2+1], l1[i1]}, rev);
 }
 
 class edge {
@@ -262,9 +280,8 @@ int get_middle(cloud &c, middle_map &mdls, const edge &e)
 {
   auto i = mdls.find(e);
   if (i == mdls.end()) {
-    int mi = c.points.size();
+    int mi = c.add_point((c.points[e.i1] + c.points[e.i2]) / 2);
     mdls.insert(std::make_pair(e, mi));
-    c.add_point((c.points[e.i1] + c.points[e.i2]) / 2);
     return mi;
   }
   else
@@ -358,7 +375,7 @@ std::ostream &operator <<(std::ostream &os, const mesh &m)
   return os;
 }
 
-mesh make_cube(double r)
+mesh make_cube()
 {
   mesh m;
   m.points =
@@ -368,22 +385,22 @@ mesh make_cube(double r)
     {{0, 1, 2}, {2, 3, 0}, {0, 4, 1}, {1, 4, 5},
      {1, 5, 2}, {2, 5, 6}, {2, 6, 3}, {3, 6, 7},
      {3, 7, 0}, {0, 7, 4}, {4, 6, 5}, {7, 6, 4}};
-  m *= r / sqrt(3);
+  m *= 1 / sqrt(3);
   return m;
 }
 
-mesh make_tetrahedron(double r)
+mesh make_tetrahedron()
 {
   mesh m;
   m.points =
     {{1, 1, 1}, {-1, -1, 1}, {1, -1, -1}, {-1, 1, -1}};
   m.triangles =
     {{0, 1, 2}, {0, 2, 3}, {0, 3, 1}, {1, 3, 2}};
-  m *= r / sqrt(3);
+  m *= 1 / sqrt(3);
   return m;
 }
 
-mesh make_icosahedron(double r)
+mesh make_icosahedron()
 {
   const double g = (1 + sqrt(5)) / 2;
   mesh m;
@@ -397,11 +414,11 @@ mesh make_icosahedron(double r)
      {4, 10, 8}, {5, 9, 11}, {7, 8, 10}, {6, 11, 9},
      {0, 4, 8}, {1, 9, 5}, {0, 11, 6}, {1, 7, 10},
      {2, 8, 7}, {3, 6, 9}, {2, 5, 11}, {3, 10, 4}};
-  m *= r / sqrt(2 + g);
+  m *= 1 / sqrt(2 + g);
   return m;
 }
 
-mesh make_octahedron(double r)
+mesh make_octahedron()
 {
   mesh m;
   m.points =
@@ -410,13 +427,56 @@ mesh make_octahedron(double r)
   m.triangles =
     {{0, 1, 2}, {0, 2, 3}, {0, 3, 4}, {0, 4, 1},
      {5, 1, 4}, {5, 2, 1}, {5, 3, 2}, {5, 4, 3}};
-  m *= r;
   return m;
 }
 
-#define PT(a, b, c, d, e) {a, b, c}, {a, c, d}, {a, d, e}
+std::vector<int> add_circle(mesh &m, vec v, double a)
+{
+  std::vector<int> l;
+  double r = hypot(v.x, v.y);
+  int n = ceil(2 * M_PI * r / a);
+  if (r > 0 && n < 4)
+    n = 4;
+  if (n == 0)
+    l.push_back(m.add_point(v));
+  else {
+    v = rotation_mat({0, 0, 1}, - M_PI / n) * v;
+    mat rot = rotation_mat({0, 0, 1}, 2 * M_PI / n);
+    while (n--) {
+      l.push_back(m.add_point(v));
+      v = rot * v;
+    }
+    l.push_back(l.front());
+  }
+  return l;
+}
 
-mesh make_dodecahedron(double r)
+mesh make_torus(double r)
+{
+  mesh m;
+  const double a = (1 - r) / 2;
+  const double h = sqrt(3)/2 * a;
+  const vec u = {0, 0, h};
+  const std::vector<int> l1 = add_circle(m, {r, 0, 0}, a);
+  const vec p2 = (r == 0) ? vec(0.25, 0, 0) : (r + a / 2) / r * m.points[l1[0]];
+  const std::vector<int> l2u = add_circle(m, p2 + u, a);
+  m.add_strip(l1, l2u, false);
+  const std::vector<int> l2d = add_circle(m, p2 - u, a);
+  m.add_strip(l1, l2d, true);
+  const vec p3 = (r + 3 * a / 2) / (r + a / 2) * (m.points[l2u[0]] - u);
+  const std::vector<int> l3u = add_circle(m, p3 + u, a);
+  m.add_strip(l2u, l3u, false);
+  const std::vector<int> l3d = add_circle(m, p3 - u, a);
+  m.add_strip(l2d, l3d, true);
+  const vec p4 = (m.points[l3u[0]] - u) / (r + 3 * a / 2);
+  const std::vector<int> l4 = add_circle(m, p4, a);
+  m.add_strip(l3u, l4, false);
+  m.add_strip(l3d, l4, true);
+
+  return m;
+}
+
+mesh make_dodecahedron()
 {
   const double g = (1 + sqrt(5)) / 2;
   const double h = g - 1;
@@ -437,7 +497,7 @@ mesh make_dodecahedron(double r)
     };
   for (auto &f: facets)
     m.add_polygon(f);
-  m *= r / sqrt(3);
+  m *= 1 / sqrt(3);
   return m;
 }
 
@@ -596,7 +656,7 @@ mesh marching_tetrahedra::build()
           + (threshold - nd0.val) / (nd1.val - nd0.val)
           * (nd1.pos - nd0.pos);
         sum += v;
-        m.points.push_back(v);
+        m.add_point(v);
       }
     }
 
@@ -610,7 +670,7 @@ mesh marching_tetrahedra::build()
       int n = m.points.size() - nd0.vertex;
       sum /= n;
       m.points.resize(nd0.vertex);
-      m.points.push_back(sum);
+      m.add_point(sum);
     }
   }
 
