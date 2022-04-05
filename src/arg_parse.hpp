@@ -154,7 +154,7 @@ public:
   }
 
   virtual void process() { used = true; }
-  virtual bool process(const string &arg) { used = true; return true; }
+  virtual bool process(const string &) { used = true; return true; }
 
   void show(ostream &os, int w_short, int w_long)
   {
