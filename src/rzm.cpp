@@ -19,7 +19,8 @@ string sh =
 string eh = "";
 string f_help = "Numerical precision in fixed notation";
 string e_help = "Numerical precision in scientific notation";
-string t_help = "Threshold value which separates the inside from the outside (default is 1/2)";
+string t_help = "Threshold value which separates the inside\n"
+                "from the outside (default is 1/2)";
 string N_help = "The maximum order of Zernike moments to use (if available)";
 string RES_help = "Résolution of the mesh (i.e. number of intervals between -1 and 1)";
 string FILE_help = "Reads FILE in ZM format (default is standard input)";
