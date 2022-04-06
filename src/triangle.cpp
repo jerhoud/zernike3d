@@ -194,7 +194,7 @@ scheme_selector::scheme_selector()
     N2(0.36185295318584176,0.01631553104333388)
   };
 
-  const std::vector<scheme_point> data31 = // 181 odes, optimal
+  const std::vector<scheme_point> data31 = // 181 nodes, optimal
   {
     N3(0.9892293397516325,0.00961725818637238,0.00019079861492913956),
     N3(0.9581524787550731,0.03833505939545534,0.000697125090809313),
