@@ -22,6 +22,14 @@ extern const std::string unexpect_eof_msg;
 std::istream &next_line(std::istream &is, std::istringstream &iss);
 std::istream &failed(std::istream &is);
 
+/** reads a stream into an object.
+  It reads the object using operator >>.
+  It reports errors with line count if possible.
+  @param name is the name of the stream for error reporting
+  @param is the stream to read
+  @param x is the variable to read the stream in
+  @return "" if no error happens and a helpfull message otherwise
+*/
 template<typename T>
 std::string read_stream(const std::string &name, std::istream &is, T &x)
 {
@@ -37,6 +45,14 @@ std::string read_stream(const std::string &name, std::istream &is, T &x)
     return invalid_file_msg + name + " at line " + std::to_string(line_count);
   return "";
 }
+
+/** reads a file into an object of type T.
+  It reads the object using operator >>.
+  It reports errors with line count if possible.
+  @param filename is the name of the file to read ("-" for standard input)
+  @param x is the variable to read the stream in
+  @return "" if no error happens and a helpfull message otherwise
+*/
 
 template<typename T>
 std::string read_file(const std::string &filename, T &x)
