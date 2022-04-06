@@ -68,7 +68,7 @@ double cloud::radius() const
 {
   double max = 0;
   for (auto &pt: points) {
-    double l2 = pt.length_square();
+    const double l2 = pt.length_square();
     if (max < l2)
       max = l2;
   }
@@ -187,7 +187,7 @@ double w_cloud::radius() const
 {
   double max = 0;
   for (auto &pt: points) {
-    double l2 = pt.v.length_square();
+    const double l2 = pt.v.length_square();
     if (max < l2)
       max = l2;
   }
@@ -202,6 +202,7 @@ std::istream &operator >>(std::istream &is, t_mesh &t)
     t = { a, b, c };
   return is;  
 }
+
 std::ostream &operator <<(std::ostream &os, const t_mesh &t)
 {
   os << t.i1 << " " << t.i2 << " " << t.i3;
@@ -242,16 +243,20 @@ void mesh::read_triangle(std::istream &is)
   }
 }
 
+/** concats two meshes.*/
 void mesh::add(const mesh &m)
 {
-  int offset = points.size();
-  int n = triangles.size();
+  const int offset = points.size();
+  const int n = triangles.size();
   points.insert(points.end(), m.points.begin(), m.points.end());
   triangles.insert(triangles.end(), m.triangles.begin(), m.triangles.end());
   for (auto i = triangles.begin() + n ; i != triangles.end() ; i++)
     i->move(offset);
 }
 
+/** adds a polygon with the given points.
+ It create an additional point at the center.
+*/
 void mesh::add_polygon(const std::vector<int> &p)
 {
   if (p.size() <= 2)
@@ -261,7 +266,7 @@ void mesh::add_polygon(const std::vector<int> &p)
     mid += points[i];
   
   mid /= p.size();
-  int i0 = add_point(mid);
+  const int i0 = add_point(mid);
   add_triangle({p.back(), p.front(), i0});
   for (size_t i = 0 ; i < p.size() - 1 ; i++)
     add_triangle({p[i], p[i+1], i0});
@@ -285,7 +290,7 @@ void mesh::add_strip(const std::vector<int> &l1, const std::vector<int> &l2, boo
 
 class edge {
 public:
-  int i1, i2;
+  const int i1, i2;
 
   bool operator == (const edge &e) const
   { return (i1 == e.i1 && i2 == e.i2) || (i1 == e.i2 && i2 == e.i1); }
@@ -301,7 +306,7 @@ typedef std::unordered_map<edge, int, hash_edge> middle_map;
 
 int get_middle(cloud &c, middle_map &mdls, const edge &e)
 {
-  auto i = mdls.find(e);
+  const auto i = mdls.find(e);
   if (i == mdls.end()) {
     int mi = c.add_point((c.points[e.i1] + c.points[e.i2]) / 2);
     mdls.insert(std::make_pair(e, mi));
@@ -318,9 +323,9 @@ mesh mesh::split() const
   m.points = points;
   middle_map middles;
   for (auto &t: triangles) {
-    int m12 = get_middle(m, middles, {t.i1, t.i2});
-    int m23 = get_middle(m, middles, {t.i2, t.i3});
-    int m31 = get_middle(m, middles, {t.i3, t.i1});
+    const int m12 = get_middle(m, middles, {t.i1, t.i2});
+    const int m23 = get_middle(m, middles, {t.i2, t.i3});
+    const int m31 = get_middle(m, middles, {t.i3, t.i1});
     m.add_triangle({t.i1, m12, m31});
     m.add_triangle({t.i2, m23, m12});
     m.add_triangle({t.i3, m31, m23});
@@ -329,6 +334,7 @@ mesh mesh::split() const
   return m;
 }
 
+/** a class to gather data about an edge in a mesh.*/
 class edge_info {
 public:
   int count, order;
@@ -345,6 +351,7 @@ void edge_register(edge_map &m, const edge &e)
   i->second.order += (e.i1 <= e.i2) ? 1 : -1;
 }
 
+/** builds a report about the mesh, to check for consistency.*/
 edge_report mesh::edges() const
 {
   edge_map m;
@@ -398,6 +405,7 @@ std::ostream &operator <<(std::ostream &os, const mesh &m)
   return os;
 }
 
+/** builds a mesh representing a cube with 12 facets.*/
 mesh make_cube()
 {
   mesh m;
@@ -412,6 +420,7 @@ mesh make_cube()
   return m;
 }
 
+/** builds a mesh representing a regular tetrahedron with 4 facets.*/
 mesh make_tetrahedron()
 {
   mesh m;
@@ -423,6 +432,7 @@ mesh make_tetrahedron()
   return m;
 }
 
+/** builds a mesh representing a regular icosahedron with 20 facets.*/
 mesh make_icosahedron()
 {
   const double g = (1 + sqrt(5)) / 2;
@@ -441,6 +451,7 @@ mesh make_icosahedron()
   return m;
 }
 
+/** builds a mesh representing a regular octahedron with 8 facets.*/
 mesh make_octahedron()
 {
   mesh m;
@@ -474,6 +485,9 @@ std::vector<int> add_circle(mesh &m, vec v, double a)
   return l;
 }
 
+/** builds a mesh representing a torus.
+  The outer radius is 1 and the inner radius is r.
+  The mesh has at least 123 facets.*/
 mesh make_torus(double r)
 {
   mesh m;
@@ -499,6 +513,7 @@ mesh make_torus(double r)
   return m;
 }
 
+/** builds a mesh representing a regular dodecahedron with 60 facets.*/
 mesh make_dodecahedron()
 {
   const double g = (1 + sqrt(5)) / 2;
@@ -524,6 +539,7 @@ mesh make_dodecahedron()
   return m;
 }
 
+/** a class to represent a tetrahedron for marching_tetrahedra.*/
 class tetrahedron
 {
 public:
@@ -532,7 +548,7 @@ public:
 
 #define TETRA(a, b, c) {a, b, c}, {a ^ 1, c ^ 1, b ^ 1}
 
-const tetrahedron tetras[24] = {
+const tetrahedron tetras[24] = { // the 24 tetrahedron around a point of the lattice
   TETRA(0, 2, 6), TETRA(0, 6, 8), TETRA(0, 8, 4), TETRA(0, 4, 2),
   TETRA(10, 2, 4), TETRA(10, 4, 7), TETRA(10, 7, 9), TETRA(10, 9, 2),
   TETRA(12, 2, 9), TETRA(12, 9, 5), TETRA(12, 5, 6), TETRA(12, 6, 2)

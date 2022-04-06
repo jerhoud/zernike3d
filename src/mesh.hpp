@@ -14,6 +14,7 @@ class cloud
 public:
   std::vector<vec> points; /**< The points. */
 
+  /** returns true if there are no points in the cloud.*/
   bool empty() const
   { return points.empty(); }
  
@@ -77,6 +78,7 @@ public:
 std::istream &operator >>(std::istream &, t_mesh &t);
 std::ostream &operator <<(std::ostream &, const t_mesh &t);
 
+/** a class to store information about a mesh.*/
 class edge_report {
 public:
   int count, border, strange;
@@ -91,7 +93,10 @@ public:
   double volume() const;
   double area() const;
 
-  /** Adds a triangle to the mesh, by giving the indices of the vertices. */
+  /** Adds a triangle to the mesh, by giving the indices of the vertices.
+   @param t the triangle to add
+   @param rev whether to reverse the orientation of the triangle
+  */
   void add_triangle(const t_mesh &t, bool rev=false)
   { 
     if (t.collapsed())
@@ -120,6 +125,7 @@ mesh make_octahedron();
 mesh make_dodecahedron();
 mesh make_torus(double r);
 
+/** a class to store the resolution on a axis for marching_tetrahedra.*/
 class mt_coord
 {
 public:
@@ -136,6 +142,7 @@ public:
   { return N + 3;}
 };
 
+/** a class to store a point of the lattice for marching_tetrahedra.*/
 class mt_node
 {
 public:
@@ -148,6 +155,9 @@ public:
   int operator()(int n) const;
 };
 
+/** a class for building a mesh from a density function.
+ It uses the regularised marching tetrahedra algorithm.
+*/
 class marching_tetrahedra
 {
 public:
