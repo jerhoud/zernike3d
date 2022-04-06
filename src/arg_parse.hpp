@@ -12,9 +12,11 @@
 #include <ctime>
 
 #define strgf(x) #x
+/** expands a macro inside quotes. */
 #define stringify(x) strgf(x)
 
 #ifndef VERSION
+/** VERSION is written when option --version is used. */
 #define VERSION undefined version
 #endif
 
@@ -22,30 +24,31 @@ namespace argparse {
 
 using namespace std;
 
-string color_red = "\033[0;31m";
-string color_blue = "\033[0;34m";
-string color_reset = "\033[0m";
+const string color_red = "\033[0;31m";
+const string color_blue = "\033[0;34m";
+const string color_reset = "\033[0m";
 
-string usage_msg = "Usage: ";
-string options_msg = "Options";
-string arguments_msg = "Arguments";
-string std_help_msg = "shows this help message and exits";
-string std_version_msg = "shows version information and exits";
-string missing_opt_name_msg = "Missing option name for argument ";
-string unknown_opt_msg = "Unknown option ";
-string unwanted_opt_arg_msg = "Unwanted argument for option ";
-string unwanted_arg_msg = "Unwanted argument ";
-string invalid_arg_msg = "Invalid value for argument ";
-string ambiguous_opt_msg = "Ambiguous option name ";
-string missing_opt_arg_msg = "Missing argument for option ";
-string invalid_opt_arg_msg = "Invalid argument for option ";
-string missing_arg_msg = "Missing argument ";
-string more_help_msg = "Use option -h for help";
-string exclusion_msg = "The following options are incompatible: ";
-string selection_msg = "You must use one of the following options: ";
-string bad_test_msg = "Bug: testing unkown option: ";
-string bad_opt_arg = "Bug: optional argument before non-optional argument: ";
+const string usage_msg = "Usage: ";
+const string options_msg = "Options";
+const string arguments_msg = "Arguments";
+const string std_help_msg = "shows this help message and exits";
+const string std_version_msg = "shows version information and exits";
+const string missing_opt_name_msg = "Missing option name for argument ";
+const string unknown_opt_msg = "Unknown option ";
+const string unwanted_opt_arg_msg = "Unwanted argument for option ";
+const string unwanted_arg_msg = "Unwanted argument ";
+const string invalid_arg_msg = "Invalid value for argument ";
+const string ambiguous_opt_msg = "Ambiguous option name ";
+const string missing_opt_arg_msg = "Missing argument for option ";
+const string invalid_opt_arg_msg = "Invalid argument for option ";
+const string missing_arg_msg = "Missing argument ";
+const string more_help_msg = "Use option -h for help";
+const string exclusion_msg = "The following options are incompatible: ";
+const string selection_msg = "You must use one of the following options: ";
+const string bad_test_msg = "Bug: testing unkown option: ";
+const string bad_opt_arg = "Bug: optional argument before non-optional argument: ";
 
+/** returns a string which represent the current date and time. */
 string now()
 {
   time_t rawtime;
@@ -54,67 +57,64 @@ string now()
   timeinfo = localtime (&rawtime);
   string s = asctime(timeinfo);
 
-  if (s.size()!=0 && s.back()=='\n')
+  if (s.size() != 0 && s.back() == '\n')
     s.pop_back();
 
  return s;
 }
 
+/** describes the different command line elements. */
 enum token_type { tok_option, tok_long_option, tok_option_arg, tok_arg };
 
-class token {
+/** a class to hold the type and name of a command element. */
+class token
+{
 public:
-  token_type tp;
-  string s;
+  const token_type tp;
+  const string s;
 };
 
-void add_token(const string &arg, vector<token> &toks, bool long_opt)
-{
-  int s, p;
-  if (long_opt) {
-    s = 2;
-    p = arg.find("=", s);
-  }
-  else {
-    s = 1;
-    p = arg.find_first_not_of(
-      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", s);
-  }
-  if (p == s)
-    toks.push_back({tok_option, ""});
-  else {
-    string head = arg.substr(s, p - s);
-    if (long_opt)
-      toks.push_back({tok_long_option, head});
-    else
-      for (auto c: head)
-        toks.push_back({tok_option, string(1, c)});
-  }
-  if (p != (int) string::npos)
-    toks.push_back({tok_option_arg, arg.substr(p + (arg[p]=='='))});
-}
-
-void parse_tokens(int argc, char *argv[], vector<token> &toks)
+/** parses command line elements into options and argument.*/
+void parse_tokens(int argc, const char *const argv[], vector<token> &toks)
 {
   bool opt = true;
   for (int i = 0 ; i < argc ; ++i) {
-    string arg = argv[i];
+    const string arg = argv[i];
     if (arg == "--") // stop parsing options
       opt = false;
     else if (!opt || arg == "" || arg == "-" || arg[0] != '-') // a regular argument
       toks.push_back({tok_arg, arg});
     else {
-      char c = arg[1];
+      const char c = arg[1];
       if (c == '.' || (c >= '0' && c <= '9')) // not an option: a negative number
         toks.push_back({tok_arg, arg});
-      else if (c == '-') // a long option starting with --
-        add_token(arg, toks, true);
-      else // a short option starting with -
-        add_token(arg, toks, false);
+      else {                  // an option
+        const bool long_opt = c == '-';
+        const int s = (long_opt) ? 2 : 1;
+        int p;
+        if (long_opt)
+          p = arg.find("=", s);
+        else
+          p = arg.find_first_not_of(
+                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", s);
+        if (p == s) // a missing option name (like -! or --=7)
+          toks.push_back({tok_option, ""});
+        else {
+          const string head = arg.substr(s, p - s);
+          if (long_opt)    // a long option
+            toks.push_back({tok_long_option, head});
+          else             // a bunch of short options
+            for (auto c: head)
+              toks.push_back({tok_option, string(1, c)});
+        }
+        if (p != (int) string::npos) // what is left is an argument
+          toks.push_back({tok_option_arg, arg.substr(p + (arg[p]=='='))});
+      }
     }
   }
 }
 
+/** pretty prints a paragraph. with a left margin of size w.*/
 void show_paragraph(ostream &os, int w, const string &h)
 {
   int p = 0, pp;
@@ -126,12 +126,14 @@ void show_paragraph(ostream &os, int w, const string &h)
   os << h.substr(p, pp - p) << endl;
 }
 
-class option_desc_base {
+/** a base class representing an option.*/
+class option_desc_base
+{
 public:
-  string short_name;
-  string long_name;
-  bool want_arg;
-  string help;
+  const string short_name;
+  const string long_name;
+  const bool want_arg;
+  const string help;
   string short_usage, short_print, long_print;
   bool used;
 
@@ -153,9 +155,12 @@ public:
     }
   }
 
+  /** called when the option is found alone on the command line. */
   virtual void process() { used = true; }
+  /** called when the option is found with an arg on the command line. */
   virtual bool process(const string &) { used = true; return true; }
 
+  /** help output of the option.*/ 
   void show(ostream &os, int w_short, int w_long)
   {
     os << "  " << left << setw(w_short) << short_print
@@ -164,6 +169,7 @@ public:
   }
 };
 
+/** reads a string into a variable of type T, returns true if successfull.*/ 
 template <typename T>
 bool parse_arg(const string &arg, T &var)
 {
@@ -180,6 +186,7 @@ template <>
 bool parse_arg<string> (const string &arg, string &var)
 { var = arg; return true; }
 
+/** tries reading a T variable and appends it to the vector.*/
 template <typename T>
 bool parse_list(const string &arg, vector<T> &var)
 {
@@ -190,8 +197,10 @@ bool parse_list(const string &arg, vector<T> &var)
     return true;
 }
 
+/** an option that sets a variable with its argument. */
 template <typename T>
-class set_option_desc: public option_desc_base {
+class set_option_desc: public option_desc_base
+{
 public:
   T &var;
 
@@ -205,8 +214,10 @@ public:
   }
 };
 
+/** an option that appends its argument to a vector each time it is met on the command line. */
 template <typename T>
-class list_option_desc: public option_desc_base {
+class list_option_desc: public option_desc_base
+{
 public:
   vector<T> &var;
 
@@ -217,18 +228,23 @@ public:
   { used = true; return parse_list(arg, var); }
 };
 
-class arg_desc_base {
+/** base class for non option arguments.*/
+class arg_desc_base
+{
 public:
-  bool need;
-  bool rest;
-  string arg_name;
-  string help;
+  const bool need;
+  const bool rest;
+  const string arg_name;
+  const string help;
   bool used;
 
   arg_desc_base(const string &a, bool n, bool r, const string &h):
   need(n), rest(r), arg_name(a), help(h) , used(false) {}
 
+  /** called when the argument is met on the command line.*/
   virtual bool process(const string &arg) = 0;
+
+  /** help output for the argument.*/
   void show(ostream &os, int w)
   {
     os << "  " << left << setw(w) << arg_name << "   ";
@@ -236,8 +252,10 @@ public:
   }
 };
 
+/** a positional argument that sets a variable.*/
 template<typename T>
-class pos_arg_desc: public arg_desc_base {
+class pos_arg_desc: public arg_desc_base
+{
 public:
   T &var;
 
@@ -248,8 +266,10 @@ public:
   { used = true; return parse_arg(arg, var); }
 };
 
+/** an argument that collects all the reminding argument on the command line.*/
 template<typename T>
-class rest_arg_desc: public arg_desc_base {
+class rest_arg_desc: public arg_desc_base
+{
 public:
   vector<T> &var;
 
@@ -260,61 +280,71 @@ public:
   { used = true; return parse_list(arg, var); }
 };
 
-class parser {
+/** The main class to parse the command line.*/ 
+class parser
+{
 public:
-  string start_help, end_help, version_text, prog_name;
-  string missing_arg;
+  const string start_help, end_help, version_text;
+  string prog_name, missing_arg;
   vector<token> toks;
   vector<option_desc_base *> opts;
   vector<arg_desc_base *> args;
   vector<vector<string> > exclusions;
   vector<vector<string> > selections;
 
-  parser(const string &sh, const string &eh, const string &v=stringify(VERSION), bool std_help_version = true):
+  parser(const string &sh, const string &eh, const string &v=stringify(VERSION)):
   start_help(sh), end_help(eh), version_text(v)
   {
-    if (std_help_version) {
-      flag("h", "help", std_help_msg);
-      flag("", "version", std_version_msg);
-    }
+    flag("h", "help", std_help_msg);
+    flag("", "version", std_version_msg);
   }
 
-  void run(int argc, char *argv[]);
-  void parse(int argc, char *argv[]);
+  void run(int argc, const char *const argv[]);
+  void parse(int argc, const char *const argv[]);
   void analysis();
-  void standard();
-  void check();
+  void standard() const;
+  void check() const;
 
-  bool operator()(const string &s);
+  bool operator()(const string &s) const;
 
-  bool any(const vector<string> &s)
+  /** returns true if any of the given options was met on the command line.*/
+  bool any(const vector<string> &s) const
   { return any_of(s.begin(), s.end(), *this); }
 
-  bool all(const vector<string> &s)
+  /** returns true if all of the given options were met on the command line.*/
+  bool all(const vector<string> &s) const
   { return all_of(s.begin(), s.end(), *this); }
 
-  bool none(const vector<string> &s)
+  /** returns true if none of the given options was met on the command line.*/
+  bool none(const vector<string> &s) const
   { return none_of(s.begin(), s.end(), *this); }
 
-  int count(const vector<string> &s)
+  /** counts how many of the given options were met on the command line.*/
+  int count(const vector<string> &s) const
   { return count_if(s.begin(), s.end(), *this); }
 
-  void show_usage(ostream &os);
-  void show_help(ostream &os);
-  void show_version(ostream &os)
+  void show_usage(ostream &os) const;
+  void show_help(ostream &os) const;
+
+  /** prints version informations.*/
+  void show_version(ostream &os) const
   { os << prog_name << " " << version_text << endl; }
 
+  /** adds a yes / no option to the parser.*/
   void flag(const string &s, const string &l, const string &h)
   { opts.push_back(new option_desc_base(s, l, "", h)); }
 
+  /** adds an option with an argument to the parser.*/
   template<typename T>
   void option(const string &s, const string &l, const string &a, T &v, const string &h)
   { opts.push_back(new set_option_desc<T>(s, l, a, v, h)); }
 
+  /** adds a repeatable option with an argument to the parser.*/
   template<typename T>
   void list_option(const string &s, const string &l, const string &a, vector<T> &v, const string &h)
   { opts.push_back(new list_option_desc<T>(s, l, a, v, h)); }
 
+  /** adds a positional argument to the parser.*/
   template<typename T>
   void arg(const string &a, T &v, const string &h)
   {
@@ -323,29 +353,34 @@ public:
     args.push_back(new pos_arg_desc<T>(a, v, true, h));
   }
 
+  /** adds an optional positional argument to the parser, should be at the end.*/
   template<typename T>
   void opt_arg(const string &a, T &v, const string &h)
   { args.push_back(new pos_arg_desc<T>(a, v, false, h)); }
 
+  /** adds a list of arguments to the parser, should be at the end.*/
   template<typename T>
   void rest_arg(const string &a, std::vector<T> &v, const string &h)
   { args.push_back(new rest_arg_desc<T>(a, v, h)); }
 
+  /** sets mutally exclusive options or arguments.*/
   void exclusion(const vector<string> &s)
   { exclusions.push_back(s); }
 
+  /** sets a list of options or arguments from which one and only one must be used.*/
   void selection(const vector<string> &s)
   { selections.push_back(s); }
 
-  void warn(const string &w)
+  /** prints a warning.*/
+  void warn(const string &w) const
   { cerr << prog_name << ": " << color_blue << w << color_reset << endl; }
 
-  [[ noreturn ]] void die(const string &err);
-  [[ noreturn ]] void die(const string &err, const vector<string> &l);
+  [[ noreturn ]] void die(const string &err) const;
+  [[ noreturn ]] void die(const string &err, const vector<string> &l) const;
 };
 
-
-void parser::show_usage(ostream &os)
+/** Prints the usage message triggered by an error.*/
+void parser::show_usage(ostream &os) const
 {
   string flag_str, opt_str, arg_str;
   for (auto &opt: opts)
@@ -387,7 +422,8 @@ void parser::show_usage(ostream &os)
   os << endl;
 }
 
-void parser::show_help(ostream &os)
+/** prints the help message triggered by --help.*/
+void parser::show_help(ostream &os) const
 {
   int w_short = 0, w_long = 0, w_arg = 0;
   for (auto &opt: opts) {
@@ -419,7 +455,8 @@ void parser::show_help(ostream &os)
     os << end_help << endl << endl;
 }
 
-void parser::run(int argc, char *argv[])
+/** parses the command line and executes actions linked with options.*/
+void parser::run(int argc, const char *const argv[])
 {
   parse(argc, argv);
   analysis();
@@ -427,13 +464,15 @@ void parser::run(int argc, char *argv[])
   check();
 }
 
-void parser::parse(int argc, char *argv[])
+/** parses the command line.*/
+void parser::parse(int argc, const char *const argv[])
 {
   if (prog_name.empty())
     prog_name = argv[0];
   parse_tokens(argc - 1, argv + 1, toks);
 }
 
+/** verifies syntax and execute option actions.*/
 void parser::analysis()
 {
   int mi = toks.size(), j = 0, mj = args.size();
@@ -463,7 +502,7 @@ void parser::analysis()
     }
     else {
       for (auto &o: opts)
-        if (o->long_name.find(tk.s)==0) {
+        if (o->long_name.find(tk.s) == 0) {
           if (opt)
             die(ambiguous_opt_msg + tk.s);
           else
@@ -486,7 +525,8 @@ void parser::analysis()
     missing_arg = args[j]->arg_name;
 }
 
-void parser::standard()
+/** checks and executes option --help and --version.*/
+void parser::standard() const
 {
   if (operator()("help")) {
     show_help(cout);
@@ -498,7 +538,8 @@ void parser::standard()
   }
 }
 
-void parser::check()
+/** checks for missing args and constraints.*/
+void parser::check() const
 {
   if (!missing_arg.empty())
     die(missing_arg_msg + missing_arg);
@@ -510,7 +551,8 @@ void parser::check()
       die(selection_msg, sel);
 }
 
-bool parser::operator()(const string &s)
+/** returns true if the options was met on the command line.*/
+bool parser::operator()(const string &s) const
 {
   for (auto &opt: opts)
     if (s == opt->short_name || s == opt->long_name)
@@ -521,7 +563,8 @@ bool parser::operator()(const string &s)
   die(bad_test_msg + s);
 }
 
-void parser::die(const string &err)
+/** prints an error message and exits.*/
+void parser::die(const string &err) const
 {
   cerr << prog_name << ": " << color_red << err << color_reset << endl;
   show_usage(cerr);
@@ -530,7 +573,8 @@ void parser::die(const string &err)
   exit(-1);
 }
 
-void parser::die(const string &err, const vector<string> &l)
+/** prints an error message and exits.*/
+void parser::die(const string &err, const vector<string> &l) const
 {
   string errl = err;
   if (!l.empty()) {
