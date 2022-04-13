@@ -1,0 +1,4 @@
+# Rule degree: 2 (3 pts)
+0 1 0
+0.5
+

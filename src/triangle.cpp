@@ -84,7 +84,12 @@ std::ostream &operator <<(std::ostream &os, const scheme &s)
 
 scheme_selector::scheme_selector()
 {
- const std::vector<scheme_point> data5 = // 7 nodes, optimal
+  const std::vector<scheme_point> data2 = // 3 nodes, optimal
+  {
+    N2(0.5,0.3333333333333333)
+  };
+
+  const std::vector<scheme_point> data5 = // 7 nodes, optimal
   {
     N2(0.1012865073234564,0.1259391805448272),
     N2(0.4701420641051151,0.1323941527885062),
@@ -837,6 +842,7 @@ scheme_selector::scheme_selector()
     N2(0.37316210978769904,0.0014295361100956)  
   };
   
+  schemes.push_back(scheme(2, data2));
   schemes.push_back(scheme(5, data5));
   schemes.push_back(scheme(7, data7));
   schemes.push_back(scheme(11, data11));
