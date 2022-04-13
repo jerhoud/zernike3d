@@ -11,26 +11,32 @@ using namespace std;
 using namespace argparse;
 
 const scheme_selector schemes;
-const int Nmax = (ZER_MAX_N < schemes.max_order()) ? ZER_MAX_N : schemes.max_order();
-const string nmax = to_string(Nmax);
+const int N_approx = ZER_MAX_N;
+const int N_scheme = schemes.max_order();
+const int N_exact = (N_approx < N_scheme) ? N_approx : N_scheme;
+const string n_exact = to_string(N_exact);
+const string n_approx = to_string(N_approx);
 
 string sh =
   "Computes Zernike moments or invariants derived from them.\n"
   "Input should be in OFF format.";
-string eh = "Currently works up to N = " + nmax
-            + " for the computation of the moments.";
+string eh = "Currently works up to N = " + n_exact
+            + " for the exact computation of the moments,\n"
+            + "and up to N = " + n_approx + " for approximate computation.\n";
 string t_help = "runs internal sanity checks and exits";
 string m_help = "Computes Zernike moments";
 string i_help = "Computes Zernike rotational invariants";
 string s_help = "Computes signature invariants";
 string n_help = "Normalizes the moments such that order 0 gives 1";
+string a_help = "Computes the moments, using approximate methods within the given ERROR"; 
 string c_help = "Chop to 0 Zenike moments less than 1e-14";
 string z_help = "Reads Zernike moments in ZM format instead of computing them";
 string d_help = "Reads Zernike moments in ZM format and substract them from the computed moments";
 
 string FILE_help = "Reads FILE in OFF format (default is standard input)";
 string N_help = "The maximum order of Zernike moments computed";
-string die_N_msg ="N must be positive and no more than " + nmax + " to compute moments.";
+string die_N_exact_msg ="N must be positive and no more than " + n_exact + " for exact compututation of the moments.";
+string die_N_approx_msg ="N must be positive and no more than " + n_approx + " for approximate compututation of the moments.";
 string radius_warning =
   "Warning: shape radius is larger than one. Risks of imprecisions.";
 string f_help = "Numerical precision in fixed notation";
@@ -40,6 +46,7 @@ parser p(sh, eh);
 int N = 0;
 int digit = 6;
 s_vec coord = {0, 0, 0};
+double approx_err = 0;
 
 int main (int argc, char *argv[])
 {
@@ -54,6 +61,7 @@ int main (int argc, char *argv[])
   p.flag("n", "normalize", n_help);
   p.flag("c", "chop", c_help);
   p.flag("z", "zm", z_help);
+  p.option("a", "approximate", "ERROR", approx_err, a_help);
   p.option("d", "diff", "ZMFILE", zm_filename, d_help);
   p.option("f", "", "DIGITS", digit, f_help);
   p.option("e", "", "DIGITS", digit, e_help);
@@ -80,6 +88,9 @@ int main (int argc, char *argv[])
   cout << "# Produced by zm (" << p.version_text << ") from file: " << filename << endl;
   cout << "# Date: " << now() << endl;
   
+  const string die_N_msg = (p("a")) ? die_N_approx_msg : die_N_exact_msg;
+  const int Nmax = (p("a")) ? N_approx : N_exact;
+
   zernike zm;
   if (p("z")) {
     if (N < 0)
@@ -109,7 +120,12 @@ int main (int argc, char *argv[])
     // compute moments
     const scheme &s = schemes.get_scheme(N);
     zernike_m_int zmi(N);
-    mesh_simple_integrate(m, s, zmi);
+    if (p("a")) {
+      const double error = mesh_approx_integrate(m, schemes, zmi, approx_err);
+      cout << "# approximation error estimate: " << error << endl;
+    }
+    else
+      mesh_exact_integrate(m, s, zmi);
     zm = zmi;
   }
   

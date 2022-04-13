@@ -325,6 +325,31 @@ void zernike::finish()
   odd_clean = true;
 }
 
+double zernike::distance(const zernike &z) const
+{
+  if (norm != z.get_norm() || order() != z.order())
+    return 1;
+  double d = 0;
+  for (size_t i = 0 ; i != zm.size(); i++) {
+    const double v = fabs(zm[i] - z.get_zm()[i]);
+    if (v > d)
+      d = v;
+  }
+  return d;
+}
+  
+zernike &zernike::operator +=(const zernike &z)
+{
+  if (norm != z.get_norm())
+    return *this;
+  size_t n = zm.size();
+  if (n > z.get_zm().size())
+    n = z.get_zm().size();
+  for (size_t i = 0 ; i != n ; i++)
+    zm[i] += z.get_zm()[i];
+  return *this;
+}
+
 zernike operator -(const zernike &z1, const zernike &z2)
 {
   if (z1.norm != z2.norm)

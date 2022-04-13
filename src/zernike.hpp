@@ -220,6 +220,8 @@ public:
   void normalize(zm_norm new_norm);
   void chop(double epsilon);
   void finish();
+  double distance(const zernike &z) const;
+  zernike &operator +=(const zernike &z);
 
   friend std::istream &operator >>(std::istream &, zernike &);
   friend zernike operator -(const zernike &z1, const zernike &z2);

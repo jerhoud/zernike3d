@@ -1,6 +1,6 @@
 CC = g++
 LDFLAGS = -DVERSION=$(shell git describe)
-CFLAGS = -Wall -Wextra -Wfatal-errors -pedantic -std=c++11 -DZER_N100
+CFLAGS = -Wall -Wextra -Wfatal-errors -pedantic -std=c++11 -DZER_N200
 OPT = -O3
 # OPT = -ggdb
 
