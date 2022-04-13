@@ -54,10 +54,22 @@ public:
     @param w An overall weight.
   */
   template<class T>
-  void integrate(const triangle &t, T &v, double w) const
+  void integrate(const triangle &t, T &v, double w, int n=0) const
   {
-    for (auto &i: data)
-      v.add(i.point(t, w));
+    if (n <= 0)
+      for (auto &i: data)
+        v.add(i.point(t, w));
+    else {
+      n--;
+      w /= 4;
+      const vec p12 = (t.p1 + t.p2) / 2;
+      const vec p23 = (t.p2 + t.p3) / 2;
+      const vec p31 = (t.p3 + t.p1) / 2;
+      integrate({t.p1, p12, p31}, v, w, n);
+      integrate({t.p2, p23, p12}, v, w, n);
+      integrate({t.p3, p31, p23}, v, w, n);
+      integrate({p12, p23, p31}, v, w, n);
+    }
   }
 
   const std::vector<scheme_point> data; /**< The integration points. */
