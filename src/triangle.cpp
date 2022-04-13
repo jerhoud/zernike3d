@@ -113,6 +113,18 @@ scheme_selector::scheme_selector()
     N1(0.09713579628279885)
   };
 
+  const std::vector<scheme_point> data11 = // 28 nodes, optimal
+  {
+    N2(0.5,0.011085303252903895),
+    N2(0.03131742869279097,0.01263743038688182),
+    N3(0.822623718335233,0.16160905512524792,0.015648348202774474),
+    N2(0.11571023910289047,0.04062513796710839),
+    N3(0.6349298072584125,0.3169783567295382,0.041212541855026964),
+    N2(0.4356810989928631,0.0615753918238474),
+    N2(0.21556008817232886,0.06705127904556835),
+    N1(0.0799110322242617)
+  };
+
   const std::vector<scheme_point> data13 = // 37 nodes, optimal
   {
     N2(0.02150968110884316,0.00605233710353918),
@@ -1750,6 +1762,7 @@ scheme_selector::scheme_selector()
   schemes.push_back(scheme(5, data5));
   schemes.push_back(scheme(7, data7));
   schemes.push_back(scheme(9, data9));
+  schemes.push_back(scheme(11, data11));
   schemes.push_back(scheme(13, data13));
   schemes.push_back(scheme(17, data17));
   schemes.push_back(scheme(21, data21));
