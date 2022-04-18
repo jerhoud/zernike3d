@@ -11,6 +11,7 @@ using namespace std;
 using namespace argparse;
 
 const scheme_selector schemes;
+const gauss_selector gauss_schemes;
 const int N_approx = ZER_MAX_N;
 const int N_scheme = schemes.max_order();
 const int N_exact = (N_approx < N_scheme) ? N_approx : N_scheme;
@@ -80,6 +81,8 @@ int main (int argc, char *argv[])
     cout << scientific << setprecision(digit);
 
   if (p("t")) {
+    for (auto &s: gauss_schemes.schemes)
+      cout << s;
     for (auto &s: schemes.schemes)
       cout << s;
     return 0;
