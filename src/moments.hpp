@@ -6,7 +6,6 @@
 
 #include "mesh.hpp"
 #include "zernike.hpp"
-#include "gauss.hpp"
 
 void cloud_integrate(const cloud &c, zernike_m_r &zm);
 void cloud_integrate(const w_cloud &c, zernike_m_r &zm);

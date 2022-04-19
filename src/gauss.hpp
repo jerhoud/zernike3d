@@ -3,6 +3,9 @@
   \author J. Houdayer
 */
 
+#ifndef GAUSS_HPP
+#define GAUSS_HPP
+
 #include <vector>
 #include <iostream>
 
@@ -25,9 +28,10 @@ public:
   double check_poly() const;
   int check_sorted() const;
 
-  /** Integrates over a triangle.
-    @param s The integration scheme.
-    @param v The integrator object. It should have an "add" member that takes a w_vec.
+  /** Integrates over a segment.
+    @param v The integrator object. It should have an "add" member that takes a coordinate and a weight.
+    @param a The beginning of the integration segment.
+    @param b The end of the integration segment.
     @param w An overall weight.
   */
   template<class T>
@@ -53,3 +57,4 @@ public:
   std::vector<gauss_scheme> schemes;
 };
 
+#endif

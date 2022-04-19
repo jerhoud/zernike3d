@@ -68,8 +68,14 @@ void spherical_harmonics::eval_sh(double theta, double phi)
   @param n Maximum order needed. Should be positive.
 */
 zernike_radial::zernike_radial(int n):
-N(n), z((N / 2 + 1) * (N / 2 + 2), 0)
+N(n), zr((N / 2 + 1) * (N / 2 + 2), 0)
 {}
+
+void zernike_radial::reset_zr()
+{
+  for (auto &v: zr)
+    v = 0;
+}
 
 void zhelp::set(int n, int l)
 {
@@ -101,26 +107,26 @@ zernike_radial(n), help((N / 2 + 1) * (N / 2 + 2), {0, 0, 0})
 /** Runs the computation.
   @param r The radial parameter. Between 0 and 1.
 */
-void zernike_r::eval_z(double r, double weight = 1)
+void zernike_r::eval_zr(double r, double weight)
 {
   const double r2 = r * r;
   const zhelp *h;
   double rn = r2 * weight;
 
-  z[0] = weight;
-  z[1] = r * weight;
+  zr[0] = weight;
+  zr[1] = r * weight;
   for (int n2 = 1, i = 2 ; n2 <= N / 2 ; n2++, rn *= r2, i++) {
     for (int l = 0 ; l < 2 * n2 - 2 ; l++, i++) {
       h = &(help[i]);
-      z[i] = h->c1 * ((r2 - h->c2) * z[i - 2 * n2]
-                      - h->c3 * z[i - 4 * n2 + 2]);
+      zr[i] = h->c1 * ((r2 - h->c2) * zr[i - 2 * n2]
+                      - h->c3 * zr[i - 4 * n2 + 2]);
     }
     h = &(help[i]);
-    z[i] = h->c1 * (r2 - h->c2) * z[i - 2 * n2];
+    zr[i] = h->c1 * (r2 - h->c2) * zr[i - 2 * n2];
     h = &(help[++i]);
-    z[i] = h->c1 * (r2 - h->c2) * z[i - 2 * n2];
-    z[++i] = rn;
-    z[++i] = r * rn;
+    zr[i] = h->c1 * (r2 - h->c2) * zr[i - 2 * n2];
+    zr[++i] = rn;
+    zr[++i] = r * rn;
   }
 }
 
@@ -133,7 +139,7 @@ zernike_int::zernike_int(int n): zernike_radial(n)
 /** Runs the computation.
   @param r The radial parameter. Between 0 and 1.
 */
-void zernike_int::eval_z(double r)
+void zernike_int::eval_zr(double r)
 {
   int idx = 0;
   int idxv = 0;
@@ -152,9 +158,34 @@ void zernike_int::eval_z(double r)
         const double rma = r - a, rpa = r + a;
         zri *= (rma * rma + b) * (rpa * rpa + b);
       }
-      z[idx] = zri;
+      zr[idx] = zri;
     }
   }
+}
+
+/** Constructor.
+  @param n Maximum order needed. Should be positive.
+*/
+zernike_int_alt::zernike_int_alt(int n, const gauss_selector &gs):
+zernike_radial(n), tmp_zr(n), g(gs.get_scheme(n))
+{}
+
+/** Runs the computation.
+  @param r The radial parameter. Between 0 and 1.
+  @param gs The integration scheme to use.
+*/
+void zernike_int_alt::eval_zr(double r)
+{
+  reset_zr();
+  if (r > 0)
+    g.integrate(*this, 0, r, 1 / (r * r * r));
+}
+
+void zernike_int_alt::add(double r, double weight)
+{
+  tmp_zr.eval_zr(r, r * r * weight);
+  for (size_t i = 0 ; i < zr.size() ; i++)
+    zr[i] += tmp_zr.get_zr()[i];
 }
 
 /** Output operator for \a zm_norm. */
@@ -242,7 +273,7 @@ void zernike::add_core(const std::vector<double> &z,
 }
 
 /** Reset the computation to 0. */
-void zernike::reset()
+void zernike::reset_zm()
 {
   norm = zm_norm::raw;
   odd_clean = false;
@@ -436,9 +467,9 @@ zernike_r(n), spherical_harmonics(n), zernike(n)
 void zernike_m_r::add(const w_vec &p)
 {
   s_vec sp = p.v.spherical();
-  eval_z(sp.r);
+  eval_zr(sp.r);
   eval_sh(sp.theta, sp.phi);
-  add_core(z, sh, p.weight);
+  add_core(zr, sh, p.weight);
 }
 
 /** Constructor.
@@ -448,15 +479,22 @@ zernike_m_int::zernike_m_int(int n):
 zernike_int(n), spherical_harmonics(n), zernike(n)
 {}
 
+/** Constructor.
+  @param n Maximum order needed. Should be positive.
+*/
+zernike_m_int_alt::zernike_m_int_alt(int n, const gauss_selector &gs):
+zernike_int_alt(n, gs), spherical_harmonics(n), zernike(n)
+{}
+
 /** Add integrated Zernike polynomials for the given point and weight.
   @param p The weight point to use.
 */
 void zernike_m_int::add(const w_vec &p)
 {
   s_vec sp = p.v.spherical();
-  eval_z(sp.r);
+  eval_zr(sp.r);
   eval_sh(sp.theta, sp.phi);
-  add_core(z, sh, p.weight);
+  add_core(zr, sh, p.weight);
 }
 
 /** Constructor.
@@ -477,7 +515,7 @@ double zernike_build::operator()(const vec &v)
   if (v.length_square() > 1)
     return 0;
   
-  reset();
+  reset_zm();
   add({1, v});
   return std::inner_product(zm.begin(), zm.end(), moments.get_zm().begin(), 0.);
 }

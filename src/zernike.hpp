@@ -7,6 +7,7 @@
 #define ZERNIKE_HPP
 
 #include "vec.hpp"
+#include "gauss.hpp"
 
 /** A pair of double.
 
@@ -96,14 +97,17 @@ public:
     @return Value of element n, l.
   */
   double get(int n, int l) const
-  { return z[index(n, l)]; }
+  { return zr[index(n, l)]; }
 
   /** A direct access to data. */
-  const std::vector<double> &get_z() const
-  { return z;}
+  const std::vector<double> &get_zr() const
+  { return zr;}
+
+  /** Reset all elements to zero. */
+  void reset_zr();
 
 protected:
-  std::vector<double> z; /**< Storage for the result. */
+  std::vector<double> zr; /**< Storage for the result. */
 };
 
 /** A truple of coefficients used by zernike_r. */
@@ -132,7 +136,7 @@ class zernike_r: public zernike_radial
 {
 public:
   zernike_r(int n);
-  void eval_z(double r, double weight = 1);
+  void eval_zr(double r, double weight = 1);
 private:
   std::vector<zhelp> help; /**< Fixed coefficients used in the computation. */
 };
@@ -156,7 +160,33 @@ class zernike_int: public zernike_radial
 {
 public:
   zernike_int(int n);
-  void eval_z(double r);
+  void eval_zr(double r);
+};
+
+/** A class to compute the integrated radial part of the Zernike polynomials.
+
+  It allows the computation of all integrated radial parts
+  up to order N given at creation.
+
+  More precisely it computes:
+  \f[ \frac 1{r^3}\int_0^r x^2 R_{n,l}(x)\mathrm dx, \f]
+  where the normalization of \f$R\f$ is the same as in zernike_r.
+
+  Usage:
+    1. create one instance with the maximum order needed.
+    2. use zernike_int::eval with chosen parameters.
+    3. get results zernike_int::get.
+    4. go to step 2.
+*/
+class zernike_int_alt: public zernike_radial
+{
+public:
+  zernike_int_alt(int n, const gauss_selector &gs);
+  void eval_zr(double r);
+  void add(double r, double weight);
+protected:
+  zernike_r tmp_zr;
+  const gauss_scheme &g;
 };
 
 /** Enumeration to represent possible Zernike moments normalizations.
@@ -215,7 +245,7 @@ public:
   zm_norm get_norm() const
   { return norm; }
 
-  void reset();
+  void reset_zm();
   void rescale(double new_scale);
   void normalize(zm_norm new_norm);
   void chop(double epsilon);
@@ -246,7 +276,7 @@ std::istream &operator >>(std::istream &, zernike &);
 
   Usage :
     1. create one instance with the maximum order needed.
-    2. Use zernike_m::reset to start from 0.
+    2. Use zernike::reset_zm to start from 0.
     3. Repeatedly call zernike_m_r::add to add the
     corresponding polynomials with the given weights.
     4. normalize if needed with zernike_m::normalize to fix element 0,0,0.
@@ -267,7 +297,7 @@ public:
 
   Usage :
     1. create one instance with the maximum order needed.
-    2. Use zernike_m::reset to start from 0.
+    2. Use zernike::reset_zm to start from 0.
     3. Repeatedly call zernike_m_int::add to add the
     corresponding integrated polynomials with the given weights.
     4. normalize if needed with zernike_m::normalize to fix element 0,0,0.
@@ -281,6 +311,28 @@ public:
   zernike_m_int(int n);
   void add(const w_vec &p);
 };
+
+/** Class for computing weighted sums of integrated zernike polynomials.
+
+  Normalization is the one from zernike_int.
+
+  Usage :
+    1. create one instance with the maximum order needed.
+    2. Use zernike::reset_zm to start from 0.
+    3. Repeatedly call zernike_m_int::add to add the
+    corresponding integrated polynomials with the given weights.
+    4. normalize if needed with zernike_m::normalize to fix element 0,0,0.
+    5. use result
+    6. go to 2.
+ */
+class zernike_m_int_alt:
+public zernike_int_alt, public spherical_harmonics, public zernike
+{
+public:
+  zernike_m_int_alt(int n, const gauss_selector &gs);
+  void add(const w_vec &p);
+};
+
 
 /** Class for evaluating functions built from Zernike moments.
  */
