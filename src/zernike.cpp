@@ -101,14 +101,14 @@ zernike_radial(n), help((N / 2 + 1) * (N / 2 + 2), {0, 0, 0})
 /** Runs the computation.
   @param r The radial parameter. Between 0 and 1.
 */
-void zernike_r::eval_z(double r)
+void zernike_r::eval_z(double r, double weight = 1)
 {
   const double r2 = r * r;
   const zhelp *h;
-  double rn = r2;
+  double rn = r2 * weight;
 
-  z[0] = 1;
-  z[1] = r;
+  z[0] = weight;
+  z[1] = r * weight;
   for (int n2 = 1, i = 2 ; n2 <= N / 2 ; n2++, rn *= r2, i++) {
     for (int l = 0 ; l < 2 * n2 - 2 ; l++, i++) {
       h = &(help[i]);

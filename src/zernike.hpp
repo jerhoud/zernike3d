@@ -132,7 +132,7 @@ class zernike_r: public zernike_radial
 {
 public:
   zernike_r(int n);
-  void eval_z(double r);
+  void eval_z(double r, double weight = 1);
 private:
   std::vector<zhelp> help; /**< Fixed coefficients used in the computation. */
 };
