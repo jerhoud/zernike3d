@@ -22,7 +22,7 @@ public:
 };
 
 /** A point in an integration scheme. */
-class scheme_point
+class triquad_point
 {
 public:
   const double weight;
@@ -34,12 +34,12 @@ public:
 };
 
 /** An integration scheme over the triangle. */
-class scheme
+class triquad_scheme
 {
 public:
   const int order; /**< order of integration. */
 
-  scheme(int o, const std::vector<scheme_point> &d):
+  triquad_scheme(int o, const std::vector<triquad_point> &d):
   order(o), data(d) {}
 
   double check_unity() const;
@@ -72,19 +72,19 @@ public:
     }
   }
 
-  const std::vector<scheme_point> data; /**< The integration points. */
+  const std::vector<triquad_point> data; /**< The integration points. */
 };
 
-std::ostream &operator <<(std::ostream &os, const scheme &s);
+std::ostream &operator <<(std::ostream &os, const triquad_scheme &s);
 
-class scheme_selector
+class triquad_selector
 {
 public:
-  scheme_selector();
-  const scheme &get_scheme(int n) const;
+  triquad_selector();
+  const triquad_scheme &get_scheme(int n) const;
   int max_order() const;
 
-  std::vector<scheme> schemes;
+  std::vector<triquad_scheme> schemes;
 };
 
 #endif

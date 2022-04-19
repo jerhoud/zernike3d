@@ -5,7 +5,7 @@
 #include "triangle.hpp"
 
 /** Checks whether the integration scheme has correct barycentric coordinates. */
-double scheme::check_unity() const
+double triquad_scheme::check_unity() const
 {
   double sum = 0;
   for (auto &i: data)
@@ -14,7 +14,7 @@ double scheme::check_unity() const
 }
 
 /** Checks whether the integration scheme has a unit global weight. */
-double scheme::check_weights() const
+double triquad_scheme::check_weights() const
 {
   double sum = 0;
   for (auto &i: data)
@@ -26,7 +26,7 @@ double scheme::check_weights() const
 /** Checks whether the integration scheme is exact for x1^n1 x2^n2.
   x1, x2, x3 being the barycentric coordinates.
 */
-double scheme::check_poly(const int n1, const int n2) const
+double triquad_scheme::check_poly(const int n1, const int n2) const
 {
   double sum = 0;
   for (auto &i: data)
@@ -38,11 +38,11 @@ double scheme::check_poly(const int n1, const int n2) const
 /** Checks whether the integration scheme is exact for x1^n, x2^n and x1^(n/2)x2^(n/2).
   x1, x2, x3 being the barycentric coordinates.
 */
-double scheme::check_poly_auto() const
+double triquad_scheme::check_poly_auto() const
 { return check_poly(order, 0) + check_poly(0, order) + check_poly(order / 2, order / 2); }
 
 /** Checks whether the weights of the integration scheme are ordered. */
-int scheme::check_sorted() const
+int triquad_scheme::check_sorted() const
 {
   double w = 0;
   int k = 0;
@@ -54,7 +54,7 @@ int scheme::check_sorted() const
   return -1;
 }
 
-std::ostream &operator <<(std::ostream &os, const scheme &s)
+std::ostream &operator <<(std::ostream &os, const triquad_scheme &s)
 {
   double sum = 0, v;
   os << "triangle quadrature, order " << s.order << ", size " << s.data.size() << ": ";
@@ -82,28 +82,28 @@ std::ostream &operator <<(std::ostream &os, const scheme &s)
 #define N3(a, b, w) W3(w, a, b, 1 - a - b), W3 (w, b, a, 1 - a - b)
 
 
-scheme_selector::scheme_selector()
+triquad_selector::triquad_selector()
 {
-  const std::vector<scheme_point> data2 = // 3 nodes, optimal
+  const std::vector<triquad_point> data2 = // 3 nodes, optimal
   {
     N2(0.5,0.3333333333333333)
   };
 
-  const std::vector<scheme_point> data5 = // 7 nodes, optimal
+  const std::vector<triquad_point> data5 = // 7 nodes, optimal
   {
     N2(0.1012865073234564,0.1259391805448272),
     N2(0.4701420641051151,0.1323941527885062),
     N1(0.225)
   };
 
-  const std::vector<scheme_point> data7 = // 15 nodes, optimal
+  const std::vector<triquad_point> data7 = // 15 nodes, optimal
   {
     N2(0.06493051315916487,0.0530778017902324),
     N3(0.642577343822696,0.31355918438493147,0.0692746820794169),
     N3(0.517039939069323,0.2845755842491703,0.07085308369213356)
   };
 
-  const std::vector<scheme_point> data11 = // 28 nodes, optimal
+  const std::vector<triquad_point> data11 = // 28 nodes, optimal
   {
     N2(0.5,0.011085303252903895),
     N2(0.03131742869279097,0.01263743038688182),
@@ -115,7 +115,7 @@ scheme_selector::scheme_selector()
     N1(0.0799110322242617)
   };
 
-  const std::vector<scheme_point> data17 = // 60 nodes, optimal
+  const std::vector<triquad_point> data17 = // 60 nodes, optimal
   {
     N2(0.014755491660753961,0.002773887577637648),
     N3(0.9159193532978168,0.07250547079900249,0.004584348401735866),
@@ -132,7 +132,7 @@ scheme_selector::scheme_selector()
     N2(0.2857065024365867,0.03771623715279527)
   };
 
-  const std::vector<scheme_point> data25 = // 120 nodes, optimal
+  const std::vector<triquad_point> data25 = // 120 nodes, optimal
   {
     N2(0.00783534428260374,0.0008065102883246195),
     N3(0.7196923470332413,0.2794161886492606,0.0015117020784589015),
@@ -161,7 +161,7 @@ scheme_selector::scheme_selector()
     N2(0.2994923158045084,0.01801764070170146)
   };
 
-  const std::vector<scheme_point> data37 = // 255 nodes, best 252 (+1%)
+  const std::vector<triquad_point> data37 = // 255 nodes, best 252 (+1%)
   {
     N2(0.013197745178021913,2.3516656618476353e-6),
     N3(0.9924598893529378,0.003936765540534348,0.00009338243653563165),
@@ -215,7 +215,7 @@ scheme_selector::scheme_selector()
     N2(0.29105406079897256,0.00991725358599164) 
   };
 
-  const std::vector<scheme_point> data51 = // 501 nodes, bound 460 (+9%)
+  const std::vector<triquad_point> data51 = // 501 nodes, bound 460 (+9%)
   {
     N2(0.0021446434160010686,0.00006051228329400925),
     N3(0.9869331639128116,0.011314709853785354,0.0001160743049039824),
@@ -311,7 +311,7 @@ scheme_selector::scheme_selector()
     N2(0.28269172450110847,0.005341092225702235)
   };
     
-  const std::vector<scheme_point> data73 = // 1030 nodes, bound 925 (+11%)
+  const std::vector<triquad_point> data73 = // 1030 nodes, bound 925 (+11%)
   {
     N3(0.675270006607219,0.28953614768814384,5.399825012808655e-7),
     N2(0.0010053867401572103,0.00001337129210115319),
@@ -499,7 +499,7 @@ scheme_selector::scheme_selector()
     N2(0.30810717213684274,0.002833860722113663)
   };
 
-  const std::vector<scheme_point> data101 = // 2007 nodes, bound 1751 (+15%)
+  const std::vector<triquad_point> data101 = // 2007 nodes, bound 1751 (+15%)
   {
     N3(0.9987556189208044,0.0010522285917318186,2.5848410126442286e-6),
     N3(0.885881050617264,0.11095277371690115,3.727008917282046e-6),
@@ -842,19 +842,19 @@ scheme_selector::scheme_selector()
     N2(0.37316210978769904,0.0014295361100956)  
   };
   
-  schemes.push_back(scheme(2, data2));
-  schemes.push_back(scheme(5, data5));
-  schemes.push_back(scheme(7, data7));
-  schemes.push_back(scheme(11, data11));
-  schemes.push_back(scheme(17, data17));
-  schemes.push_back(scheme(25, data25));
-  schemes.push_back(scheme(37, data37));
-  schemes.push_back(scheme(51, data51));
-  schemes.push_back(scheme(73, data73));
-  schemes.push_back(scheme(101, data101));
+  schemes.push_back(triquad_scheme(2, data2));
+  schemes.push_back(triquad_scheme(5, data5));
+  schemes.push_back(triquad_scheme(7, data7));
+  schemes.push_back(triquad_scheme(11, data11));
+  schemes.push_back(triquad_scheme(17, data17));
+  schemes.push_back(triquad_scheme(25, data25));
+  schemes.push_back(triquad_scheme(37, data37));
+  schemes.push_back(triquad_scheme(51, data51));
+  schemes.push_back(triquad_scheme(73, data73));
+  schemes.push_back(triquad_scheme(101, data101));
 }
 
-const scheme &scheme_selector::get_scheme(int n) const
+const triquad_scheme &triquad_selector::get_scheme(int n) const
 {
   for (auto &s: schemes)
     if (s.order >= n)
@@ -862,7 +862,7 @@ const scheme &scheme_selector::get_scheme(int n) const
   return schemes.back();
 }
 
-int scheme_selector::max_order() const
+int triquad_selector::max_order() const
 {
   return schemes.back().order;
 }

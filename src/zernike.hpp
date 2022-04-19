@@ -106,6 +106,8 @@ public:
   /** Reset all elements to zero. */
   void reset_zr();
 
+  zernike_radial &operator +=(const zernike_radial &zr2);
+
 protected:
   std::vector<double> zr; /**< Storage for the result. */
 };
@@ -245,6 +247,9 @@ public:
   zm_norm get_norm() const
   { return norm; }
 
+  double get_error() const
+  { return error; }
+
   void reset_zm();
   void rescale(double new_scale);
   void normalize(zm_norm new_norm);
@@ -255,6 +260,8 @@ public:
 
   friend std::istream &operator >>(std::istream &, zernike &);
   friend zernike operator -(const zernike &z1, const zernike &z2);
+ 
+  double error;
 protected:
   int N;
   zm_norm norm;

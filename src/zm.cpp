@@ -10,10 +10,10 @@
 using namespace std;
 using namespace argparse;
 
-const scheme_selector schemes;
+const triquad_selector triquad_schemes;
 const gauss_selector gauss_schemes;
 const int N_approx = ZER_MAX_N;
-const int N_scheme = schemes.max_order();
+const int N_scheme = triquad_schemes.max_order();
 const int N_exact = (N_approx < N_scheme) ? N_approx : N_scheme;
 const string n_exact = to_string(N_exact);
 const string n_approx = to_string(N_approx);
@@ -83,7 +83,7 @@ int main (int argc, char *argv[])
   if (p("t")) {
     for (auto &s: gauss_schemes.schemes)
       cout << s;
-    for (auto &s: schemes.schemes)
+    for (auto &s: triquad_schemes.schemes)
       cout << s;
     return 0;
   }
@@ -121,15 +121,12 @@ int main (int argc, char *argv[])
       p.warn(radius_warning);
 
     // compute moments
-    const scheme &s = schemes.get_scheme(N);
-    zernike_m_int zmi(N);
     if (p("a")) {
-      const double error = mesh_approx_integrate(m, schemes, zmi, approx_err);
-      cout << "# approximation error estimate: " << error << endl;
+      zm = mesh_approx_integrate(m, N, approx_err, triquad_schemes, gauss_schemes);
+      cout << "# approximation error estimate: " << zm.error << endl;
     }
     else
-      mesh_exact_integrate(m, s, zmi);
-    zm = zmi;
+      zm = mesh_exact_integrate(m, N, triquad_schemes, gauss_schemes);
   }
   
   zm.normalize(zm_norm::ortho);

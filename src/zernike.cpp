@@ -77,6 +77,15 @@ void zernike_radial::reset_zr()
     v = 0;
 }
 
+zernike_radial &zernike_radial::operator +=(const zernike_radial &zr2)
+{
+  const std::vector<double> &z2 = zr2.get_zr();
+  const size_t n = std::min(zr.size(), z2.size());
+  for (size_t i = 0 ; i != n ; i++)
+    zr[i] += z2[i];
+  return *this;
+}
+
 void zhelp::set(int n, int l)
 {
   if (n > l) {
@@ -184,8 +193,7 @@ void zernike_int_alt::eval_zr(double r)
 void zernike_int_alt::add(double r, double weight)
 {
   tmp_zr.eval_zr(r, r * r * weight);
-  for (size_t i = 0 ; i < zr.size() ; i++)
-    zr[i] += tmp_zr.get_zr()[i];
+  *this += tmp_zr;
 }
 
 /** Output operator for \a zm_norm. */
@@ -229,7 +237,7 @@ std::istream &operator >>(std::istream &is, zm_norm &norm)
   @param n Maximum order needed. Should be positive.
 */
 zernike::zernike(int n):
-N(n), norm(zm_norm::raw), odd_clean(false),
+error(0), N(n), norm(zm_norm::raw), odd_clean(false),
 zm(2 * (n / 2 + 1) * (n / 2 + 2) * (2 * (n / 2) + 3) / 3, 0)
 {}
 
@@ -238,7 +246,7 @@ zm(2 * (n / 2 + 1) * (n / 2 + 2) * (2 * (n / 2) + 3) / 3, 0)
   @param source Moments to copy from (truncated at N = n.).
 */
 zernike::zernike(int n, const zernike &source):
-N(n), norm(source.norm), odd_clean(false),
+error(0), N(n), norm(source.norm), odd_clean(false),
 zm(2 * (n / 2 + 1) * (n / 2 + 2) * (2 * (n / 2) + 3) / 3, 0)
 {
   std::copy(source.get_zm().begin(), source.get_zm().begin() + zm.size(),
@@ -373,11 +381,11 @@ zernike &zernike::operator +=(const zernike &z)
 {
   if (norm != z.get_norm())
     return *this;
-  size_t n = zm.size();
-  if (n > z.get_zm().size())
-    n = z.get_zm().size();
+  const std::vector<double> &z2 = z.get_zm();
+  const size_t n = std::min(zm.size(), z2.size());
   for (size_t i = 0 ; i != n ; i++)
-    zm[i] += z.get_zm()[i];
+    zm[i] += z2[i];
+  error += z.get_error();
   return *this;
 }
 
@@ -490,6 +498,17 @@ zernike_int_alt(n, gs), spherical_harmonics(n), zernike(n)
   @param p The weight point to use.
 */
 void zernike_m_int::add(const w_vec &p)
+{
+  s_vec sp = p.v.spherical();
+  eval_zr(sp.r);
+  eval_sh(sp.theta, sp.phi);
+  add_core(zr, sh, p.weight);
+}
+
+/** Add integrated Zernike polynomials for the given point and weight.
+  @param p The weight point to use.
+*/
+void zernike_m_int_alt::add(const w_vec &p)
 {
   s_vec sp = p.v.spherical();
   eval_zr(sp.r);
