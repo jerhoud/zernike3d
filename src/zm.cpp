@@ -26,8 +26,10 @@ string i_help = "Computes Zernike rotational invariants";
 string s_help = "Computes signature invariants";
 string n_help = "Normalizes the moments such that order 0 gives 1";
 string a_help = "Computes the moments, using approximate methods within the given ERROR";
-string c_help = "The Zernike moments are output in complex form.";
+string c_help = "The Zernike moments are output in complex form";
 string chop_help = "Chops to 0 very small Zenike moments";
+string raw_help = "Divides Zernike moments by sqrt(2n+3)";
+string dual_help = "Multiplies Zernike moments by sqrt(2n+3)";
 string z_help = "Reads Zernike moments in ZM format instead of computing them";
 string d_help = "Reads Zernike moments in ZM format and substract them from the computed moments";
 
@@ -53,6 +55,7 @@ int main (int argc, char *argv[])
   string filename = "-";
   string zm_filename;
   p.prog_name = "zm";
+  zm_norm norm = zm_norm::ortho;
 
   p.flag("v", "verbose", v_help);
   p.flag("t", "tests", t_help);
@@ -61,6 +64,8 @@ int main (int argc, char *argv[])
   p.flag("s", "signatures", s_help);
   p.flag("n", "normalize", n_help);
   p.flag("", "chop", chop_help);
+  p.flag("", "raw", raw_help);
+  p.flag("", "dual", dual_help);
   p.flag("c", "complex", c_help);
   p.flag("z", "zm", z_help);
   p.option("a", "approximate", "ERROR", approx_err, a_help);
@@ -71,6 +76,7 @@ int main (int argc, char *argv[])
   p.opt_arg("FILE", filename, FILE_help);
 
   p.selection({"t", "m", "i", "s"});
+  p.exclusion({"raw", "dual"});
 
   p.run(argc, argv);
 
@@ -141,7 +147,12 @@ int main (int argc, char *argv[])
       zm = mesh_exact_integrate(m, N, triquad_schemes, gauss_schemes, p("v"));
   }
   
-  zm.normalize(zm_norm::ortho);
+  if (p("raw"))
+    norm = zm_norm::raw;
+  if (p("dual"))
+    norm = zm_norm::dual;
+  zm.normalize(norm);
+  
   if (p("c"))
     zm.output = zm_output::complex;
   if (p("n"))
