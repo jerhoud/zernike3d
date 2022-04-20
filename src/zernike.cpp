@@ -199,11 +199,42 @@ std::istream &operator >>(std::istream &is, zm_norm &norm)
   return failed(is);
 }
 
+/** Output operator for \a zm_output. */
+std::ostream &operator <<(std::ostream &os, zm_output output)
+{
+  switch (output) {
+    case zm_output::real:
+      os << "REAL";
+      break;
+    case zm_output::complex:
+      os << "COMPLEX";
+      break;
+  }
+  return os;
+}
+
+/** Input operator for \a zm_output. */
+std::istream &operator >>(std::istream &is, zm_output &output)
+{
+  std::string s;
+  is >> s;
+  if (s=="REAL") {
+    output = zm_output::real;
+    return is;
+  }
+    if (s=="COMPLEX") {
+    output = zm_output::complex;
+    return is;
+  }
+  return failed(is);
+}
+
 /** Constructor.
   @param n Maximum order needed. Should be positive.
 */
 zernike::zernike(int n):
-error(0), N(n), norm(zm_norm::raw), odd_clean(false),
+error(0), output(zm_output::real),
+N(n), norm(zm_norm::raw), odd_clean(false),
 zm(2 * (n / 2 + 1) * (n / 2 + 2) * (2 * (n / 2) + 3) / 3, 0)
 {}
 
@@ -212,7 +243,8 @@ zm(2 * (n / 2 + 1) * (n / 2 + 2) * (2 * (n / 2) + 3) / 3, 0)
   @param source Moments to copy from (truncated at N = n.).
 */
 zernike::zernike(int n, const zernike &source):
-error(0), N(n), norm(source.norm), odd_clean(false),
+error(0), output(source.output),
+N(n), norm(source.norm), odd_clean(false),
 zm(2 * (n / 2 + 1) * (n / 2 + 2) * (2 * (n / 2) + 3) / 3, 0)
 {
   std::copy(source.get_zm().begin(), source.get_zm().begin() + zm.size(),
@@ -383,14 +415,27 @@ zernike operator -(const zernike &z1, const zernike &z2)
 std::ostream &operator <<(std::ostream &os, const zernike &zm)
 {
   os << "ZM" << std::endl;
-  os << zm.get_norm() << " " << zm.order() << std::endl;
+  os << zm.get_norm() << " " << zm.order() << " " << zm.output << std::endl;
   for (int n = 0 ; n <= zm.order() ; n++)
-    for (int l = n & 1 ; l <= n ; l+=2)
-      for (int m = -l ; m <= l ; m++) {
-        double z = zm.get(n, l ,m);
-        if (z != 0)
-          os << n << " " << l << " " << m << " " << z << std::endl;
+    for (int l = n & 1 ; l <= n ; l+=2) {
+      if (zm.output == zm_output::real)
+        for (int m = -l ; m <= l ; m++) {
+          const double z = zm.get(n, l, m);
+          if (z != 0)
+            os << n << " " << l << " " << m << " " << z << std::endl;
+        }
+      else {
+        const double z0 = zm.get(n, l, 0);
+        if (z0 != 0)
+          os << n << " " << l << " 0 " << z0 << std::endl;
+        for (int m = 1 ; m <= l ; m++) {
+          const double r = sqrt(0.5) * zm.get(n, l, m);
+          const double i = - sqrt(0.5) * zm.get(n, l, -m);
+          if (r != 0 && i != 0)
+            os << n << " " << l << " " << m << " " << r << " " << i << std::endl;
+        }
       }
+    }
   return os;
 }
 
@@ -406,20 +451,28 @@ std::istream &operator >>(std::istream &is, zernike &z)
     return failed(is);
   int n0;
   zm_norm norm;
-  s >> norm >> n0;
+  zm_output output;
+  s >> norm >> n0 >> output;
   if (!is || n0 < 0)
     return failed(is);
   zernike z0(n0);
   z0.norm = norm;
+  z0.output = output;
   z0.odd_clean = true;
   while(next_line(is, s)) {
     int n, l, m;
-    double z;
-    s >> n >> l >> m >> z;
+    double r, i;
+    s >> n >> l >> m >> r;
     if (!s || n < 0 || n > n0 || l < 0 || l > n || (l ^ n) == 1
-        || m < -l || m > l)
+        || m < 0 || m > l)
       return failed(is);
-    z0.zm[z0.index(n, l, m)] = z;
+    if (m != 0)
+      s >> i;
+    if (!s)
+      return failed(is);
+    z0.zm[z0.index(n, l, m)] = sqrt(2) * r;
+    if (m != 0)
+      z0.zm[z0.index(n, l, -m)] = - sqrt(2) * i;
   }
   if (is.eof()) {
     z = z0;

@@ -176,6 +176,9 @@ protected:
 */
 enum class zm_norm {raw, ortho, dual};
 
+/** Enumeration to represent types of output for Zernike moments.*/
+enum class zm_output {real, complex};
+
 /** A base class to compute Zernike moments. */
 class zernike
 {
@@ -240,6 +243,7 @@ public:
   friend zernike operator -(const zernike &z1, const zernike &z2);
  
   double error;
+  zm_output output;
 protected:
   int N;
   zm_norm norm;
