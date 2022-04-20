@@ -85,6 +85,7 @@ public:
   int max_order() const;
 
   std::vector<triquad_scheme> schemes;
+  std::vector<triquad_scheme> secondary_schemes;
 };
 
 #endif

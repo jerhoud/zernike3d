@@ -49,9 +49,9 @@ std::ostream &operator <<(std::ostream &os, const gauss_scheme &s)
   os << ", sorted " << k;
   bool ok = sum < 1e-12 && k==-1;
   if (ok)
-    os << ", all OK" << std::endl;
+    os << ", \033[0;32mOK\033[0m" << std::endl;
   else
-    os << ", BAD" << std::endl;
+    os << ", \033[0;31mBAD\033[0m" << std::endl;
   return os;
 }
 

@@ -81,9 +81,14 @@ int main (int argc, char *argv[])
     cout << scientific << setprecision(digit);
 
   if (p("t")) {
+    cout << "checking gauss quadratures on the segment" << endl;
     for (auto &s: gauss_schemes.schemes)
       cout << s;
-    for (auto &s: triquad_schemes.schemes)
+    cout << "checking primary quadratures on the triangle" << endl;
+      for (auto &s: triquad_schemes.schemes)
+      cout << s;
+     cout << "checking secondary quadratures on the triangle" << endl;
+   for (auto &s: triquad_schemes.secondary_schemes)
       cout << s;
     return 0;
   }
