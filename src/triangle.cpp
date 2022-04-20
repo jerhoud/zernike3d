@@ -47,8 +47,8 @@ int triquad_scheme::check_sorted() const
   double w = 0;
   int k = 0;
   for (auto &i: data) {
-    if (i.weight < w) return k;
-    w = i.weight;
+    if (fabs(i.weight) < w) return k;
+    w = fabs(i.weight);
     k++;
   }
   return -1;
@@ -84,9 +84,10 @@ std::ostream &operator <<(std::ostream &os, const triquad_scheme &s)
 
 triquad_selector::triquad_selector()
 {
-  const std::vector<triquad_point> data2 = // 3 nodes, optimal
+  const std::vector<triquad_point> data3 = // 4 nodes, optimal (with negative weights)
   {
-    N2(0.5,0.3333333333333333)
+    N2(0.2, 25./48),
+    N1(-0.5625)
   };
 
   const std::vector<triquad_point> data5 = // 7 nodes, optimal
@@ -842,7 +843,7 @@ triquad_selector::triquad_selector()
     N2(0.37316210978769904,0.0014295361100956)  
   };
   
-  schemes.push_back(triquad_scheme(2, data2));
+  schemes.push_back(triquad_scheme(3, data3));
   schemes.push_back(triquad_scheme(5, data5));
   schemes.push_back(triquad_scheme(7, data7));
   schemes.push_back(triquad_scheme(11, data11));
