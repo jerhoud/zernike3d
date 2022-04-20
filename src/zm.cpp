@@ -18,7 +18,8 @@ string sh =
   "Computes Zernike moments or invariants derived from them.\n"
   "Input should be in OFF format.";
 string eh = "Currently works up to N = " + n_exact
-            + " for the exact computation of the moments.";
+            + " for the exact computation of the moments.\n";
+string v_help = "outputs more informations, including progression bars";
 string t_help = "runs internal sanity checks and exits";
 string m_help = "Computes Zernike moments";
 string i_help = "Computes Zernike rotational invariants";
@@ -50,6 +51,7 @@ int main (int argc, char *argv[])
   string zm_filename;
   p.prog_name = "zm";
 
+  p.flag("v", "verbose", v_help);
   p.flag("t", "tests", t_help);
   p.flag("m", "moments", m_help);
   p.flag("i", "invariants", i_help);
@@ -96,7 +98,7 @@ int main (int argc, char *argv[])
     if (N < 0)
       p.die(die_N_msg);
     zernike zm2;
-    string err = read_file(filename, zm2);
+    string err = read_file(filename, zm2, p("v"));
     if (!err.empty())
       p.die(err);
     zm = zernike(N, zm2);
@@ -105,7 +107,7 @@ int main (int argc, char *argv[])
     if (N < 0 || (!p("a") && N > N_exact))
       p.die(die_N_msg);
     mesh m;
-    string err = read_file(filename, m);
+    string err = read_file(filename, m, p("v"));
     if (!err.empty())
       p.die(err);
 
@@ -119,11 +121,11 @@ int main (int argc, char *argv[])
 
     // compute moments
     if (p("a")) {
-      zm = mesh_approx_integrate(m, N, approx_err, triquad_schemes, gauss_schemes);
+      zm = mesh_approx_integrate(m, N, approx_err, triquad_schemes, gauss_schemes, p("v"));
       cout << "# approximation error estimate: " << zm.error << endl;
     }
     else
-      zm = mesh_exact_integrate(m, N, triquad_schemes, gauss_schemes);
+      zm = mesh_exact_integrate(m, N, triquad_schemes, gauss_schemes, p("v"));
   }
   
   zm.normalize(zm_norm::ortho);
@@ -134,7 +136,7 @@ int main (int argc, char *argv[])
 
   zernike zm2;
   if (p("d")) {
-    string err = read_file(zm_filename, zm2);
+    string err = read_file(zm_filename, zm2, p("v"));
     if (!err.empty())
       p.die(err);
     zm2.normalize(zm_norm::ortho);

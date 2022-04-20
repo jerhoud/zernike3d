@@ -31,8 +31,10 @@ std::istream &failed(std::istream &is);
   @return "" if no error happens and a helpfull message otherwise
 */
 template<typename T>
-std::string read_stream(const std::string &name, std::istream &is, T &x)
+std::string read_stream(const std::string &name, std::istream &is, T &x, bool verbose = false)
 {
+  if (verbose)
+    std::cerr << "Reading file " << name << "...";
   line_count = 0;
   if (!is)
     return cannot_open_msg + name + " (" + strerror(errno) + ")";
@@ -43,6 +45,8 @@ std::string read_stream(const std::string &name, std::istream &is, T &x)
     return unexpect_eof_msg + name;
   if (is.fail())
     return invalid_file_msg + name + " at line " + std::to_string(line_count);
+  if (verbose)
+    std::cerr << " Done\n"; 
   return "";
 }
 
@@ -55,16 +59,28 @@ std::string read_stream(const std::string &name, std::istream &is, T &x)
 */
 
 template<typename T>
-std::string read_file(const std::string &filename, T &x)
+std::string read_file(const std::string &filename, T &x, bool verbose = false)
 {
   if (filename=="-")
-    return read_stream("standard input", std::cin, x);
+    return read_stream("standard input", std::cin, x, verbose);
   else {
     std::ifstream file(filename);
-    std::string err = read_stream(filename, file, x);
+    std::string err = read_stream(filename, file, x, verbose);
     file.close();
     return err;
   }
 }
+
+class progression
+{
+public:
+  time_t start_time, current_time;
+  size_t size, step;
+  bool silent;
+
+  progression(size_t sz, bool show);
+  ~progression();
+  void progress(const std::string &s ="");
+};
 
 #endif
