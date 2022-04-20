@@ -38,6 +38,7 @@ public:
   void integrate(T &v, double a, double b, double w) const
   {
     const double s = b - a;
+    w *= s;
     for (auto &i: data)
       v.add(a + s * i.x, w * i.weight);
   }
