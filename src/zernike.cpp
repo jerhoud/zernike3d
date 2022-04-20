@@ -464,15 +464,19 @@ std::istream &operator >>(std::istream &is, zernike &z)
     double r, i;
     s >> n >> l >> m >> r;
     if (!s || n < 0 || n > n0 || l < 0 || l > n || (l ^ n) == 1
-        || m < 0 || m > l)
+        || m < -l || m > l)
       return failed(is);
-    if (m != 0)
+    if (m == 0 || output == zm_output::real)
+      z0.zm[z0.index(n, l, m)] = r;
+    else if (m < 0)
+      return failed(is);
+    else {
       s >> i;
-    if (!s)
-      return failed(is);
-    z0.zm[z0.index(n, l, m)] = sqrt(2) * r;
-    if (m != 0)
+      if (!s)
+        return failed(is);
+      z0.zm[z0.index(n, l, m)] = sqrt(2) * r;
       z0.zm[z0.index(n, l, -m)] = - sqrt(2) * i;
+    }
   }
   if (is.eof()) {
     z = z0;
