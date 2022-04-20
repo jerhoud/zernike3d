@@ -36,6 +36,8 @@ string die_N_msg ="N must be positive and no more than "
                        + n_exact + " for exact compututation of the moments.";
 string radius_warning =
   "Warning: shape radius is larger than one. Risks of imprecisions.";
+string die_approx_msg = "-a option: ERROR must be positive";
+string approx_warning = "Warning; requested precision is very small, program may not halt. Allowed error by facet: ";
 string f_help = "Numerical precision in fixed notation";
 string e_help = "Numerical precision in scientific notation";
 
@@ -121,6 +123,14 @@ int main (int argc, char *argv[])
 
     // compute moments
     if (p("a")) {
+      if (approx_err <= 0)
+        p.die(die_approx_msg);
+      const double facet_error = approx_err / m.triangles.size();
+      if (facet_error < 1e-13) {
+        ostringstream out;
+        out << scientific << facet_error;
+        p.warn(approx_warning + out.str());
+      }
       zm = mesh_approx_integrate(m, N, approx_err, triquad_schemes, gauss_schemes, p("v"));
       cout << "# approximation error estimate: " << zm.error << endl;
     }
