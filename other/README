@@ -1,0 +1,11 @@
+
+This directory is not necessary to the functionning of the code (you can remove it)
+It archives the Mathematica programs used to write the code in triangle.cpp
+and gauss.cpp
+
+build_c_rule.nb is the little Mathematica program used to convert the outputs
+of the polyquad program found in directory polyquad_results to the format
+expected by triquad_selector::triquad_selector() in triangle.cpp
+
+build_gauss.nb is the little Mathematica program used to compute the coefficients
+of the gauss quadratures found in gauss.cpp
