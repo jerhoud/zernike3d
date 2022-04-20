@@ -111,8 +111,8 @@ triquad_selector::triquad_selector()
 {
   const std::vector<triquad_point> data3 = // 4 nodes, optimal (with negative weights)
   {
-    N2(0.2, 25./48),
-    N1(-0.5625)
+    N2(2. / 10, 25. / 48),
+    N1(-9. / 16)
   };
 
   const std::vector<triquad_point> data5 = // 7 nodes, optimal
