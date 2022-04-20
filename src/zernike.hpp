@@ -161,29 +161,7 @@ private:
 class zernike_int: public zernike_radial
 {
 public:
-  zernike_int(int n);
-  void eval_zr(double r);
-};
-
-/** A class to compute the integrated radial part of the Zernike polynomials.
-
-  It allows the computation of all integrated radial parts
-  up to order N given at creation.
-
-  More precisely it computes:
-  \f[ \frac 1{r^3}\int_0^r x^2 R_{n,l}(x)\mathrm dx, \f]
-  where the normalization of \f$R\f$ is the same as in zernike_r.
-
-  Usage:
-    1. create one instance with the maximum order needed.
-    2. use zernike_int::eval with chosen parameters.
-    3. get results zernike_int::get.
-    4. go to step 2.
-*/
-class zernike_int_alt: public zernike_radial
-{
-public:
-  zernike_int_alt(int n, const gauss_selector &gs);
+  zernike_int(int n, const gauss_selector &gs);
   void eval_zr(double r);
   void add(double r, double weight);
 protected:
@@ -315,28 +293,7 @@ class zernike_m_int:
 public zernike_int, public spherical_harmonics, public zernike
 {
 public:
-  zernike_m_int(int n);
-  void add(const w_vec &p);
-};
-
-/** Class for computing weighted sums of integrated zernike polynomials.
-
-  Normalization is the one from zernike_int.
-
-  Usage :
-    1. create one instance with the maximum order needed.
-    2. Use zernike::reset_zm to start from 0.
-    3. Repeatedly call zernike_m_int::add to add the
-    corresponding integrated polynomials with the given weights.
-    4. normalize if needed with zernike_m::normalize to fix element 0,0,0.
-    5. use result
-    6. go to 2.
- */
-class zernike_m_int_alt:
-public zernike_int_alt, public spherical_harmonics, public zernike
-{
-public:
-  zernike_m_int_alt(int n, const gauss_selector &gs);
+  zernike_m_int(int n, const gauss_selector &gs);
   void add(const w_vec &p);
 };
 

@@ -1,6 +1,6 @@
 CC = g++
 LDFLAGS = -DVERSION=$(shell git describe)
-CFLAGS = -Wall -Wextra -Wfatal-errors -pedantic -std=c++11 -DZER_N200
+CFLAGS = -Wall -Wextra -Wfatal-errors -pedantic -std=c++11
 OPT = -O3
 # OPT = -ggdb
 
@@ -10,8 +10,8 @@ BIN_DIR = ~/bin/
 
 WITNESS = $(BUILD_DIR)/witness
 EXEC = makeOFF zm rzm
-MODS = iotools mesh moments triangle vec zernike_data zernike gauss
-HEADERS = zernike_def arg_parse
+MODS = iotools mesh moments triangle vec zernike gauss
+HEADERS = arg_parse
 OTHER = Makefile
 
 TARGETS = $(addprefix $(BUILD_DIR)/, $(EXEC))

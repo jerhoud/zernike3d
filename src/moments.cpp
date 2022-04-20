@@ -32,7 +32,7 @@ zernike mesh_exact_integrate(const mesh &m, int n, const triquad_selector &ts, c
   if (n <= 0)
     return zernike();
   
-  zernike_m_int_alt zm(n, gs);
+  zernike_m_int zm(n, gs);
   //zernike_m_int zm(n);
   const triquad_scheme &s = ts.get_scheme(n);
   for (auto &i: m.triangles) {
@@ -42,7 +42,7 @@ zernike mesh_exact_integrate(const mesh &m, int n, const triquad_selector &ts, c
   return zm;
 }
 
-void facet_approx_integrate(const triangle &t, double error, const triquad_selector &ts, zernike_m_int_alt *&za, zernike_m_int_alt *&zb)
+void facet_approx_integrate(const triangle &t, double error, const triquad_selector &ts, zernike_m_int *&za, zernike_m_int *&zb)
 { 
   double err = 0;
   za->reset_zm();
@@ -78,8 +78,8 @@ zernike mesh_approx_integrate(const mesh &m, int n, double error, const triquad_
   if (n <= 0)
     return zernike();
   zernike z(n);
-  zernike_m_int_alt z1(n, gs), z2(n, gs);
-  zernike_m_int_alt *za = &z1, *zb = &z2;
+  zernike_m_int z1(n, gs), z2(n, gs);
+  zernike_m_int *za = &z1, *zb = &z2;
   error /= m.triangles.size();
   for (auto &t: m.triangles) {
     facet_approx_integrate(t.get_triangle(m), error, ts, za, zb);

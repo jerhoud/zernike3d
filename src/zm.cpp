@@ -4,7 +4,6 @@
 */
 #include "arg_parse.hpp"
 #include "iotools.hpp"
-#include "zernike_def.hpp"
 #include "moments.hpp"
 
 using namespace std;
@@ -12,18 +11,14 @@ using namespace argparse;
 
 const triquad_selector triquad_schemes;
 const gauss_selector gauss_schemes;
-const int N_approx = ZER_MAX_N;
-const int N_scheme = triquad_schemes.max_order();
-const int N_exact = (N_approx < N_scheme) ? N_approx : N_scheme;
+const int N_exact = triquad_schemes.max_order();
 const string n_exact = to_string(N_exact);
-const string n_approx = to_string(N_approx);
 
 string sh =
   "Computes Zernike moments or invariants derived from them.\n"
   "Input should be in OFF format.";
 string eh = "Currently works up to N = " + n_exact
-            + " for the exact computation of the moments,\n"
-            + "and up to N = " + n_approx + " for approximate computation.\n";
+            + " for the exact computation of the moments.";
 string t_help = "runs internal sanity checks and exits";
 string m_help = "Computes Zernike moments";
 string i_help = "Computes Zernike rotational invariants";
@@ -36,8 +31,8 @@ string d_help = "Reads Zernike moments in ZM format and substract them from the 
 
 string FILE_help = "Reads FILE in OFF format (default is standard input)";
 string N_help = "The maximum order of Zernike moments computed";
-string die_N_exact_msg ="N must be positive and no more than " + n_exact + " for exact compututation of the moments.";
-string die_N_approx_msg ="N must be positive and no more than " + n_approx + " for approximate compututation of the moments.";
+string die_N_msg ="N must be positive and no more than "
+                       + n_exact + " for exact compututation of the moments.";
 string radius_warning =
   "Warning: shape radius is larger than one. Risks of imprecisions.";
 string f_help = "Numerical precision in fixed notation";
@@ -95,9 +90,6 @@ int main (int argc, char *argv[])
 
   cout << "# Produced by zm (" << p.version_text << ") from file: " << filename << endl;
   cout << "# Date: " << now() << endl;
-  
-  const string die_N_msg = (p("a")) ? die_N_approx_msg : die_N_exact_msg;
-  const int Nmax = (p("a")) ? N_approx : N_exact;
 
   zernike zm;
   if (p("z")) {
@@ -110,7 +102,7 @@ int main (int argc, char *argv[])
     zm = zernike(N, zm2);
   }
   else {
-    if (N < 0 || N > Nmax)
+    if (N < 0 || (!p("a") && N > N_exact))
       p.die(die_N_msg);
     mesh m;
     string err = read_file(filename, m);

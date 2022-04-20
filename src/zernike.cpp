@@ -3,7 +3,6 @@
   \author J. Houdayer
 */
 #include "iotools.hpp"
-#include "zernike_data.hpp"
 #include "zernike.hpp"
 #include <sstream>
 #include <iomanip>
@@ -142,40 +141,7 @@ void zernike_r::eval_zr(double r, double weight)
 /** Constructor.
   @param n Maximum order needed. Should be positive.
 */
-zernike_int::zernike_int(int n): zernike_radial(n)
-{}
-
-/** Runs the computation.
-  @param r The radial parameter. Between 0 and 1.
-*/
-void zernike_int::eval_zr(double r)
-{
-  int idx = 0;
-  int idxv = 0;
-  for (int n2 = 0 ; n2 <= N / 2 ; n2++) {
-    double rl = 1;
-    for (int l = 0 ; l <= 2 * n2 + 1 ; l++, idx++, rl *= r) {
-      const int nrr = zri_n_roots[idx];
-      double zri = rl * zri_roots[idxv++];
-      for (int j = 0 ; j < nrr ; j++) {
-        const double a = zri_roots[idxv++];
-        zri *= (r - a) * (r + a);
-      }
-      for (int j = 0 ; j < (n2 - l / 2 - nrr) / 2 ; j++) {
-        const double a = zri_roots[idxv++];
-        const double b = zri_roots[idxv++];
-        const double rma = r - a, rpa = r + a;
-        zri *= (rma * rma + b) * (rpa * rpa + b);
-      }
-      zr[idx] = zri;
-    }
-  }
-}
-
-/** Constructor.
-  @param n Maximum order needed. Should be positive.
-*/
-zernike_int_alt::zernike_int_alt(int n, const gauss_selector &gs):
+zernike_int::zernike_int(int n, const gauss_selector &gs):
 zernike_radial(n), tmp_zr(n), g(gs.get_scheme(n))
 {}
 
@@ -183,14 +149,14 @@ zernike_radial(n), tmp_zr(n), g(gs.get_scheme(n))
   @param r The radial parameter. Between 0 and 1.
   @param gs The integration scheme to use.
 */
-void zernike_int_alt::eval_zr(double r)
+void zernike_int::eval_zr(double r)
 {
   reset_zr();
   if (r > 0)
     g.integrate(*this, 0, r, 1 / (r * r * r));
 }
 
-void zernike_int_alt::add(double r, double weight)
+void zernike_int::add(double r, double weight)
 {
   tmp_zr.eval_zr(r, r * r * weight);
   *this += tmp_zr;
@@ -483,32 +449,14 @@ void zernike_m_r::add(const w_vec &p)
 /** Constructor.
   @param n Maximum order needed. Should be positive.
 */
-zernike_m_int::zernike_m_int(int n):
-zernike_int(n), spherical_harmonics(n), zernike(n)
-{}
-
-/** Constructor.
-  @param n Maximum order needed. Should be positive.
-*/
-zernike_m_int_alt::zernike_m_int_alt(int n, const gauss_selector &gs):
-zernike_int_alt(n, gs), spherical_harmonics(n), zernike(n)
+zernike_m_int::zernike_m_int(int n, const gauss_selector &gs):
+zernike_int(n, gs), spherical_harmonics(n), zernike(n)
 {}
 
 /** Add integrated Zernike polynomials for the given point and weight.
   @param p The weight point to use.
 */
 void zernike_m_int::add(const w_vec &p)
-{
-  s_vec sp = p.v.spherical();
-  eval_zr(sp.r);
-  eval_sh(sp.theta, sp.phi);
-  add_core(zr, sh, p.weight);
-}
-
-/** Add integrated Zernike polynomials for the given point and weight.
-  @param p The weight point to use.
-*/
-void zernike_m_int_alt::add(const w_vec &p)
 {
   s_vec sp = p.v.spherical();
   eval_zr(sp.r);
