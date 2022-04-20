@@ -25,8 +25,9 @@ string m_help = "Computes Zernike moments";
 string i_help = "Computes Zernike rotational invariants";
 string s_help = "Computes signature invariants";
 string n_help = "Normalizes the moments such that order 0 gives 1";
-string a_help = "Computes the moments, using approximate methods within the given ERROR"; 
-string c_help = "Chop to 0 Zenike moments less than 1e-14";
+string a_help = "Computes the moments, using approximate methods within the given ERROR";
+string c_help = "The Zernike moments are output in complex form.";
+string chop_help = "Chops to 0 very small Zenike moments";
 string z_help = "Reads Zernike moments in ZM format instead of computing them";
 string d_help = "Reads Zernike moments in ZM format and substract them from the computed moments";
 
@@ -45,7 +46,7 @@ parser p(sh, eh);
 int N = 0;
 int digit = 6;
 s_vec coord = {0, 0, 0};
-double approx_err = 0;
+double approx_err = 1e-13;
 
 int main (int argc, char *argv[])
 {
@@ -59,7 +60,8 @@ int main (int argc, char *argv[])
   p.flag("i", "invariants", i_help);
   p.flag("s", "signatures", s_help);
   p.flag("n", "normalize", n_help);
-  p.flag("c", "chop", c_help);
+  p.flag("", "chop", chop_help);
+  p.flag("c", "complex", c_help);
   p.flag("z", "zm", z_help);
   p.option("a", "approximate", "ERROR", approx_err, a_help);
   p.option("d", "diff", "ZMFILE", zm_filename, d_help);
@@ -104,6 +106,7 @@ int main (int argc, char *argv[])
     if (!err.empty())
       p.die(err);
     zm = zernike(N, zm2);
+    zm.output = zm_output::real;
   }
   else {
     if (N < 0 || (!p("a") && N > N_exact))
@@ -139,10 +142,12 @@ int main (int argc, char *argv[])
   }
   
   zm.normalize(zm_norm::ortho);
+  if (p("c"))
+    zm.output = zm_output::complex;
   if (p("n"))
     zm.rescale(1);
-  if (p("c"))
-    zm.chop(1e-14);
+  if (p("chop"))
+    zm.chop(zm.error / 10);
 
   zernike zm2;
   if (p("d")) {

@@ -47,6 +47,7 @@ zernike mesh_exact_integrate(const mesh &m, int n, const triquad_selector &ts, c
     s.integrate(t, zm, 3 * t.volume());
     prog.progress();
   }
+  zm.error = 1e-13;
   return zm;
 }
 
