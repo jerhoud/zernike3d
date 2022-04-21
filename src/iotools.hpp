@@ -83,4 +83,36 @@ public:
   void progress(const std::string &s ="");
 };
 
+enum class smart_status {ok, eof, fail, bad};
+
+class smart_input
+{
+public:
+  smart_input(const std::string &name, bool verbose = false);
+  smart_input(std::istream &is, const std::string &name, bool verbose = false);
+  ~smart_input();
+  smart_input(const smart_input &) = delete;
+  smart_input &operator=(const smart_input &) = delete;
+
+  smart_status status() const;
+  explicit operator bool() const;
+  smart_input &next_line(std::istringstream &iss);
+  smart_input &failed();
+
+  size_t line_count;
+  bool verbose;
+  std::string name;
+
+private:
+  std::ifstream *file;
+  std::istream *input;
+};
+
+template <typename T>
+smart_input &operator>>(smart_input &is, T &x)
+{
+  *is.input >> x;
+  return is;
+}
+
 #endif

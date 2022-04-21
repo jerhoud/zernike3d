@@ -61,3 +61,65 @@ void progression::progress(const std::string &s)
     std::cerr << s << "\033[K";
   }
 }
+
+smart_input::smart_input(const std::string &n, bool v):
+line_count(0), verbose(v), name(n), file(NULL), input(NULL)
+{
+  if (name == "-") {
+    name = "standard input";
+    input = &std::cin;
+  }
+  else {
+    file = new std::ifstream(name);
+    input = file;
+  }
+}
+
+smart_input::smart_input(std::istream &is, const std::string &n, bool v):
+line_count(0), verbose(v), name(n), file(NULL), input(&is)
+{}
+
+smart_input::~smart_input()
+{
+  if (file != NULL) {
+    file->close();
+    delete file;
+  }
+}
+
+smart_status smart_input::status() const
+{
+  if (input->bad())
+    return smart_status::bad;
+  if (input->fail())
+    return smart_status::fail;
+  if (input->eof())
+    return smart_status::eof;
+  return smart_status::ok;
+}
+
+smart_input::operator bool() const
+{
+  return bool(*input);
+}
+
+smart_input &smart_input::next_line(std::istringstream &iss)
+{
+  std::string s;
+  while (getline(*input, s)) {
+    line_count++;
+    s.push_back(' ');
+    iss.clear();
+    iss.str(s);
+    iss >> std::ws;
+    if (!iss.eof() && iss.peek()!='#')
+      break;
+  }
+  return *this;
+}
+
+smart_input &smart_input::failed()
+{
+  input->setstate(std::ios_base::failbit);
+  return *this;
+}
