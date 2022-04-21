@@ -106,16 +106,16 @@ void cloud::torus_project(double r)
 }
 
 /** reads a point and adds it to the cloud. */
-void cloud::read_point(std::istream &is)
+void cloud::read_point(smart_input &is)
 {
   std::istringstream s;
-  if (next_line(is, s)) {
+  if (is.next_line(s)) {
     vec v;
     s >> v;
     if (s)
       add_point(v);
     else
-      failed(is);
+      is.failed();
   }
 }
 
@@ -229,17 +229,17 @@ double mesh::area() const
 }
 
 /** Reads one triangle and adds it to the mesh. */
-void mesh::read_triangle(std::istream &is)
+void mesh::read_triangle(smart_input &is)
 {
   std::istringstream s;
-  if (next_line(is, s)) {
+  if (is.next_line(s)) {
     int dummy;
     t_mesh t;
     s >> dummy >> t;
     if (s)
       add_triangle(t);
     else
-      failed(is);
+      is.failed();
   }
 }
 
@@ -372,18 +372,18 @@ edge_report mesh::edges() const
 
 /** Reads a mesh in OFF format.
   Adds the shape to the given mesh. */
-std::istream &operator >>(std::istream &is, mesh &m)
+smart_input &operator >>(smart_input &is, mesh &m)
 {
   mesh m0;
   std::istringstream s;
-  if (!next_line(is, s)) //remove first line containing "OFF"
+  if (!is.next_line(s)) //remove first line containing "OFF"
     return is;
-  if (!next_line(is, s))
+  if (!is.next_line(s))
     return is;
   int n_points, n_faces, dummy;
   s >> n_points >> n_faces >> dummy;
   if (!s || n_points < 0 || n_faces < 0)
-    return failed(is);
+    return is.failed();
   for (int i = 0 ; i < n_points ; i++)
     m0.read_point(is);
   for (int i = 0 ; i < n_faces ; i++)

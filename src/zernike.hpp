@@ -6,6 +6,7 @@
 #ifndef ZERNIKE_HPP
 #define ZERNIKE_HPP
 
+#include "iotools.hpp"
 #include "vec.hpp"
 #include "gauss.hpp"
 
@@ -239,7 +240,7 @@ public:
   double distance(const zernike &z) const;
   zernike &operator +=(const zernike &z);
 
-  friend std::istream &operator >>(std::istream &, zernike &);
+  friend smart_input &operator >>(smart_input &, zernike &);
   friend zernike operator -(const zernike &z1, const zernike &z2);
  
   double error;
@@ -257,7 +258,7 @@ protected:
 zernike operator -(const zernike &z1, const zernike &z2);
 
 std::ostream &operator <<(std::ostream &, const zernike &);
-std::istream &operator >>(std::istream &, zernike &);
+smart_input &operator >>(smart_input &, zernike &);
 
 /** Class for computing weighted sums of zernike polynomials.
 
@@ -358,7 +359,7 @@ public:
   const std::vector<double> &get_ri() const
   { return ri; }
 
-  friend std::istream &operator >>(std::istream &, rotational_invariants &);
+  friend smart_input &operator >>(smart_input&, rotational_invariants &);
   friend rotational_invariants operator -(const rotational_invariants &, const rotational_invariants &);
 
 private:
@@ -370,7 +371,7 @@ private:
 rotational_invariants operator -(const rotational_invariants &r1, const rotational_invariants &r2);
 
 std::ostream &operator <<(std::ostream &, const rotational_invariants &);
-std::istream &operator >>(std::istream &, rotational_invariants &);
+smart_input &operator >>(smart_input &, rotational_invariants &);
 
 class signature_invariants
 {
@@ -397,7 +398,7 @@ public:
   const std::vector<double> &get_si() const
   { return si; }
 
-  friend std::istream &operator >>(std::istream &, signature_invariants &);
+  friend smart_input &operator >>(smart_input &, signature_invariants &);
   friend signature_invariants operator -(const signature_invariants &s1, const signature_invariants &s2);
 private:
   int N;
@@ -407,6 +408,6 @@ private:
 
 signature_invariants operator -(const signature_invariants &s1, const signature_invariants &s2);
 std::ostream &operator <<(std::ostream &, const signature_invariants &);
-std::istream &operator >>(std::istream &, signature_invariants &);
+smart_input &operator >>(smart_input &, signature_invariants &);
 
 #endif

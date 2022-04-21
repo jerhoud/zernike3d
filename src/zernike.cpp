@@ -2,7 +2,6 @@
   Implementation of zernike.hpp.
   \author J. Houdayer
 */
-#include "iotools.hpp"
 #include "zernike.hpp"
 #include <sstream>
 #include <iomanip>
@@ -442,38 +441,38 @@ std::ostream &operator <<(std::ostream &os, const zernike &zm)
 /** Reads a zernike in ZM format.
  See format in operator >> doc.
 */
-std::istream &operator >>(std::istream &is, zernike &z)
+smart_input &operator >>(smart_input &is, zernike &z)
 {
   std::istringstream s;
-  if (!next_line(is, s)) //remove first line containing "ZM"
-    return failed(is);
-  if (!next_line(is, s))
-    return failed(is);
+  if (!is.next_line(s)) //remove first line containing "ZM"
+    return is.failed();
+  if (!is.next_line(s))
+    return is.failed();
   int n0;
   zm_norm norm;
   zm_output output;
   s >> norm >> n0 >> output;
   if (!is || n0 < 0)
-    return failed(is);
+    return is.failed();
   zernike z0(n0);
   z0.norm = norm;
   z0.output = output;
   z0.odd_clean = true;
-  while(next_line(is, s)) {
+  while(is.next_line(s)) {
     int n, l, m;
     double r, i;
     s >> n >> l >> m >> r;
     if (!s || n < 0 || n > n0 || l < 0 || l > n || (l ^ n) == 1
         || m < -l || m > l)
-      return failed(is);
+      return is.failed();
     if (m == 0 || output == zm_output::real)
       z0.zm[z0.index(n, l, m)] = r;
     else if (m < 0)
-      return failed(is);
+      return is.failed();
     else {
       s >> i;
       if (!s)
-        return failed(is);
+        return is.failed();
       z0.zm[z0.index(n, l, m)] = sqrt(2) * r;
       z0.zm[z0.index(n, l, -m)] = - sqrt(2) * i;
     }
@@ -481,7 +480,7 @@ std::istream &operator >>(std::istream &is, zernike &z)
   if (is.eof()) {
     z = z0;
     is.clear();
-  } 
+  }
   return is;
 }
 
@@ -601,31 +600,33 @@ std::ostream &operator <<(std::ostream &os, const rotational_invariants &ri)
   return os;
 }
 
-std::istream &operator >>(std::istream &is, rotational_invariants &ri)
+smart_input &operator >>(smart_input &is, rotational_invariants &ri)
 {
   std::istringstream s;
-  if (!next_line(is, s)) //remove first line containing "ZRI"
-    return failed(is);
-  if (!next_line(is, s))
-    return failed(is);
+  if (!is.next_line(s)) //remove first line containing "ZRI"
+    return is.failed();
+  if (!is.next_line(s))
+    return is.failed();
   int n0;
   zm_norm norm;
   s >> norm >> n0;
   if (!s || n0 < 0)
-    return failed(is);
+    return is.failed();
   rotational_invariants ri0(n0);
   ri.norm = norm;
-  while(next_line(is, s)) {
+  while(is.next_line(s)) {
     int n1, n2, l;
     double z;
     s >> n1 >> n2 >> l >> z;
     if (!s || n1 < 0 || n1 > n0 || n2 < 0 || n2 > n1 || l < 0 || l > n2
         || (n1 | n2) == 1 || (l | n2) ==1)
-      return failed(is);
+      return is.failed();
     ri0.ri[ri0.index(n1, n2, l)] = z;
   }
-  if (is.eof())
+  if (is.eof()) {
     ri = ri0;
+    is.clear();
+  }
   return is;
 }
 
@@ -679,29 +680,31 @@ std::ostream &operator <<(std::ostream &os, const signature_invariants &si)
   return os;
 }
 
-std::istream &operator >>(std::istream &is, signature_invariants &si)
+smart_input &operator >>(smart_input &is, signature_invariants &si)
 {
   std::istringstream s;
-  if (!next_line(is, s)) //remove first line containing "ZSI"
-    return failed(is);
-  if (!next_line(is, s))
-    return failed(is);
+  if (!is.next_line(s)) //remove first line containing "ZSI"
+    return is.failed();
+  if (!is.next_line(s))
+    return is.failed();
   int n0;
   zm_norm norm;
   s >> norm >> n0;
   if (!s || n0 < 0)
-    return failed(is);
+    return is.failed();
   signature_invariants si0(n0);
   si.norm = norm;
-  while(next_line(is, s)) {
+  while(is.next_line(s)) {
     int n;
     double z;
     s >> n >> z;
     if (!s || n < 0 || n > n0)
-      return failed(is);
+      return is.failed();
     si0.si[n] = z;
   }
-  if (is.eof())
+  if (is.eof()) {
     si = si0;
+    is.clear();
+  }
   return is;
 }

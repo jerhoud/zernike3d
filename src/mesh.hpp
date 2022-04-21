@@ -6,6 +6,7 @@
 #define MESH_HPP
 
 #include <functional>
+#include "iotools.hpp"
 #include "triangle.hpp"
 
 /** A cloud of points. */
@@ -25,7 +26,7 @@ public:
     return points.size() - 1;
   }
 
-  void read_point(std::istream &is);
+  void read_point(smart_input &is);
   cloud &operator += (const vec &v);
   cloud &operator -= (const vec &v);
   cloud &operator *= (double scalar);
@@ -109,13 +110,13 @@ public:
   void add_polygon(const std::vector<int> &p);
   void add_strip(const std::vector<int> &l1, const std::vector<int> &l2, bool rev);
 
-  void read_triangle(std::istream &is);
+  void read_triangle(smart_input &is);
   void add(const mesh &m);
   mesh split() const;
   edge_report edges() const;
 };
 
-std::istream &operator >>(std::istream &is, mesh &m);
+smart_input &operator >>(smart_input &is, mesh &m);
 std::ostream &operator <<(std::ostream &os, const mesh &m);
 
 mesh make_cube();

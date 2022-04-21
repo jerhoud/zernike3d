@@ -1,31 +1,9 @@
 #include "iotools.hpp"
 
-int line_count = 0;
-
 const std::string cannot_open_msg = "Cannot open file ";
 const std::string invalid_file_msg = "Cannot read file ";
 const std::string bad_file_msg = "Something bad happens when reading file ";
 const std::string unexpect_eof_msg = "Unexpected end of file ";
-
-/** Reads a line from a stream.
-  Ignores initial white spaces, blank lines and lines starting with '#'.
-  @param is The stream to read.
-  @param iss The stream where to put the line.
-*/
-std::istream &next_line(std::istream &is, std::istringstream &iss)
-{
-  std::string s;
-  while (getline(is, s)) {
-    line_count++;
-    s.push_back(' ');
-    iss.clear();
-    iss.str(s);
-    iss >> std::ws;
-    if (!iss.eof() && iss.peek()!='#')
-      break;
-  }
-  return is;
-}
 
 /** Marks the stream as failed and returns it. */
 std::istream &failed(std::istream &is)
@@ -62,8 +40,8 @@ void progression::progress(const std::string &s)
   }
 }
 
-smart_input::smart_input(const std::string &n, bool v):
-line_count(0), verbose(v), name(n), file(NULL), input(NULL)
+smart_input::smart_input(const std::string &n):
+line_count(0), name(n), file(NULL), input(NULL)
 {
   if (name == "-") {
     name = "standard input";
@@ -75,8 +53,8 @@ line_count(0), verbose(v), name(n), file(NULL), input(NULL)
   }
 }
 
-smart_input::smart_input(std::istream &is, const std::string &n, bool v):
-line_count(0), verbose(v), name(n), file(NULL), input(&is)
+smart_input::smart_input(std::istream &is, const std::string &n):
+line_count(0), name(n), file(NULL), input(&is)
 {}
 
 smart_input::~smart_input()
@@ -85,17 +63,6 @@ smart_input::~smart_input()
     file->close();
     delete file;
   }
-}
-
-smart_status smart_input::status() const
-{
-  if (input->bad())
-    return smart_status::bad;
-  if (input->fail())
-    return smart_status::fail;
-  if (input->eof())
-    return smart_status::eof;
-  return smart_status::ok;
 }
 
 smart_input::operator bool() const
