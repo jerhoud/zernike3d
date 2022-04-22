@@ -44,18 +44,20 @@ string approx_warning = "Warning; requested precision is very small, program may
 string f_help = "Numerical precision in fixed notation";
 string e_help = "Numerical precision in scientific notation";
 
-parser p(sh, eh);
-int N = 0;
-int digit = 6;
-s_vec coord = {0, 0, 0};
-double approx_err = 1e-13;
-
 int main (int argc, char *argv[])
 {
+  parser p(sh, eh);
+  int N = 0;
+  int digit = 6;
+  s_vec coord = {0, 0, 0};
+  double approx_err = 1e-13;
+
   string filename = "-";
   string zm_filename;
   p.prog_name = "zm";
   zm_norm norm = zm_norm::ortho;
+
+  // Set command line options 
 
   p.flag("v", "verbose", v_help);
   p.flag("t", "tests", t_help);
@@ -78,7 +80,11 @@ int main (int argc, char *argv[])
   p.selection({"t", "m", "i", "s"});
   p.exclusion({"raw", "dual"});
 
+  // Parse command line
+
   p.run(argc, argv);
+
+  // Apply options -e and -f
 
   if (digit < 0)
     digit = 6;
@@ -86,6 +92,8 @@ int main (int argc, char *argv[])
     cout << fixed << setprecision(digit);
   else if (p("e"))
     cout << scientific << setprecision(digit);
+
+  // Option -t auto tests and exits
 
   if (p("t")) {
     cout << "checking gauss quadratures on the segment" << endl;
@@ -100,8 +108,12 @@ int main (int argc, char *argv[])
     return 0;
   }
 
+  // Output header
+
   cout << "# Produced by zm (" << p.version_text << ") from file: " << filename << endl;
   cout << "# Date: " << now() << endl;
+
+  // Compute or read Zernike moments
 
   zernike zm;
   if (p("z")) {
@@ -147,6 +159,8 @@ int main (int argc, char *argv[])
       zm = mesh_exact_integrate(m, N, triquad_schemes, gauss_schemes, p("v"));
   }
   
+  // Select normalization and apply options -c -n --chop
+
   if (p("raw"))
     norm = zm_norm::raw;
   if (p("dual"))
@@ -160,6 +174,8 @@ int main (int argc, char *argv[])
   if (p("chop"))
     zm.chop(zm.error / 10);
 
+  // option -d read a secondary zm file
+
   zernike zm2;
   if (p("d")) {
     string err = read_file(zm_filename, zm2, p("v"));
@@ -169,11 +185,13 @@ int main (int argc, char *argv[])
     cout << "# Substracted data from file " << zm_filename << endl;
   }
 
+  // command -m output moments
   if (p("m")) {
     if (p("d"))
       zm = zm - zm2;
     cout << zm;
   }
+  // command -i output rotational invariants
   else if (p("i")) {
     rotational_invariants ri(zm);
     if (p("d")) {
@@ -182,6 +200,7 @@ int main (int argc, char *argv[])
     }
     cout << ri;
   }
+  // command -s output signature
   else if (p("s")) {
     signature_invariants si(zm);
     if (p("d")) {
