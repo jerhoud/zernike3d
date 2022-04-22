@@ -49,7 +49,6 @@ int main (int argc, char *argv[])
   parser p(sh, eh);
   int N = 0;
   int digit = 6;
-  s_vec coord = {0, 0, 0};
   double approx_err = 1e-13;
 
   string filename = "-";
