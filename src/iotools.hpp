@@ -78,11 +78,13 @@ smart_input &operator>>(smart_input &is, T &x)
 template<typename T>
 std::string read_object(smart_input &is, T &x,  bool verbose = false)
 {
-  if (verbose)
-    std::cerr << "Reading file " << is.name << "...";
   if (!is)
     return cannot_open_msg + is.name + " (" + strerror(errno) + ")";
+  if (verbose)
+    std::cerr << "Reading file " << is.name << "...";
   is >> x;
+  if (verbose)
+    std::cerr << "Done" << std::endl;
   if (is.bad())
     return bad_file_msg + is.name + " (" + strerror(errno) + ")";
   if (is.eof())
