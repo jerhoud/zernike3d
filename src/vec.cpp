@@ -83,6 +83,22 @@ std::istream& operator>>(std::istream& is, vec &v)
   return is;
 }
 
+std::ostream& operator<<(std::ostream& os, const w_vec &v)
+{
+  os << v.v << " " << v.weight;
+  return os;
+}
+
+std::istream& operator>>(std::istream& is, w_vec &v)
+{
+  vec v0;
+  double w;
+  is >> v0 >> w;
+  if (is)
+    v = {w, v0};
+  return is;
+}
+
 /** Cartesian coordinates representation. */
 vec s_vec::cartesian() const
 {

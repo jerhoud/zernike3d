@@ -98,6 +98,9 @@ public:
   vec v;
 };
 
+std::ostream& operator<<(std::ostream& os, const w_vec &v);
+std::istream& operator>>(std::istream& is, w_vec &v);
+
 /** 3D-points / vectors in spherical coordinates.
   The usual physical convention is used.
   theta is the colatitude and phi the longitude.
