@@ -17,6 +17,7 @@ string sh =
   "Computes a mesh from Zernike moments.\n"
   "Input should be in ZM format as produced by zm.";
 string eh = "";
+string v_help = "Outputs additional informations including progression bars";
 string f_help = "Numerical precision in fixed notation";
 string e_help = "Numerical precision in scientific notation";
 string t_help = "Threshold value which separates the inside\n"
@@ -38,6 +39,7 @@ int main (int argc, char *argv[])
   string filename = "-";
   p.prog_name = "rzm";
 
+  p.flag("v", "verbose", v_help);
   p.option("f", "", "DIGITS", digit, f_help);
   p.option("e", "", "DIGITS", digit, e_help);
   p.option("t", "threshold", "THRESH", thresh, t_help);
@@ -61,7 +63,7 @@ int main (int argc, char *argv[])
   cout << "# Date: " << now() << endl;
 
   zernike zm;
-  string err = read_file(filename, zm);
+  string err = read_file(filename, zm, p("v"));
   if (!err.empty())
     p.die(err);
   if (N > zm.order()) {
@@ -71,6 +73,6 @@ int main (int argc, char *argv[])
   zm.normalize(zm_norm::dual);
 
   zernike_build f(zernike(N, zm));
-  marching_tetrahedra mt({-1, 1, res}, {-1, 1, res}, {-1, 1, res}, f, thresh);
+  marching_tetrahedra mt({-1, 1, res}, {-1, 1, res}, {-1, 1, res}, f, thresh, p("v"));
   cout << mt.build();
 }
