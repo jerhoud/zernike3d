@@ -12,7 +12,7 @@ string sh =
   "Creates or modifies a shape in OFF format.\n"
   "Outputs it on standard output in OFF format.";
 string eh =
-  "Operations are executed in the order presented above.\n"
+  "Operations are executed in the order of the command line.\n"
   "One can read or create multiple shapes into one.\n"
   "If no file is given and no shapes created, then reads standard input.\n"
   "The shapes created by makeOFF have originally a radius equal to one.\n\n"
@@ -27,12 +27,11 @@ string c_help = "centers the shape around the center of mass";
 string r_help = "rescales the shape to fix the radius to R";
 string s_help = "multiplies the number of facets by four N times,\n"
                 "projects the new points for the sphere and the torus";
-string v_help =
-  "translates the shape along the given vector (3 numbers inside a quote)\n"
-  "when used with -a, sets the rotation axis instead";
+string t_help =
+  "translates the shape along the given vector (3 numbers inside a quote)";
 string a_help =
-  "rotates the shape with the given angle in degrees\n"
-  "the axis is given with -v (default is vertical axis)";
+  "rotates the shape with the given angle in degrees and axis,\n"
+  "4 numbers inside a quote (\"x y z angle\")";
 string d_help =
   "applies a diagonal matrix (i.e. expands along the axis)\n"
   "the three expansion factors are given inside a quote";
@@ -51,36 +50,43 @@ string tor_help = "creates a torus with the given inner radius\n"
 int main (int argc, char *argv[])
 {
   int digit = 6;
-  int s = 0;
-  double r = 0;
-  vec v = {0, 0, 1};
-  vec d;
-  double a = 0;
-  double tor_radius;
+  vector<double> tor_radius;
+  vector<int> s;
+  vector<double> r;
+  vector<vec> t;
+  vector<vec> d;
+  vector<w_vec> a;
   vector<string> fs;
-  bool project = true;
+  double project = 0;
+  vector<opt_recorder> rec;
 
   parser p(sh, eh);
   p.prog_name = "makeOFF";
   p.rest_arg("FILES", fs, FILES_help);
-  p.flag("", "cube", cub_help);
-  p.flag("", "icosahedron", ico_help);
-  p.flag("", "octahedron", oct_help);
-  p.flag("", "tetrahedron", tet_help);
-  p.flag("", "dodecahedron", dod_help);
-  p.flag("", "sphere", sph_help);
-  p.option("", "torus", "RADIUS", tor_radius, tor_help);
-  p.option("s", "", "N", s, s_help);
-  p.flag("c", "", c_help);
-  p.option("r", "", "R", r, r_help);
-  p.option("d", "", "FACTORS", d, d_help);
-  p.option("v", "", "VEC", v, v_help);
-  p.option("a", "", "ANG", a, a_help);
+  p.rec_flag("", "cube", rec, cub_help);
+  p.rec_flag("", "icosahedron", rec, ico_help);
+  p.rec_flag("", "octahedron", rec, oct_help);
+  p.rec_flag("", "tetrahedron", rec, tet_help);
+  p.rec_flag("", "dodecahedron", rec, dod_help);
+  p.rec_flag("", "sphere", rec, sph_help);
+  p.rec_list_option("", "torus", "RADIUS", tor_radius, rec, tor_help);
+  p.rec_list_option("s", "", "N", s, rec, s_help);
+  p.rec_flag("c", "", rec, c_help);
+  p.rec_list_option("r", "", "R", r, rec, r_help);
+  p.rec_list_option("d", "", "FACTORS", d, rec, d_help);
+  p.rec_list_option("t", "", "VEC", t, rec, t_help);
+  p.rec_list_option("a", "", "VEC_ANGLE", a, rec, a_help);
   p.option("f", "", "DIGITS", digit, f_help);
   p.option("e", "", "DIGITS", digit, e_help);
   p.flag("i", "", i_help);
 
   p.run(argc, argv);
+
+  if (p("f"))
+    cout << fixed << setprecision(digit);
+  else if (p("e"))
+    cout << scientific << setprecision(digit);
+
 
   if (fs.empty() &&
       p.none({"cube", "icosahedron", "octahedron", "tetrahedron",
@@ -94,53 +100,51 @@ int main (int argc, char *argv[])
       p.die(err);
   }
  
-  if (p("cube"))
-    m.add(make_cube());
-  if (p("icosahedron"))
-    m.add(make_icosahedron());
-  if (p("octahedron"))
-    m.add(make_octahedron());
-  if (p("tetrahedron"))
-    m.add(make_tetrahedron());
-  if (p("dodecahedron"))
-    m.add(make_dodecahedron());
-  if (p("sphere")) {
-    project = m.empty();
-    m.add(make_icosahedron());
-  }
-  if (p("torus")) {
-    project = m.empty();
-    m.add(make_torus(tor_radius));
-  }
-
-  for (int i = 0 ; i < s ; i++) {
-    m = m.split();
-    if (project) {
-      if (p("sphere"))
-        m.sphere_project();
-      else if (p("torus"))
-        m.torus_project(tor_radius);
+  for (auto opt: rec) {
+    const string &n = opt.name;
+    if (n == "sphere") {
+      project = (m.empty()) ? -1 : -2;
+      m.add(make_icosahedron());
+      continue;
     }
+    if (n == "torus") {
+      project = (m.empty()) ? tor_radius[opt.pos] : -2;
+      m.add(make_torus(tor_radius[opt.pos]));
+      continue;
+    }
+    if (n == "s") {
+      for (int i = 0 ; i < s[opt.pos] ; i++) {
+        m = m.split();
+        if (project == -1)
+          m.sphere_project();
+        else if (project >=0)
+          m.torus_project(project);
+        }
+      continue;
+    }
+    project = -2; 
+    if (n == "cube")
+      m.add(make_cube());
+    else if (n == "icosahedron")
+      m.add(make_icosahedron());
+    else if (n == "octahedron")
+      m.add(make_octahedron());
+    else if (n == "tetrahedron")
+      m.add(make_tetrahedron());
+    else if (n == "dodecahedron")
+      m.add(make_dodecahedron());
+    else if (n == "c")
+      m -= m.mass_center();
+    else if (n == "r")
+      m *= r[opt.pos] / m.radius();
+    else if (n == "d")
+      m.apply(diag_mat(d[opt.pos]));
+    else if (n == "a")
+      m.apply(rotation_mat(a[opt.pos].v.normalize(),
+              a[opt.pos].weight * 3.141592653589793238 / 180));
+    else if (n == "t")
+      m += t[opt.pos]; 
   }
-
-  if (p("c"))
-    m -= m.mass_center();
-
-  if (p("r"))
-    m *= r / m.radius();
-
-  if (p("d"))
-    m.apply(diag_mat(d));
-  
-  if (p("a"))
-    m.apply(rotation_mat(v.normalize(), a * 3.141592653589793238 / 180));
-  else if (p("v"))
-    m += v;
-
-  if (p("f"))
-    cout << fixed << setprecision(digit);
-  else if (p("e"))
-    cout << scientific << setprecision(digit);
 
   if (p("i")) {
     vec mc = m.mass_center();
