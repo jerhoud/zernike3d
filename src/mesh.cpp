@@ -653,11 +653,14 @@ int neighbors::component(int sig) const
 }
 
 marching_tetrahedra::marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord &sz,
-                      std::function<double(const vec &)> f, double thresh):
-szx(sx), szy(sy), szz(sz), threshold(thresh), func(f), node(2*szx.maxN()*szy.maxN()*szz.maxN())
+                      std::function<double(const vec &)> f, double thresh, bool v):
+szx(sx), szy(sy), szz(sz), threshold(thresh), func(f), verbose(v), node(2*szx.maxN()*szy.maxN()*szz.maxN())
 {
   int idx = 0;
   int s = 0;
+  if (verbose)
+    std::cerr << "Phase 1/3, function evaluation" << std::endl;
+  progression prog(szz.maxN()*((2 * szy.maxN()- 1) * szx.maxN() - 1), verbose);
   for (int nz = 0 ; nz < szz.maxN() * 2 ; nz++, s = 1 - s) {
     for (int ny = 0 ; ny < szy.maxN() - s ; ny++) // remove one line every two layers 
       for (int nx = 0 ; nx < szx.maxN() ; nx++, idx++) {
@@ -669,12 +672,12 @@ szx(sx), szy(sy), szz(sz), threshold(thresh), func(f), node(2*szx.maxN()*szy.max
                       && ny > 0 && ny < szy.maxN() - 1;
         if (nd.inside) // select all inside points
           in_node.push_back(idx);
+        prog.progress();
       }
     if (s == 1) // remove one point every two layers
       idx--;
   }
 }
-
 
 mesh marching_tetrahedra::build()
 {
@@ -682,38 +685,48 @@ mesh marching_tetrahedra::build()
   std::vector<int> surface;
   mesh m;
 
-  for (auto idx: in_node) { // go through all points
-    mt_node &nd0 = node[idx];
-    nd0.vertex = m.points.size();
+  if (verbose)
+    std::cerr << "Phase 2/3, computing vertices" << std::endl;
+  {
+    progression prog(in_node.size(), verbose);
+    for (auto idx: in_node) { // go through all points
+      prog.progress();
+      mt_node &nd0 = node[idx];
+      nd0.vertex = m.points.size();
 
-    vec sum;
-    for (int n = 0 ; n < 14 ; n++) {// check all neighbors
-      mt_node &nd1 = node[idx + ngh[n]];
-      if(!nd1.inside) {
-        nd0.signature |= 1 << n;
-        vec v = nd0.pos
-          + (threshold - nd0.val) / (nd1.val - nd0.val)
-          * (nd1.pos - nd0.pos);
-        sum += v;
-        m.add_point(v);
+      vec sum;
+      for (int n = 0 ; n < 14 ; n++) {// check all neighbors
+        mt_node &nd1 = node[idx + ngh[n]];
+        if(!nd1.inside) {
+          nd0.signature |= 1 << n;
+          vec v = nd0.pos
+            + (threshold - nd0.val) / (nd1.val - nd0.val)
+            * (nd1.pos - nd0.pos);
+          sum += v;
+          m.add_point(v);
+        }
       }
-    }
 
-    if (nd0.signature == 0)
-      continue;
+      if (nd0.signature == 0)
+        continue;
 
-    surface.push_back(idx);
-    nd0.collapsed = ngh.collapse[nd0.signature];
+      surface.push_back(idx);
+      nd0.collapsed = ngh.collapse[nd0.signature];
 
-    if (nd0.collapsed) {
-      int n = m.points.size() - nd0.vertex;
-      sum /= n;
-      m.points.resize(nd0.vertex);
-      m.add_point(sum);
+      if (nd0.collapsed) {
+        int n = m.points.size() - nd0.vertex;
+        sum /= n;
+        m.points.resize(nd0.vertex);
+        m.add_point(sum);
+      }
     }
   }
 
+  if (verbose)
+    std::cerr << "Phase 3/3, computing triangles" << std::endl;
+  progression prog(surface.size(), verbose);
   for (auto idx: surface) {// go through all inside points on surface
+    prog.progress();
     mt_node &nd0 = node[idx];
     for (auto &tetra: tetras) { // go through all possible tetra at this point
       int n1 = tetra.n1;

@@ -165,9 +165,10 @@ public:
   const mt_coord szx, szy, szz;
   const double threshold;
   const std::function<double(const vec &)> func;
+  bool verbose;
 
   marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord &sz,
-                      std::function<double(const vec &)> f, double thresh);
+                      std::function<double(const vec &)> f, double thresh, bool verbose = false);
 
   mesh build();
 
