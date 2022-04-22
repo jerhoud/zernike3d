@@ -41,7 +41,7 @@ void progression::progress(const std::string &s)
 }
 
 smart_input::smart_input(const std::string &n):
-line_count(0), name(n), file(NULL), input(NULL)
+line_count(0), name(n), resend(false), line(""), file(NULL), input(NULL)
 {
   if (name == "-") {
     name = "standard input";
@@ -54,7 +54,7 @@ line_count(0), name(n), file(NULL), input(NULL)
 }
 
 smart_input::smart_input(std::istream &is, const std::string &n):
-line_count(0), name(n), file(NULL), input(&is)
+line_count(0), name(n), resend(false), line(""), file(NULL), input(&is)
 {}
 
 smart_input::~smart_input()
@@ -72,16 +72,22 @@ smart_input::operator bool() const
 
 smart_input &smart_input::next_line(std::istringstream &iss)
 {
-  std::string s;
-  while (getline(*input, s)) {
-    line_count++;
-    s.push_back(' ');
+  if (resend) {
+    resend = false;
     iss.clear();
-    iss.str(s);
+    iss.str(line);
     iss >> std::ws;
-    if (!iss.eof() && iss.peek()!='#')
-      break;
   }
+  else
+    while (getline(*input, line)) {
+      line_count++;
+      line.push_back(' ');
+      iss.clear();
+      iss.str(line);
+      iss >> std::ws;
+      if (!iss.eof() && iss.peek()!='#')
+        break;
+    }
   return *this;
 }
 

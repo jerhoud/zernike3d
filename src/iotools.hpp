@@ -55,12 +55,17 @@ public:
 
   explicit operator bool() const;
   smart_input &next_line(std::istringstream &iss);
+  void put_back()
+  { resend = true; }
+
   smart_input &failed();
 
   size_t line_count;
   std::string name;
 
 private:
+  bool resend;
+  std::string line;
   std::ifstream *file;
   std::istream *input;
 };
