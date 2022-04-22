@@ -77,10 +77,9 @@ smart_input &operator>>(smart_input &is, T &x)
   return is;
 }
 
-template <typename T>
-std::string read_file(const std::string &filename, T &x,  bool verbose = false)
+template<typename T>
+std::string read_object(smart_input &is, T &x,  bool verbose = false)
 {
-  smart_input is(filename);
   if (verbose)
     std::cerr << "Reading file " << is.name << "...";
   if (!is)
@@ -93,6 +92,13 @@ std::string read_file(const std::string &filename, T &x,  bool verbose = false)
   if (is.fail())
     return invalid_file_msg + is.name + " at line " + std::to_string(is.line_count);
   return "";
+}
+
+template <typename T>
+std::string read_file(const std::string &filename, T &x,  bool verbose = false)
+{
+  smart_input is(filename);
+  return read_object(is, x, verbose);
 }
 
 #endif
