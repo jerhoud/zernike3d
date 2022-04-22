@@ -16,7 +16,7 @@ const string n_exact = to_string(N_exact);
 
 string sh =
   "Computes Zernike moments or invariants derived from them.\n"
-  "Input should be in OFF format.";
+  "Input should be in OFF or ZM format.";
 string eh = "Currently works up to N = " + n_exact
             + " for the exact computation of the moments.\n";
 string v_help = "outputs more informations, including progression bars";
@@ -26,14 +26,15 @@ string i_help = "Computes Zernike rotational invariants";
 string s_help = "Computes signature invariants";
 string n_help = "Normalizes the moments such that order 0 gives 1";
 string a_help = "Computes the moments, using approximate methods within the given ERROR";
-string c_help = "The Zernike moments are output in complex form";
-string chop_help = "Chops to 0 very small Zenike moments";
+string z_help = "The Zernike moments are output in complex form";
+string c_help = "Chops to 0 very small Zenike moments";
 string raw_help = "Divides Zernike moments by sqrt(2n+3)";
 string dual_help = "Multiplies Zernike moments by sqrt(2n+3)";
-string z_help = "Reads Zernike moments in ZM format instead of computing them";
 string d_help = "Reads Zernike moments in ZM format and substract them from the computed moments";
+string f_help = "Numerical precision in fixed notation";
+string e_help = "Numerical precision in scientific notation";
 
-string FILE_help = "Reads FILE in OFF format (default is standard input)";
+string FILE_help = "Reads FILE in OFF or ZM format (default is standard input)";
 string N_help = "The maximum order of Zernike moments computed";
 string die_N_msg ="N must be positive and no more than "
                        + n_exact + " for exact compututation of the moments.";
@@ -41,8 +42,8 @@ string radius_warning =
   "Warning: shape radius is larger than one. Risks of imprecisions.";
 string die_approx_msg = "-a option: ERROR must be positive";
 string approx_warning = "Warning; requested precision is very small, program may not halt. Allowed error by facet: ";
-string f_help = "Numerical precision in fixed notation";
-string e_help = "Numerical precision in scientific notation";
+string die_unknown_format = "Unknown file format (should be OFF or ZM): ";
+
 
 int main (int argc, char *argv[])
 {
@@ -64,11 +65,10 @@ int main (int argc, char *argv[])
   p.flag("i", "invariants", i_help);
   p.flag("s", "signatures", s_help);
   p.flag("n", "normalize", n_help);
-  p.flag("", "chop", chop_help);
+  p.flag("c", "chop", c_help);
   p.flag("", "raw", raw_help);
   p.flag("", "dual", dual_help);
-  p.flag("c", "complex", c_help);
-  p.flag("z", "zm", z_help);
+  p.flag("z", "complex", z_help);
   p.option("a", "approximate", "ERROR", approx_err, a_help);
   p.option("d", "diff", "ZMFILE", zm_filename, d_help);
   p.option("f", "", "DIGITS", digit, f_help);
@@ -107,29 +107,42 @@ int main (int argc, char *argv[])
     return 0;
   }
 
+  // 
+
+  if (N < 0)
+    p.die(die_N_msg);
+  zernike zm;
+  smart_input is(filename);
+  if (!is)
+    p.die(cannot_open_msg + is.name + " (" + strerror(errno) + ")");
+
   // Output header
 
-  cout << "# Produced by zm (" << p.version_text << ") from file: " << filename << endl;
+  cout << "# Produced by zm (" << p.version_text << ") from file: " << is.name << endl;
   cout << "# Date: " << now() << endl;
 
-  // Compute or read Zernike moments
+  // Identify type of input file
+  
+  istringstream iss;
+  is.peek_line(iss);
+  string filetype;
+  iss >> filetype;
 
-  zernike zm;
-  if (p("z")) {
-    if (N < 0)
-      p.die(die_N_msg);
+  // it is a ZM file
+  if (filetype == "ZM" || filetype == "zm") {
     zernike zm2;
-    string err = read_file(filename, zm2, p("v"));
+    string err = read_object(is, zm2, p("v"));
     if (!err.empty())
       p.die(err);
     zm = zernike(N, zm2);
     zm.output = zm_output::real;
   }
-  else {
-    if (N < 0 || (!p("a") && N > N_exact))
+  // it is an OFF file
+  else if (filetype == "OFF" || filetype == "off") {
+    if ((!p("a") && N > N_exact))
       p.die(die_N_msg);
     mesh m;
-    string err = read_file(filename, m, p("v"));
+    string err = read_object(is, m, p("v"));
     if (!err.empty())
       p.die(err);
 
@@ -157,6 +170,8 @@ int main (int argc, char *argv[])
     else
       zm = mesh_exact_integrate(m, N, triquad_schemes, gauss_schemes, p("v"));
   }
+  else
+    p.die(die_unknown_format + is.name);
   
   // Select normalization and apply options -c -n --chop
 
@@ -184,7 +199,7 @@ int main (int argc, char *argv[])
     cout << "# Substracted data from file " << zm_filename << endl;
   }
 
-  // command -m output moments
+// command -m output moments
   if (p("m")) {
     if (p("d"))
       zm = zm - zm2;
