@@ -393,7 +393,7 @@ public:
   void list_option(const string &s, const string &l, const string &a, vector<T> &v, const string &h)
   { opts.push_back(new list_option_desc<T>(s, l, a, v, h)); }
 
-  /** adds a repeatable recaorded option with an argument to the parser.*/
+  /** adds a repeatable recorded option with an argument to the parser.*/
   template<typename T>
   void rec_list_option(const string &s, const string &l, const string &a, vector<T> &v, vector<opt_recorder> &r, const string &h)
   { opts.push_back(new rec_list_option_desc<T>(s, l, a, v, r, h)); }
