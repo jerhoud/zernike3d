@@ -221,7 +221,7 @@ std::istream &operator >>(std::istream &is, zm_output &output)
     output = zm_output::real;
     return is;
   }
-    if (s=="COMPLEX") {
+  if (s=="COMPLEX") {
     output = zm_output::complex;
     return is;
   }
@@ -452,7 +452,7 @@ smart_input &operator >>(smart_input &is, zernike &z)
   zm_norm norm;
   zm_output output;
   s >> norm >> n0 >> output;
-  if (!is || n0 < 0)
+  if (!s || n0 < 0)
     return is.failed();
   zernike z0(n0);
   z0.norm = norm;
