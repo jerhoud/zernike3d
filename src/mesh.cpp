@@ -370,8 +370,7 @@ edge_report mesh::edges() const
   return r;
 }
 
-/** Reads a mesh in OFF format.
-  Adds the shape to the given mesh. */
+/** Reads a mesh in OFF format. */
 smart_input &operator >>(smart_input &is, mesh &m)
 {
   mesh m0;
@@ -389,7 +388,7 @@ smart_input &operator >>(smart_input &is, mesh &m)
   for (int i = 0 ; i < n_faces ; i++)
     m0.read_triangle(is);
   if (is)
-    m.add(m0);
+    m = m0;
   return is;
 }
 
