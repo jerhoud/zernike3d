@@ -55,9 +55,7 @@ public:
 
   explicit operator bool() const;
   smart_input &next_line(std::istringstream &iss);
-  void put_back()
-  { resend = true; }
-
+  smart_input &peek_line(std::istringstream &iss);
   smart_input &failed();
 
   size_t line_count;

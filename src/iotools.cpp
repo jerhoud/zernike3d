@@ -91,6 +91,13 @@ smart_input &smart_input::next_line(std::istringstream &iss)
   return *this;
 }
 
+smart_input &smart_input::peek_line(std::istringstream &iss)
+{
+  next_line(iss);
+  resend = true;
+  return *this;
+}
+
 smart_input &smart_input::failed()
 {
   input->setstate(std::ios_base::failbit);
