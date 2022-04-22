@@ -126,6 +126,16 @@ void show_paragraph(ostream &os, int w, const string &h)
   os << h.substr(p, pp - p) << endl;
 }
 
+class opt_recorder
+{
+public:
+  string name;
+  int pos;
+
+  opt_recorder(const string &n): name(n), pos(-1) {}
+  opt_recorder(const string &n, int p): name(n), pos(p) {}
+};
+
 /** a base class representing an option.*/
 class option_desc_base
 {
@@ -197,6 +207,22 @@ bool parse_list(const string &arg, vector<T> &var)
     return true;
 }
 
+/** a yes / no option that record its usage in a recorder */
+class rec_flag_desc: public option_desc_base
+{
+public:
+  std::vector<opt_recorder> &rec;
+
+  rec_flag_desc(const string &s, const string &l, std::vector<opt_recorder> &r, const string &h):
+  option_desc_base(s, l, "", h), rec(r) {}
+
+  void process()
+  {
+    used = true;
+    rec.push_back(opt_recorder((short_name.empty()) ? long_name : short_name));
+  }
+};
+
 /** an option that sets a variable with its argument. */
 template <typename T>
 class set_option_desc: public option_desc_base
@@ -226,6 +252,25 @@ public:
 
   bool process(const string &arg)
   { used = true; return parse_list(arg, var); }
+};
+
+/** an option that appends and records its argument to a vector each time it is met on the command line. */
+template <typename T>
+class rec_list_option_desc: public option_desc_base
+{
+public:
+  vector<T> &var;
+  vector<opt_recorder> &rec;
+
+  rec_list_option_desc(const string &s, const string &l, const string &an, vector<T> &v, vector<opt_recorder> &r, const string &h):
+  option_desc_base(s, l, an, h), var(v), rec(r) {}
+
+  bool process(const string &arg)
+  {
+    used = true;
+    rec.push_back(opt_recorder((short_name.empty()) ? long_name : short_name, var.size()));
+    return parse_list(arg, var);
+  }
 };
 
 /** base class for non option arguments.*/
@@ -334,6 +379,10 @@ public:
   void flag(const string &s, const string &l, const string &h)
   { opts.push_back(new option_desc_base(s, l, "", h)); }
 
+  /** adds a yes / no recorded option to the parser.*/
+  void rec_flag(const string &s, const string &l, vector<opt_recorder> &r, const string &h)
+  { opts.push_back(new rec_flag_desc(s, l, r, h)); }
+
   /** adds an option with an argument to the parser.*/
   template<typename T>
   void option(const string &s, const string &l, const string &a, T &v, const string &h)
@@ -343,6 +392,11 @@ public:
   template<typename T>
   void list_option(const string &s, const string &l, const string &a, vector<T> &v, const string &h)
   { opts.push_back(new list_option_desc<T>(s, l, a, v, h)); }
+
+  /** adds a repeatable recaorded option with an argument to the parser.*/
+  template<typename T>
+  void rec_list_option(const string &s, const string &l, const string &a, vector<T> &v, vector<opt_recorder> &r, const string &h)
+  { opts.push_back(new rec_list_option_desc<T>(s, l, a, v, r, h)); }
 
   /** adds a positional argument to the parser.*/
   template<typename T>
