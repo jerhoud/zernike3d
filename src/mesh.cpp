@@ -2,6 +2,7 @@
   Implementation of mesh.hpp.
   \author J. Houdayer
 */
+
 #include <unordered_map>
 #include "iotools.hpp"
 #include "mesh.hpp"
@@ -196,7 +197,7 @@ double w_cloud::radius() const
 
 std::istream &operator >>(std::istream &is, t_mesh &t)
 {
-  int a, b, c;
+  size_t a, b, c;
   is >> a >> b >> c;
   if (is)
     t = { a, b, c };
@@ -246,8 +247,8 @@ void mesh::read_triangle(smart_input &is)
 /** concats two meshes.*/
 void mesh::add(const mesh &m)
 {
-  const int offset = points.size();
-  const int n = triangles.size();
+  const size_t offset = points.size();
+  const size_t n = triangles.size();
   points.insert(points.end(), m.points.begin(), m.points.end());
   triangles.insert(triangles.end(), m.triangles.begin(), m.triangles.end());
   for (auto i = triangles.begin() + n ; i != triangles.end() ; i++)
@@ -257,7 +258,7 @@ void mesh::add(const mesh &m)
 /** adds a polygon with the given points.
  It create an additional point at the center.
 */
-void mesh::add_polygon(const std::vector<int> &p)
+void mesh::add_polygon(const std::vector<size_t> &p)
 {
   if (p.size() <= 2)
     return;
@@ -266,13 +267,13 @@ void mesh::add_polygon(const std::vector<int> &p)
     mid += points[i];
   
   mid /= p.size();
-  const int i0 = add_point(mid);
+  const size_t i0 = add_point(mid);
   add_triangle({p.back(), p.front(), i0});
   for (size_t i = 0 ; i < p.size() - 1 ; i++)
     add_triangle({p[i], p[i+1], i0});
 }
 
-void mesh::add_strip(const std::vector<int> &l1, const std::vector<int> &l2, bool rev)
+void mesh::add_strip(const std::vector<size_t> &l1, const std::vector<size_t> &l2, bool rev)
 {
   const int s1 = l1.size() - 1;
   const int s2 = l2.size() - 1;
@@ -290,7 +291,7 @@ void mesh::add_strip(const std::vector<int> &l1, const std::vector<int> &l2, boo
 
 class edge {
 public:
-  const int i1, i2;
+  const size_t i1, i2;
 
   bool operator == (const edge &e) const
   { return (i1 == e.i1 && i2 == e.i2) || (i1 == e.i2 && i2 == e.i1); }
@@ -299,16 +300,16 @@ public:
 class hash_edge {
 public:
   size_t operator()(const edge &e) const
-  { return (std::hash<int>{}(e.i1) * std::hash<int>{}(e.i2)); }
+  { return (std::hash<size_t>{}(e.i1) * std::hash<size_t>{}(e.i2)); }
 };
 
-typedef std::unordered_map<edge, int, hash_edge> middle_map;
+typedef std::unordered_map<edge, size_t, hash_edge> middle_map;
 
-int get_middle(cloud &c, middle_map &mdls, const edge &e)
+size_t get_middle(cloud &c, middle_map &mdls, const edge &e)
 {
   const auto i = mdls.find(e);
   if (i == mdls.end()) {
-    int mi = c.add_point((c.points[e.i1] + c.points[e.i2]) / 2);
+    size_t mi = c.add_point((c.points[e.i1] + c.points[e.i2]) / 2);
     mdls.insert(std::make_pair(e, mi));
     return mi;
   }
@@ -323,9 +324,9 @@ mesh mesh::split() const
   m.points = points;
   middle_map middles;
   for (auto &t: triangles) {
-    const int m12 = get_middle(m, middles, {t.i1, t.i2});
-    const int m23 = get_middle(m, middles, {t.i2, t.i3});
-    const int m31 = get_middle(m, middles, {t.i3, t.i1});
+    const size_t m12 = get_middle(m, middles, {t.i1, t.i2});
+    const size_t m23 = get_middle(m, middles, {t.i2, t.i3});
+    const size_t m31 = get_middle(m, middles, {t.i3, t.i1});
     m.add_triangle({t.i1, m12, m31});
     m.add_triangle({t.i2, m23, m12});
     m.add_triangle({t.i3, m31, m23});
@@ -337,7 +338,7 @@ mesh mesh::split() const
 /** a class to gather data about an edge in a mesh.*/
 class edge_info {
 public:
-  int count, order;
+  size_t count, order;
 };
 
 typedef std::unordered_map<edge, edge_info, hash_edge> edge_map;
@@ -360,7 +361,7 @@ edge_report mesh::edges() const
     edge_register(m, {t.i2, t.i3});
     edge_register(m, {t.i3, t.i1});
   }
-  edge_report r = {(int)m.size(), 0, 0};
+  edge_report r = {m.size(), 0, 0};
   for (auto &i: m) {
     if (i.second.count % 2)
       r.border++;
@@ -379,13 +380,13 @@ smart_input &operator >>(smart_input &is, mesh &m)
     return is;
   if (!is.next_line(s))
     return is;
-  int n_points, n_faces, dummy;
+  size_t n_points, n_faces, dummy;
   s >> n_points >> n_faces >> dummy;
-  if (!s || n_points < 0 || n_faces < 0)
+  if (!s)
     return is.failed();
-  for (int i = 0 ; i < n_points ; i++)
+  for (size_t i = 0 ; i < n_points ; i++)
     m0.read_point(is);
-  for (int i = 0 ; i < n_faces ; i++)
+  for (size_t i = 0 ; i < n_faces ; i++)
     m0.read_triangle(is);
   if (is)
     m = m0;
@@ -463,11 +464,11 @@ mesh make_octahedron()
   return m;
 }
 
-std::vector<int> add_circle(mesh &m, vec v, double a)
+std::vector<size_t> add_circle(mesh &m, vec v, double a)
 {
-  std::vector<int> l;
+  std::vector<size_t> l;
   double r = hypot(v.x, v.y);
-  int n = ceil(2 * M_PI * r / a);
+  size_t n = ceil(2 * M_PI * r / a);
   if (r > 0 && n < 4)
     n = 4;
   if (n == 0)
@@ -493,19 +494,19 @@ mesh make_torus(double r)
   const double a = (1 - r) / 2;
   const double h = sqrt(3)/2 * a;
   const vec u = {0, 0, h};
-  const std::vector<int> l1 = add_circle(m, {r, 0, 0}, a);
+  const std::vector<size_t> l1 = add_circle(m, {r, 0, 0}, a);
   const vec p2 = (r == 0) ? vec(0.25, 0, 0) : (r + a / 2) / r * m.points[l1[0]];
-  const std::vector<int> l2u = add_circle(m, p2 + u, a);
+  const std::vector<size_t> l2u = add_circle(m, p2 + u, a);
   m.add_strip(l1, l2u, false);
-  const std::vector<int> l2d = add_circle(m, p2 - u, a);
+  const std::vector<size_t> l2d = add_circle(m, p2 - u, a);
   m.add_strip(l1, l2d, true);
   const vec p3 = (r + 3 * a / 2) / (r + a / 2) * (m.points[l2u[0]] - u);
-  const std::vector<int> l3u = add_circle(m, p3 + u, a);
+  const std::vector<size_t> l3u = add_circle(m, p3 + u, a);
   m.add_strip(l2u, l3u, false);
-  const std::vector<int> l3d = add_circle(m, p3 - u, a);
+  const std::vector<size_t> l3d = add_circle(m, p3 - u, a);
   m.add_strip(l2d, l3d, true);
   const vec p4 = (m.points[l3u[0]] - u) / (r + 3 * a / 2);
-  const std::vector<int> l4 = add_circle(m, p4, a);
+  const std::vector<size_t> l4 = add_circle(m, p4, a);
   m.add_strip(l3u, l4, false);
   m.add_strip(l3d, l4, true);
 
@@ -524,7 +525,7 @@ mesh make_dodecahedron()
      {0, h, g}, {0, -h, g}, {0, h, -g}, {0, -h, -g},
      {g, 0, h}, {g, 0, -h}, {-g, 0, h}, {-g, 0, -h},
      {h, g, 0}, {-h, g, 0}, {h, -g, 0}, {-h, -g, 0}};
-  const std::vector<int> facets[12] =
+  const std::vector<size_t> facets[12] =
     {{8, 9, 3, 12, 0},   {8, 1, 14, 2, 9},
      {10, 11, 6, 15, 5}, {10, 4, 13, 7, 11},
      {12, 13, 4, 16, 0}, {12, 3, 18, 7, 13},
@@ -553,12 +554,14 @@ const tetrahedron tetras[24] = { // the 24 tetrahedron around a point of the lat
   TETRA(12, 2, 9), TETRA(12, 9, 5), TETRA(12, 5, 6), TETRA(12, 6, 2)
 };
 
-#define NEIGH(x) x, -(x)
 
-inline bool out(int sig, int n)
+
+typedef u_int16_t sig_t;
+
+inline bool out(sig_t sig, int n)
 { return sig & (1 << n); }
 
-inline int count_bit(int sig)
+int count_bit(sig_t sig)
 {
   int n = 0;
   for (; sig; sig &= sig - 1)
@@ -566,20 +569,35 @@ inline int count_bit(int sig)
   return n;
 }
 
-int mt_node::operator()(int n) const
-{
-  if (collapsed)
-    return vertex;
-  else
-    return vertex + count_bit(signature & ((1 << n) - 1));
-}
+class mt_node {
+public:
+  size_t pos;
+  sig_t groups[6];
+
+  sig_t signature() const
+  { return groups[0]; }
+
+  bool collapsed() const
+  { return groups[1] != 0; }
+
+  size_t operator()(int n) const
+  {
+    sig_t mask = 1 << n;
+    if (!collapsed())
+      return pos + count_bit(signature() & (mask - 1));
+    else
+      for (int i = 1 ; ; i++)
+        if (groups[i] & mask)
+          return pos + i - 1;
+  }
+};
 
 class neighbors
 {
 public:
   std::vector<int> ngh;
   std::vector<std::vector<int>> nngh;
-  std::vector<bool> collapse;
+  std::vector<sig_t> components;
 
   neighbors(int dx, int dy, int dz);
 
@@ -595,8 +613,10 @@ public:
   bool connected(int n1, int n2) const
   { return nngh[n1][n2] != -1; }
 
-  int component(int sig) const;
+  void component(sig_t sig, sig_t *comp);
 };
+
+#define NEIGH(x) x, -(x)
 
 neighbors::neighbors(int dx, int dy, int dz)
 {
@@ -616,19 +636,20 @@ neighbors::neighbors(int dx, int dy, int dz)
           break;
         }
     }
-  collapse.assign(16384, false);
-  for (int sig = 0 ; sig < 16384 ; sig++) {
+  components.assign(65536, 0);
+  for (sig_t sig = 0 ; sig < 16384 ; sig++) {
     int n = count_bit(sig);
     if (n < 2 || n > 12)
       continue;
-    if (component(sig) == 2)
-      collapse[sig] = true;
+    component(sig, &components[4 * sig]);
   }
 }
 
-int neighbors::component(int sig) const
+void neighbors::component(sig_t sig, sig_t *comp)
 {
+  int p = 0;
   int num = 0;
+  bool in_one = false;
   std::vector<int> mark(14, 0);
   std::vector<int> stack;
 
@@ -636,7 +657,12 @@ int neighbors::component(int sig) const
     if (mark[i] != 0)
       continue;
     bool t = out(sig, i);
-    mark[i] = num++;
+    if ((!t && in_one) || (t && p == 3)) {
+      comp[0] = 0;
+      return;
+    }
+    mark[i] = ++num;
+    sig_t c = 1 << i;
     stack.push_back(i);
     while (!stack.empty()) {
       int j = stack.back();
@@ -644,138 +670,183 @@ int neighbors::component(int sig) const
       for (int k = 0 ; k < 14 ; k++)
         if (mark[k] == 0 && out(sig, k) == t && connected(j, k)) {
           mark[k] = num;
+          c |= 1 << k;
           stack.push_back(k);
         }
     }
+    if (!t)
+      in_one = true;
+    else
+      comp[p++] = c;
   }
-  return num;
 }
 
-marching_tetrahedra::marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord &sz,
-                      std::function<double(const vec &)> f, double thresh, bool v):
-szx(sx), szy(sy), szz(sz), threshold(thresh), func(f), verbose(v), node(2*szx.maxN()*szy.maxN()*szz.maxN())
+vec pos_vertex(const mt_coord &sx, const mt_coord &sy, const mt_coord &sz, size_t idx)
 {
-  int idx = 0;
+  const size_t layer_sz = sy.maxN() * sx.maxN();
+  const size_t dbl_layer_sz = 2 * layer_sz - sx.maxN() - 1;
   int s = 0;
-  if (verbose)
-    std::cerr << "Phase 1/3, function evaluation" << std::endl;
-  progression prog(szz.maxN()*((2 * szy.maxN()- 1) * szx.maxN() - 1), verbose);
-  for (int nz = 0 ; nz < szz.maxN() * 2 ; nz++, s = 1 - s) {
-    for (int ny = 0 ; ny < szy.maxN() - s ; ny++) // remove one line every two layers 
-      for (int nx = 0 ; nx < szx.maxN() ; nx++, idx++) {
-        mt_node &nd = node[idx];
-        nd.pos = { szx.pos(nx, s), szy.pos(ny, s), szz.pos(nz / 2, s) };
-        nd.val = func(nd.pos);
-        nd.inside = nd.val > thresh
-                      && nx > 0 && nx < szx.maxN() - 1
-                      && ny > 0 && ny < szy.maxN() - 1;
-        if (nd.inside) // select all inside points
-          in_node.push_back(idx);
-        prog.progress();
-      }
-    if (s == 1) // remove one point every two layers
-      idx--;
+  const size_t nz = idx / dbl_layer_sz;
+  idx -= nz * dbl_layer_sz;
+  if (idx > layer_sz) {
+    s = 1;
+    idx -= layer_sz;
   }
+  const size_t ny = idx / sx.maxN();
+  const size_t nx = idx - ny * sx.maxN();
+  return vec {sx.pos(nx, s), sy.pos(ny, s), sz.pos(nz, s)}; 
 }
 
-mesh marching_tetrahedra::build()
+mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord &sz,
+                      std::function<double(const vec &)> f, double thresh, bool verbose)
 {
-  neighbors ngh(1, szx.maxN(), szx.maxN() * szy.maxN());
-  std::vector<int> surface;
-  mesh m;
-
-  if (verbose)
-    std::cerr << "Phase 2/3, computing vertices" << std::endl;
+  const size_t N = sz.maxN()*((2 * sy.maxN() - 1) * sx.maxN() - 1);
+  std::vector<float> val(N+1);
+  std::vector<size_t> in_node;
   {
-    progression prog(in_node.size(), verbose);
-    for (auto idx: in_node) { // go through all points
-      prog.progress();
-      mt_node &nd0 = node[idx];
-      nd0.vertex = m.points.size();
-
-      vec sum;
-      for (int n = 0 ; n < 14 ; n++) {// check all neighbors
-        mt_node &nd1 = node[idx + ngh[n]];
-        if(!nd1.inside) {
-          nd0.signature |= 1 << n;
-          vec v = nd0.pos
-            + (threshold - nd0.val) / (nd1.val - nd0.val)
-            * (nd1.pos - nd0.pos);
-          sum += v;
-          m.add_point(v);
+    if (verbose)
+      std::cerr << "Phase 1/3, function evaluation" << std::endl;
+    progression prog(N + sz.maxN(), verbose);
+    int s = 0;
+    size_t idx = 0;
+    for (int nz = 0 ; nz < sz.maxN() * 2 ; nz++, s = 1 - s) {
+      for (int ny = 0 ; ny < sy.maxN() - s ; ny++) // remove one line every two layers 
+        for (int nx = 0 ; nx < sx.maxN() ; nx++, idx++) {
+          const vec pos { sx.pos(nx, s), sy.pos(ny, s), sz.pos(nz / 2, s) };
+          double v = f(pos) - thresh;
+          if (v > 0 && (nx <= 0 || nx >= sx.maxN() - 1
+                    || ny <= 0 || ny >= sy.maxN() - 1))
+            v = -1;
+          val[idx] = v;
+          if (v > 0)
+            in_node.push_back(idx);
+          prog.progress();
         }
-      }
-
-      if (nd0.signature == 0)
-        continue;
-
-      surface.push_back(idx);
-      nd0.collapsed = ngh.collapse[nd0.signature];
-
-      if (nd0.collapsed) {
-        int n = m.points.size() - nd0.vertex;
-        sum /= n;
-        m.points.resize(nd0.vertex);
-        m.add_point(sum);
-      }
+      if (s == 1) // remove one point every two layers
+        idx--;
     }
   }
 
-  if (verbose)
-    std::cerr << "Phase 3/3, computing triangles" << std::endl;
-  progression prog(surface.size(), verbose);
-  for (auto idx: surface) {// go through all inside points on surface
-    prog.progress();
-    mt_node &nd0 = node[idx];
-    for (auto &tetra: tetras) { // go through all possible tetra at this point
-      int n1 = tetra.n1;
-      int n2 = tetra.n2;
-      int n3 = tetra.n3;
-      bool i1 = !out(nd0.signature, n1);
-      bool i2 = !out(nd0.signature, n2);
-      bool i3 = !out(nd0.signature, n3);
-      int n = i1 + i2 + i3; // numbers of neighbors inside
-      if (n == 3) // tetra is completly inside, do nothing
-        continue;
-      if (n == 0) // only current point inside
-        m.add_triangle({nd0(n1), nd0(n2), nd0(n3)});
-      else {      // 2 or 3 points inside
-        while (!i1 || i3) { // rotate points, after that inside points are n1 and possibly n2
-          bool ti = i1;
-          i1 = i2;
-          i2 = i3;
-          i3 = ti;
-          int tn = n1;
-          n1 = n2;
-          n2 = n3;
-          n3 = tn;
+  mesh m;
+  if (in_node.empty())
+    return m;
+  std::unordered_map<size_t, mt_node> surface;
+  neighbors ngh(1, sx.maxN(), sx.maxN() * sy.maxN());
+  {
+    if (verbose)
+      std::cerr << "Phase 2/3, computing vertices" << std::endl;
+    progression prog(in_node.size(), verbose);
+    std::vector<vec> vertex(14);
+    for (auto idx: in_node) { // go through all points
+      prog.progress();
+      const vec pos = pos_vertex(sx, sy, sz, idx);
+      const double v = val[idx];
+      sig_t sig = 0;
+      for (int i = 0 ; i < 14 ; i++) {// check all neighbors
+        const size_t idx_ngh = idx + ngh[i];
+        const double v_ngh = val[idx_ngh];
+        if (v_ngh <= 0) {
+          sig |= 1 << i;
+          const vec pos_ngh = pos_vertex(sx, sy, sz, idx_ngh);
+          vertex[i] = pos - v / (v_ngh - v) * (pos_ngh - pos);
         }
-        if (ngh[n1] < 0) // stop if tetra has already been done by n1
-          continue;
-        mt_node &nd1 = node[idx + ngh[n1]];
-        if (n == 1) { // tetra has 2 points in and 2 out
-          int p02 = nd0(n2);
-          int p03 = nd0(n3);
-          int p12 = nd1(ngh(n1, n2));
-          int p13 = nd1(ngh(n1, n3));
-          if ((m.points[p02] - m.points[p13]).length_square()
-               > (m.points[p12] - m.points[p03]).length_square()) { // cut through the smallest diagonal
-            m.add_triangle({p03, p13, p12});
-            m.add_triangle({p03, p12, p02});
-          }
-          else {
-            m.add_triangle({p13, p12, p02});
-            m.add_triangle({p13, p02, p03});
-          }
-        }
+      }
 
-        else { // tetra has 3 points in and 1 out
-          if (ngh[n2] < 0) // stop if tetra has been done by n2
+      if (sig == 0)
+        continue;
+
+      mt_node node;
+      node.pos = m.points.size();
+      node.groups[0] = sig;
+      sig_t *compo = &ngh.components[4 * sig];
+      node.groups[1] = compo[0];
+      node.groups[2] = compo[1];
+      node.groups[3] = compo[2];
+      node.groups[4] = compo[3];
+      node.groups[5] = 0;
+      surface.insert({idx, node});
+
+      if (!node.collapsed()) {
+        for (int i = 0 ; i < 14 ; i++)
+          if (out(sig, i))
+            m.points.push_back(vertex[i]);
+      }
+      else
+        for (int i = 0 ; compo[i] != 0 ; i++) {
+          vec sum {0, 0, 0};
+          int n = 0;
+          for (int j = 0 ; j < 14 ; j++)
+            if (out(compo[i], j)) {
+              sum += vertex[j];
+              n++;
+            }
+          sum /= n;
+          m.points.push_back(sum);
+        }
+    }
+  }
+
+  val.clear();
+  in_node.clear();
+
+  {
+    if (verbose)
+      std::cerr << "Phase 3/3, computing triangles" << std::endl;
+    progression prog(surface.size(), verbose);
+    for (auto &v: surface) {// go through all inside points on surface
+      prog.progress();
+      const size_t idx = v.first;
+      const mt_node &node = v.second;
+      for (auto &tetra: tetras) { // go through all possible tetra at this point
+        int n1 = tetra.n1;
+        int n2 = tetra.n2;
+        int n3 = tetra.n3;
+        bool i1 = !out(node.signature(), n1);
+        bool i2 = !out(node.signature(), n2);
+        bool i3 = !out(node.signature(), n3);
+        int n = i1 + i2 + i3; // numbers of neighbors inside
+        if (n == 3) // tetra is completly inside, do nothing
+          continue;
+        if (n == 0) // only current point inside
+          m.add_triangle({node(n1), node(n2), node(n3)});
+        else {      // 2 or 3 points inside
+          while (!i1 || i3) { // rotate points, after that inside points are n1 and possibly n2
+            bool ti = i1;
+            i1 = i2;
+            i2 = i3;
+            i3 = ti;
+            int tn = n1;
+            n1 = n2;
+            n2 = n3;
+            n3 = tn;
+          }
+          if (ngh[n1] < 0) // stop if tetra has already been done by n1
             continue;
-          mt_node &nd2 = node[idx + ngh[n2]];        
-          m.add_triangle({nd0(n3),
-                          nd1(ngh(n1, n3)),
-                          nd2(ngh(n2, n3))});
+          const mt_node &node1 = surface[idx + ngh[n1]];
+          if (n == 1) { // tetra has 2 points in and 2 out
+            size_t p02 = node(n2);
+            size_t p03 = node(n3);
+            size_t p12 = node1(ngh(n1, n2));
+            size_t p13 = node1(ngh(n1, n3));
+            if ((m.points[p02] - m.points[p13]).length_square()
+                > (m.points[p12] - m.points[p03]).length_square()) { // cut through the smallest diagonal
+              m.add_triangle({p03, p13, p12});
+              m.add_triangle({p03, p12, p02});
+            }
+            else {
+              m.add_triangle({p13, p12, p02});
+              m.add_triangle({p13, p02, p03});
+            }
+          }
+
+          else { // tetra has 3 points in and 1 out
+            if (ngh[n2] < 0) // stop if tetra has been done by n2
+              continue;
+            const mt_node &node2 = surface[idx + ngh[n2]];        
+            m.add_triangle({node(n3),
+                            node1(ngh(n1, n3)),
+                            node2(ngh(n2, n3))});
+          }
         }
       }
     }

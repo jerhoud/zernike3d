@@ -73,6 +73,5 @@ int main (int argc, char *argv[])
   zm.normalize(zm_norm::dual);
 
   zernike_build f(zernike(N, zm));
-  marching_tetrahedra mt({-1, 1, res}, {-1, 1, res}, {-1, 1, res}, f, thresh, p("v"));
-  cout << mt.build();
+  cout << marching_tetrahedra({-1, 1, res}, {-1, 1, res}, {-1, 1, res}, f, thresh, p("v"));
 }

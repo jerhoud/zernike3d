@@ -20,7 +20,7 @@ public:
   { return points.empty(); }
  
   /** Adds a point to the cloud. */
-  int add_point(const vec &pt)
+  size_t add_point(const vec &pt)
   {
     points.push_back(pt);
     return points.size() - 1;
@@ -45,8 +45,11 @@ public:
   std::vector<w_vec> points; /**< The points. */
 
   /** Adds a point to the cloud. */
-  void add_point(const w_vec &pt)
-  { points.push_back(pt); }
+  size_t add_point(const w_vec &pt)
+  { 
+    points.push_back(pt);
+    return points.size() - 1;
+  }
 
   w_cloud &operator += (const vec &v);
   w_cloud &operator -= (const vec &v);
@@ -64,9 +67,9 @@ public:
 class t_mesh
 {
 public:
-  int i1, i2, i3;
+  size_t i1, i2, i3;
 
-  void move(int offset)
+  void move(size_t offset)
   { i1 += offset; i2 += offset; i3 += offset; }
 
   triangle get_triangle(const cloud &cld) const
@@ -82,7 +85,7 @@ std::ostream &operator <<(std::ostream &, const t_mesh &t);
 /** a class to store information about a mesh.*/
 class edge_report {
 public:
-  int count, border, strange;
+  size_t count, border, strange;
 };
 
 /** A triangular mesh. */
@@ -107,8 +110,8 @@ public:
     else
       triangles.push_back(t);
   }
-  void add_polygon(const std::vector<int> &p);
-  void add_strip(const std::vector<int> &l1, const std::vector<int> &l2, bool rev);
+  void add_polygon(const std::vector<size_t> &p);
+  void add_strip(const std::vector<size_t> &l1, const std::vector<size_t> &l2, bool rev);
 
   void read_triangle(smart_input &is);
   void add(const mesh &m);
@@ -143,39 +146,7 @@ public:
   { return N + 3;}
 };
 
-/** a class to store a point of the lattice for marching_tetrahedra.*/
-class mt_node
-{
-public:
-  vec pos;
-  double val;
-  bool inside, collapsed;
-  int signature;
-  int vertex;
-
-  int operator()(int n) const;
-};
-
-/** a class for building a mesh from a density function.
- It uses the regularised marching tetrahedra algorithm.
-*/
-class marching_tetrahedra
-{
-public:
-  const mt_coord szx, szy, szz;
-  const double threshold;
-  const std::function<double(const vec &)> func;
-  bool verbose;
-
-  marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord &sz,
+mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord &sz,
                       std::function<double(const vec &)> f, double thresh, bool verbose = false);
-
-  mesh build();
-
-protected:
-  std::vector<mt_node> node;
-  std::vector<int> in_node;
-};
-
 
 #endif
