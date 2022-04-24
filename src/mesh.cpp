@@ -572,23 +572,27 @@ int count_bit(sig_t sig)
 class mt_node {
 public:
   size_t pos;
-  sig_t groups[6];
-
-  sig_t signature() const
-  { return groups[0]; }
+  sig_t signature;
+  std::vector<sig_t> groups;
 
   bool collapsed() const
-  { return groups[1] != 0; }
+  { return !groups.empty(); }
 
   size_t operator()(int n) const
   {
     sig_t mask = 1 << n;
     if (!collapsed())
-      return pos + count_bit(signature() & (mask - 1));
-    else
-      for (int i = 1 ; ; i++)
-        if (groups[i] & mask)
-          return pos + i - 1;
+      return pos + count_bit(signature & (mask - 1));
+    else {
+      size_t cpos = pos;
+      for (auto g: groups) {
+        if (g & mask)
+          return cpos;
+        ++cpos;
+      }
+    }
+    //should not reach here
+    return -1;
   }
 };
 
@@ -597,7 +601,7 @@ class neighbors
 public:
   std::vector<int> ngh;
   std::vector<std::vector<int>> nngh;
-  std::vector<sig_t> components;
+  std::unordered_map<sig_t, std::vector<sig_t>> components;
 
   neighbors(int dx, int dy, int dz);
 
@@ -613,7 +617,7 @@ public:
   bool connected(int n1, int n2) const
   { return nngh[n1][n2] != -1; }
 
-  void component(sig_t sig, sig_t *comp);
+  const std::vector<sig_t> component(sig_t sig) const;
 };
 
 #define NEIGH(x) x, -(x)
@@ -636,31 +640,20 @@ neighbors::neighbors(int dx, int dy, int dz)
           break;
         }
     }
-  components.assign(65536, 0);
-  for (sig_t sig = 0 ; sig < 16384 ; sig++) {
-    int n = count_bit(sig);
-    if (n < 2 || n > 12)
-      continue;
-    component(sig, &components[4 * sig]);
-  }
 }
 
-void neighbors::component(sig_t sig, sig_t *comp)
+const std::vector<sig_t> neighbors::component(sig_t sig) const
 {
-  int p = 0;
+  int n_in = 0;
   int num = 0;
-  bool in_one = false;
   std::vector<int> mark(14, 0);
   std::vector<int> stack;
+  std::vector<sig_t> groups;
 
   for (int i = 0 ; i < 14 ; i++) {
     if (mark[i] != 0)
       continue;
     bool t = out(sig, i);
-    if ((!t && in_one) || (t && p == 3)) {
-      comp[0] = 0;
-      return;
-    }
     mark[i] = ++num;
     sig_t c = 1 << i;
     stack.push_back(i);
@@ -675,10 +668,13 @@ void neighbors::component(sig_t sig, sig_t *comp)
         }
     }
     if (!t)
-      in_one = true;
+      n_in++;
     else
-      comp[p++] = c;
+      groups.push_back(c);
   }
+  if (n_in != 1)
+    groups.clear();
+  return groups;
 }
 
 vec pos_vertex(const mt_coord &sx, const mt_coord &sy, const mt_coord &sz, size_t idx)
@@ -698,7 +694,7 @@ vec pos_vertex(const mt_coord &sx, const mt_coord &sy, const mt_coord &sz, size_
 }
 
 mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord &sz,
-                      std::function<double(const vec &)> f, double thresh, bool verbose)
+                      std::function<double(const vec &)> f, double thresh, bool regularized, bool verbose)
 {
   const size_t N = sz.maxN()*((2 * sy.maxN() - 1) * sx.maxN() - 1);
   std::vector<float> val(N+1);
@@ -731,6 +727,7 @@ mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord 
   if (in_node.empty())
     return m;
   std::unordered_map<size_t, mt_node> surface;
+  std::unordered_map<sig_t, std::vector<sig_t>> components;
   neighbors ngh(1, sx.maxN(), sx.maxN() * sy.maxN());
   {
     if (verbose)
@@ -757,13 +754,15 @@ mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord 
 
       mt_node node;
       node.pos = m.points.size();
-      node.groups[0] = sig;
-      sig_t *compo = &ngh.components[4 * sig];
-      node.groups[1] = compo[0];
-      node.groups[2] = compo[1];
-      node.groups[3] = compo[2];
-      node.groups[4] = compo[3];
-      node.groups[5] = 0;
+      node.signature = sig;
+      int n = count_bit(sig);
+      if (regularized && n >= 2 && n <=12) {
+        auto it = components.find(sig);
+        if (it != components.end())
+          node.groups = it->second;
+        else
+          components[sig] = node.groups = ngh.component(sig);
+      }
       surface.insert({idx, node});
 
       if (!node.collapsed()) {
@@ -772,15 +771,12 @@ mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord 
             m.points.push_back(vertex[i]);
       }
       else
-        for (int i = 0 ; compo[i] != 0 ; i++) {
+        for (auto g: node.groups) {
           vec sum {0, 0, 0};
-          int n = 0;
           for (int j = 0 ; j < 14 ; j++)
-            if (out(compo[i], j)) {
+            if (out(g, j))
               sum += vertex[j];
-              n++;
-            }
-          sum /= n;
+          sum /= count_bit(g);
           m.points.push_back(sum);
         }
     }
@@ -801,9 +797,9 @@ mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord 
         int n1 = tetra.n1;
         int n2 = tetra.n2;
         int n3 = tetra.n3;
-        bool i1 = !out(node.signature(), n1);
-        bool i2 = !out(node.signature(), n2);
-        bool i3 = !out(node.signature(), n3);
+        bool i1 = !out(node.signature, n1);
+        bool i2 = !out(node.signature, n2);
+        bool i3 = !out(node.signature, n3);
         int n = i1 + i2 + i3; // numbers of neighbors inside
         if (n == 3) // tetra is completly inside, do nothing
           continue;

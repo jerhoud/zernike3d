@@ -22,6 +22,7 @@ string f_help = "Numerical precision in fixed notation";
 string e_help = "Numerical precision in scientific notation";
 string t_help = "Threshold value which separates the inside\n"
                 "from the outside (default is 1/2)";
+string r_help = "Does not regularized the mesh";
 string N_help = "The maximum order of Zernike moments to use (if available)";
 string RES_help = "Résolution of the mesh (i.e. number of intervals between -1 and 1)";
 string FILE_help = "Reads FILE in ZM format (default is standard input)";
@@ -42,6 +43,7 @@ int main (int argc, char *argv[])
   p.flag("v", "verbose", v_help);
   p.option("f", "", "DIGITS", digit, f_help);
   p.option("e", "", "DIGITS", digit, e_help);
+  p.flag("r", "raw", r_help);
   p.option("t", "threshold", "THRESH", thresh, t_help);
   p.arg("N", N, N_help);
   p.arg("RES", res, RES_help);
@@ -73,5 +75,5 @@ int main (int argc, char *argv[])
   zm.normalize(zm_norm::dual);
 
   zernike_build f(zernike(N, zm));
-  cout << marching_tetrahedra({-1, 1, res}, {-1, 1, res}, {-1, 1, res}, f, thresh, p("v"));
+  cout << marching_tetrahedra({-1, 1, res}, {-1, 1, res}, {-1, 1, res}, f, thresh, !p("r"), p("v"));
 }
