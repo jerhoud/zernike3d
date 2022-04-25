@@ -4,6 +4,7 @@
 */
 
 #include <unordered_map>
+#include <algorithm>
 #include "iotools.hpp"
 #include "mesh.hpp"
 
@@ -363,10 +364,10 @@ edge_report mesh::edges() const
   }
   edge_report r = {m.size(), 0, 0};
   for (auto &i: m) {
-    if (i.second.count % 2)
-      r.border++;
-    else if (i.second.order != 0)
+    if (i.second.count > 2)
       r.strange++;
+    else if (i.second.order != 0)
+      r.border++;
   }
   return r;
 }
@@ -572,27 +573,21 @@ int count_bit(sig_t sig)
 class mt_node {
 public:
   size_t pos;
-  sig_t signature;
+  sig_t signature, rest;
   std::vector<sig_t> groups;
-
-  bool collapsed() const
-  { return !groups.empty(); }
+  vec vertex[14];
 
   size_t operator()(int n) const
   {
-    sig_t mask = 1 << n;
-    if (!collapsed())
-      return pos + count_bit(signature & (mask - 1));
-    else {
-      size_t cpos = pos;
-      for (auto g: groups) {
-        if (g & mask)
-          return cpos;
-        ++cpos;
-      }
+    const sig_t mask = 1 << n;
+    size_t vpos = pos;
+    for (auto g: groups) {
+      if (g & mask)
+        return vpos;
+      ++vpos;
     }
-    //should not reach here
-    return -1;
+    vpos += count_bit(rest & (mask - 1));
+    return vpos;
   }
 };
 
@@ -601,7 +596,6 @@ class neighbors
 public:
   std::vector<int> ngh;
   std::vector<std::vector<int>> nngh;
-  std::unordered_map<sig_t, std::vector<sig_t>> components;
 
   neighbors(int dx, int dy, int dz);
 
@@ -617,7 +611,7 @@ public:
   bool connected(int n1, int n2) const
   { return nngh[n1][n2] != -1; }
 
-  const std::vector<sig_t> component(sig_t sig) const;
+  const std::vector<sig_t> component(sig_t sig, int &n_in) const;
 };
 
 #define NEIGH(x) x, -(x)
@@ -642,13 +636,13 @@ neighbors::neighbors(int dx, int dy, int dz)
     }
 }
 
-const std::vector<sig_t> neighbors::component(sig_t sig) const
+const std::vector<sig_t> neighbors::component(sig_t sig, int &n_in) const
 {
-  int n_in = 0;
   int num = 0;
   std::vector<int> mark(14, 0);
   std::vector<int> stack;
   std::vector<sig_t> groups;
+  n_in = 0;
 
   for (int i = 0 ; i < 14 ; i++) {
     if (mark[i] != 0)
@@ -672,8 +666,6 @@ const std::vector<sig_t> neighbors::component(sig_t sig) const
     else
       groups.push_back(c);
   }
-  if (n_in != 1)
-    groups.clear();
   return groups;
 }
 
@@ -699,7 +691,7 @@ mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord 
   const size_t N = sz.maxN()*((2 * sy.maxN() - 1) * sx.maxN() - 1);
   std::vector<float> val(N+1);
   std::vector<size_t> in_node;
-  {
+  { // Phase 1
     if (verbose)
       std::cerr << "Phase 1/3, function evaluation" << std::endl;
     progression prog(N + sz.maxN(), verbose);
@@ -723,18 +715,20 @@ mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord 
     }
   }
 
-  mesh m;
   if (in_node.empty())
-    return m;
+    return mesh();
+  
   std::unordered_map<size_t, mt_node> surface;
-  std::unordered_map<sig_t, std::vector<sig_t>> components;
   neighbors ngh(1, sx.maxN(), sx.maxN() * sy.maxN());
-  {
+  { // Phase 2
     if (verbose)
-      std::cerr << "Phase 2/3, computing vertices" << std::endl;
+      std::cerr << "Phase 2/4, computing vertices" << std::endl;
     progression prog(in_node.size(), verbose);
-    std::vector<vec> vertex(14);
+    std::unordered_map<sig_t, std::vector<sig_t>> components;
+    std::unordered_map<sig_t, bool> collapsable;
+
     for (auto idx: in_node) { // go through all points
+      mt_node node;
       prog.progress();
       const vec pos = pos_vertex(sx, sy, sz, idx);
       const double v = val[idx];
@@ -745,107 +739,180 @@ mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord 
         if (v_ngh <= 0) {
           sig |= 1 << i;
           const vec pos_ngh = pos_vertex(sx, sy, sz, idx_ngh);
-          vertex[i] = pos - v / (v_ngh - v) * (pos_ngh - pos);
+          node.vertex[i] = pos - v / (v_ngh - v) * (pos_ngh - pos);
         }
       }
 
       if (sig == 0)
         continue;
 
-      mt_node node;
-      node.pos = m.points.size();
       node.signature = sig;
       int n = count_bit(sig);
       if (regularized && n >= 2 && n <=12) {
         auto it = components.find(sig);
         if (it != components.end())
           node.groups = it->second;
-        else
-          components[sig] = node.groups = ngh.component(sig);
-      }
-      surface.insert({idx, node});
-
-      if (!node.collapsed()) {
-        for (int i = 0 ; i < 14 ; i++)
-          if (out(sig, i))
-            m.points.push_back(vertex[i]);
-      }
-      else
-        for (auto g: node.groups) {
-          vec sum {0, 0, 0};
-          for (int j = 0 ; j < 14 ; j++)
-            if (out(g, j))
-              sum += vertex[j];
-          sum /= count_bit(g);
-          m.points.push_back(sum);
+        else {
+          int n_in;
+          std::vector<sig_t> compo = ngh.component(sig, n_in);
+          for (auto c:compo) {
+            bool collapse;
+            auto it = collapsable.find(c);
+            if (it != collapsable.end())
+              collapse = it->second;
+            else {
+              ngh.component(c, n_in);
+              collapse = n_in == 1;
+              collapsable[c] = collapse;
+            }
+            if (collapse) {
+              node.groups.push_back(c);
+              sig ^= c;
+            }
+          }
+          components[node.signature] = node.groups;
         }
+      }
+      node.rest = sig;
+      surface.insert({idx, node});
     }
   }
 
   val.clear();
   in_node.clear();
 
-  {
-    if (verbose)
-      std::cerr << "Phase 3/3, computing triangles" << std::endl;
-    progression prog(surface.size(), verbose);
-    for (auto &v: surface) {// go through all inside points on surface
-      prog.progress();
-      const size_t idx = v.first;
-      const mt_node &node = v.second;
-      for (auto &tetra: tetras) { // go through all possible tetra at this point
-        int n1 = tetra.n1;
-        int n2 = tetra.n2;
-        int n3 = tetra.n3;
-        bool i1 = !out(node.signature, n1);
-        bool i2 = !out(node.signature, n2);
-        bool i3 = !out(node.signature, n3);
-        int n = i1 + i2 + i3; // numbers of neighbors inside
-        if (n == 3) // tetra is completly inside, do nothing
-          continue;
-        if (n == 0) // only current point inside
-          m.add_triangle({node(n1), node(n2), node(n3)});
-        else {      // 2 or 3 points inside
-          while (!i1 || i3) { // rotate points, after that inside points are n1 and possibly n2
-            bool ti = i1;
-            i1 = i2;
-            i2 = i3;
-            i3 = ti;
-            int tn = n1;
-            n1 = n2;
-            n2 = n3;
-            n3 = tn;
+  std::vector<size_t> reject(1, -1);
+  int count = 0;
+  while (true) {
+    count++;
+    mesh m;
+    { // Phase 3
+      if (verbose)
+        std::cerr << "Phase 3/4, grouping vertices" << std::endl;
+      progression prog(surface.size(), verbose);
+      size_t idx = 0, r_idx = 0;
+      for (auto &v: surface) { // go through all inside points on surface
+        mt_node &node = v.second;
+        node.pos = m.points.size();
+        sig_t dispatch = 0;
+        for (size_t i = 0 ; i < node.groups.size() ; i++) {
+          sig_t g = node.groups[i];
+          if (idx == reject[r_idx]) {
+            r_idx++;
+            dispatch |= g;
+            node.groups.erase(node.groups.begin() + i--);
           }
-          if (ngh[n1] < 0) // stop if tetra has already been done by n1
-            continue;
-          const mt_node &node1 = surface[idx + ngh[n1]];
-          if (n == 1) { // tetra has 2 points in and 2 out
-            size_t p02 = node(n2);
-            size_t p03 = node(n3);
-            size_t p12 = node1(ngh(n1, n2));
-            size_t p13 = node1(ngh(n1, n3));
-            if ((m.points[p02] - m.points[p13]).length_square()
-                > (m.points[p12] - m.points[p03]).length_square()) { // cut through the smallest diagonal
-              m.add_triangle({p03, p13, p12});
-              m.add_triangle({p03, p12, p02});
-            }
-            else {
-              m.add_triangle({p13, p12, p02});
-              m.add_triangle({p13, p02, p03});
-            }
+          else {
+            vec sum {0, 0, 0};
+            for (int j = 0 ; j < 14 ; j++)
+              if (out(g, j))
+                sum += node.vertex[j];
+            sum /= count_bit(g);
+            m.points.push_back(sum);
           }
+          idx++;
+        }
+        if ((node.rest | dispatch) != 0)
+          for (int i = 0 ; i < 14 ; i++) {
+            if (out(node.rest, i)) {
+              if (idx == reject[r_idx])
+                r_idx++;
+              m.points.push_back(node.vertex[i]);
+              idx++;
+            }
+            else if(out(dispatch, i))
+              m.points.push_back(node.vertex[i]);
+          }
+        node.rest |= dispatch;
+        prog.progress();
+      }
+    }
 
-          else { // tetra has 3 points in and 1 out
-            if (ngh[n2] < 0) // stop if tetra has been done by n2
+    { // Phase 4
+      if (verbose)
+        std::cerr << "Phase 4/4, computing triangles" << std::endl;
+      progression prog(surface.size(), verbose);
+      for (auto &v: surface) {// go through all inside points on surface
+        prog.progress();
+        const size_t idx = v.first;
+        const mt_node &node = v.second;
+        for (auto &tetra: tetras) { // go through all possible tetra at this point
+          int n1 = tetra.n1;
+          int n2 = tetra.n2;
+          int n3 = tetra.n3;
+          bool i1 = !out(node.signature, n1);
+          bool i2 = !out(node.signature, n2);
+          bool i3 = !out(node.signature, n3);
+          int n = i1 + i2 + i3; // numbers of neighbors inside
+          if (n == 3) // tetra is completly inside, do nothing
+            continue;
+          if (n == 0) // only current point inside
+            m.add_triangle({node(n1), node(n2), node(n3)});
+          else {      // 2 or 3 points inside
+            while (!i1 || i3) { // rotate points, after that inside points are n1 and possibly n2
+              bool ti = i1;
+              i1 = i2;
+              i2 = i3;
+              i3 = ti;
+              int tn = n1;
+              n1 = n2;
+              n2 = n3;
+              n3 = tn;
+            }
+            if (ngh[n1] < 0) // stop if tetra has already been done by n1
               continue;
-            const mt_node &node2 = surface[idx + ngh[n2]];        
-            m.add_triangle({node(n3),
-                            node1(ngh(n1, n3)),
-                            node2(ngh(n2, n3))});
+            const mt_node &node1 = surface[idx + ngh[n1]];
+            if (n == 1) { // tetra has 2 points in and 2 out
+              size_t p02 = node(n2);
+              size_t p03 = node(n3);
+              size_t p12 = node1(ngh(n1, n2));
+              size_t p13 = node1(ngh(n1, n3));
+              if ((m.points[p02] - m.points[p13]).length_square()
+                  > (m.points[p12] - m.points[p03]).length_square()) { // cut through the smallest diagonal
+                m.add_triangle({p03, p13, p12});
+                m.add_triangle({p03, p12, p02});
+              }
+              else {
+                m.add_triangle({p13, p12, p02});
+                m.add_triangle({p13, p02, p03});
+              }
+            }
+
+            else { // tetra has 3 points in and 1 out
+              if (ngh[n2] < 0) // stop if tetra has been done by n2
+                continue;
+              const mt_node &node2 = surface[idx + ngh[n2]];        
+              m.add_triangle({node(n3),
+                              node1(ngh(n1, n3)),
+                              node2(ngh(n2, n3))});
+            }
           }
         }
       }
     }
+
+    if (count == 1) {
+      if (verbose)
+        std::cerr << "Checking for bad bonds" << std::endl;
+      edge_map em;
+      for (auto &t: m.triangles) {
+        edge_register(em, {t.i1, t.i2});
+        edge_register(em, {t.i2, t.i3});
+        edge_register(em, {t.i3, t.i1});
+      }
+      reject.clear();
+      for (auto &i: em) {
+        if (i.second.count > 2)
+          reject.push_back(i.first.i1);
+      }
+      if (verbose)
+        std::cerr << "Found: " << reject.size()  << std::endl;
+      
+      reject.push_back(-1);
+      std::sort(reject.begin(), reject.end());
+      std::unique(reject.begin(), reject.end());
+    }
+    else
+      return m;
   }
-  return m;
 }
