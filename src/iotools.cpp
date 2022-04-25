@@ -13,7 +13,8 @@ std::istream &failed(std::istream &is)
 }
 
 progression::progression(size_t sz, bool show):
-start_time(time(NULL)), size(sz), step(0), silent(!show)
+start_time(time(NULL)), size(sz), step(0),
+old_percent(-1), old_rest(-1), silent(!show)
 {
   if (!silent)
     std::cerr << "Starting 0/" << sz;
@@ -28,15 +29,20 @@ progression::~progression()
 void progression::progress(const std::string &s)
 {
   ++step;
-  time(&current_time);
-  const double elapsed = difftime(current_time, start_time);
-  const int rest = (int) ((elapsed / step) * (size - step) + 0.5);
   if (!silent) {
-    std::cerr << "\r";
-    std::cerr << step << "/" << size << ": "
-              << (int)(100 * double(step) / size + 0.5)
-              << "% (" << rest << " s)";
-    std::cerr << s << "\033[K";
+    time(&current_time);
+    const double elapsed = difftime(current_time, start_time);
+    const int rest = (int) ((elapsed / step) * (size - step) + 0.5);
+    const int percent = (int)(100 * double(step) / size + 0.5);
+    if ((rest != old_rest) || (percent != old_percent)) {
+      std::cerr << "\r";
+      std::cerr << step << "/" << size << ": "
+                << percent
+                << "% (" << rest << " s)";
+      std::cerr << s << "\033[K";
+      old_rest = rest;
+      old_percent = percent;
+    }
   }
 }
 

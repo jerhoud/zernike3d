@@ -25,6 +25,7 @@ class progression
 public:
   time_t start_time, current_time;
   size_t size, step;
+  int old_percent, old_rest;
   bool silent;
 
   progression(size_t sz, bool show);
