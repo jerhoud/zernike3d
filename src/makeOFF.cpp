@@ -172,7 +172,7 @@ int main (int argc, char *argv[])
     if (r.border != 0)
       cout << "There are " << r.border << " border edges." << endl;
     if (r.strange != 0)
-      cout << "There are " << r.strange << " ill oriented edges." << endl;
+      cout << "There are " << r.strange << " edges connected to more than 2 facets." << endl;
     cout << endl;
     cout << "Center of mass: " << mc << endl;
     cout << "Radius from center of mass: " << m.radius() << endl;
