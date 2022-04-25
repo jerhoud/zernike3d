@@ -13,7 +13,7 @@ std::istream &failed(std::istream &is)
 }
 
 progression::progression(size_t sz, bool show):
-start_time(time(NULL)), size(sz), step(0),
+start_time(std::chrono::system_clock::now()), size(sz), step(0),
 old_percent(-1), old_rest(-1), silent(!show)
 {
   if (!silent)
@@ -22,16 +22,26 @@ old_percent(-1), old_rest(-1), silent(!show)
 
 progression::~progression()
 {
-  if (!silent)
-    std::cerr << std::endl;
+  if (!silent) {
+    std::chrono::duration<double> diff_time =  std::chrono::system_clock::now() - start_time;
+    const double elapsed = diff_time.count();
+
+    std::cerr << "\r";
+    std::cerr << "Finished " << size << " steps in ";
+    if (elapsed >= 1)
+      std::cerr << ((int) (100 * elapsed)) / 100. << " s";
+    else
+      std::cerr << (int) (1000 * elapsed) << " ms";
+    std::cerr << "\033[K" << std::endl;
+  }
 }
 
 void progression::progress(const std::string &s)
 {
   ++step;
   if (!silent) {
-    time(&current_time);
-    const double elapsed = difftime(current_time, start_time);
+    std::chrono::duration<double> diff_time =  std::chrono::system_clock::now() - start_time;
+    const double elapsed = diff_time.count();
     const int rest = (int) ((elapsed / step) * (size - step) + 0.5);
     const int percent = (int)(100 * double(step) / size + 0.5);
     if ((rest != old_rest) || (percent != old_percent)) {

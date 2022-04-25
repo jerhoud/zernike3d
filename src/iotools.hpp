@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <fstream>
 #include <cstring>
+#include <chrono>
 
 
 extern const std::string cannot_open_msg;
@@ -23,7 +24,7 @@ std::istream &failed(std::istream &is);
 class progression
 {
 public:
-  time_t start_time, current_time;
+  std::chrono::time_point<std::chrono::system_clock> start_time, current_time;
   size_t size, step;
   int old_percent, old_rest;
   bool silent;
