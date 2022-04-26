@@ -21,10 +21,19 @@ extern const std::string unexpect_eof_msg;
 
 std::istream &failed(std::istream &is);
 
+class elapsed
+{
+public:
+  const std::chrono::time_point<std::chrono::system_clock> start_time;
+
+  elapsed();
+  double seconds() const;
+};
+
 class progression
 {
 public:
-  std::chrono::time_point<std::chrono::system_clock> start_time, current_time;
+  elapsed timer;
   size_t size, step;
   int old_percent, old_rest;
   bool silent;
