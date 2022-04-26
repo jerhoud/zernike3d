@@ -25,7 +25,7 @@ string m_help = "Computes Zernike moments";
 string i_help = "Computes Zernike rotational invariants";
 string s_help = "Computes signature invariants";
 string n_help = "Normalizes the moments such that order 0 gives 1";
-string a_help = "Computes the moments, using approximate methods within the given ERROR";
+string a_help = "Computes the moments using approximate methods to get the required correct DIGITS";
 string z_help = "The Zernike moments are output in complex form";
 string c_help = "Chops to 0 very small Zenike moments";
 string raw_help = "Divides Zernike moments by sqrt(2n+3)";
@@ -50,7 +50,7 @@ int main (int argc, char *argv[])
   parser p(sh, eh);
   int N = 0;
   int digit = 6;
-  double approx_err = 1e-13;
+  int approx = 13;
 
   string filename = "-";
   string zm_filename;
@@ -69,7 +69,7 @@ int main (int argc, char *argv[])
   p.flag("", "raw", raw_help);
   p.flag("", "dual", dual_help);
   p.flag("z", "complex", z_help);
-  p.option("a", "approximate", "ERROR", approx_err, a_help);
+  p.option("a", "approximate", "DIGITS", approx, a_help);
   p.option("d", "diff", "ZMFILE", zm_filename, d_help);
   p.option("f", "", "DIGITS", digit, f_help);
   p.option("e", "", "DIGITS", digit, e_help);
@@ -85,12 +85,16 @@ int main (int argc, char *argv[])
 
   // Apply options -e and -f
 
+  double approx_err = pow(0.1, approx);
+  if (p("a") && !p("e") && !p("f"))
+    digit = approx + 1;
   if (digit < 0)
     digit = 6;
   if (p("f"))
-    cout << fixed << setprecision(digit);
+    cout << fixed;
   else if (p("e"))
-    cout << scientific << setprecision(digit);
+    cout << scientific;
+  cout << setprecision(digit);
 
   // Option -t auto tests and exits
 
