@@ -305,13 +305,13 @@ public:
 
 /** Class for evaluating functions built from Zernike moments.
  */
-class zernike_build:
+class zernike_eval:
 public zernike_m_r
 {
 public:
   zernike moments;
 
-  zernike_build(const zernike &mom);
+  zernike_eval(const zernike &mom);
   double operator()(const vec &v);
 };
 

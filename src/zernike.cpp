@@ -523,7 +523,7 @@ void zernike_m_int::add(const w_vec &p)
 /** Constructor.
  @param mom The Zernike moments of the density to build.
 */
-zernike_build::zernike_build(const zernike &mom):
+zernike_eval::zernike_eval(const zernike &mom):
 zernike_m_r(mom.order()), moments(mom)
 {
   moments.normalize(zm_norm::dual);
@@ -533,7 +533,7 @@ zernike_m_r(mom.order()), moments(mom)
  @param v The position where the density must be evaluated.
  @return The value of the density at \a v.
 */
-double zernike_build::operator()(const vec &v)
+double zernike_eval::operator()(const vec &v)
 {
   if (v.length_square() > 1)
     return 0;
