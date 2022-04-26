@@ -693,7 +693,7 @@ mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord 
   std::vector<size_t> in_node;
   { // Phase 1
     if (verbose)
-      std::cerr << "Phase 1/3, function evaluation" << std::endl;
+      std::cerr << "Phase 1/4, function evaluation" << std::endl;
     progression prog(N + sz.maxN(), verbose);
     int s = 0;
     size_t idx = 0;
