@@ -37,6 +37,7 @@ double thresh = 0.5;
 
 int main (int argc, char *argv[])
 {
+  elapsed timer;
   string filename = "-";
   p.prog_name = "rzm";
 
@@ -76,4 +77,7 @@ int main (int argc, char *argv[])
 
   zernike_build f(zernike(N, zm));
   cout << marching_tetrahedra({-1, 1, res}, {-1, 1, res}, {-1, 1, res}, f, thresh, !p("r"), p("v"));
+  
+  if (p("v"))
+    cerr << "rzm used " << (int) (timer.seconds() * 100) / 100. << " seconds to run.\n"; 
 }

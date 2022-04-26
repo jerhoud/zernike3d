@@ -47,6 +47,7 @@ string die_unknown_format = "Unknown file format (should be OFF or ZM): ";
 
 int main (int argc, char *argv[])
 {
+  elapsed timer;
   parser p(sh, eh);
   int N = 0;
   int digit = 6;
@@ -85,7 +86,7 @@ int main (int argc, char *argv[])
 
   // Apply options -e and -f
 
-  double approx_err = pow(0.1, approx);
+  const double approx_err = pow(0.1, approx);
   if (p("a") && !p("e") && !p("f"))
     digit = approx + 1;
   if (digit < 0)
@@ -227,4 +228,7 @@ int main (int argc, char *argv[])
     }
     cout << si;
   }
+
+  if (p("v"))
+    cerr << "zm used " << (int) (timer.seconds() * 100) / 100. << " seconds to run.\n"; 
 }
