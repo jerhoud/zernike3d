@@ -141,7 +141,7 @@ void zernike_r::eval_zr(double r, double weight)
   @param n Maximum order needed. Should be positive.
 */
 zernike_int::zernike_int(int n, const gauss_selector &gs):
-zernike_radial(n), tmp_zr(n), g(gs.get_scheme(n))
+zernike_radial(n), tmp_zr(n), g(gs.get_scheme(n + 2))
 {}
 
 /** Runs the computation.
