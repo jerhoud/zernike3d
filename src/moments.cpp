@@ -62,7 +62,11 @@ int facet_approx_integrate(const triangle &t, double error, const triquad_select
     zb->finish();
     err = za->distance(*zb);
     std::swap(za, zb);
-    if (err < error) {
+    if (za->order() <= s.order) {
+      za->error = 1e-14;
+      return s.order;
+    }
+    else if (err < error) {
       za->error = err;
       return s.order;
     }
