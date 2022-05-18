@@ -908,6 +908,9 @@ mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord 
       if (verbose)
         std::cerr << "Found: " << reject.size()  << std::endl;
       
+      if (reject.size() == 0)
+        return m;
+
       reject.push_back(-1);
       std::sort(reject.begin(), reject.end());
       std::unique(reject.begin(), reject.end());
