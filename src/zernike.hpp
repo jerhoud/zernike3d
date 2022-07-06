@@ -175,10 +175,14 @@ protected:
  ortho is the orthonormal normalization
  dual is ortho * sqrt{2n+3}, it is used for reconstruction of the original density
 */
-enum class zm_norm {raw, ortho, dual};
+enum class zm_norm {raw, ortho, dual, raw_n, ortho_n, dual_n};
+
+zm_norm make_norm(bool raw, bool dual, bool norm);
 
 /** Enumeration to represent types of output for Zernike moments.*/
-enum class zm_output {real, complex};
+enum class zm_output {real, complex, real_p, complex_p};
+
+zm_output make_output(bool cplx, bool phase);
 
 /** A base class to compute Zernike moments. */
 class zernike

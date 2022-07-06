@@ -174,6 +174,15 @@ std::ostream &operator <<(std::ostream &os, zm_norm norm)
     case zm_norm::dual:
       os << "DUAL";
       break;
+     case zm_norm::raw_n:
+      os << "RAW_N";
+      break;
+    case zm_norm::ortho_n:
+      os << "ORTHO_N";
+      break;
+    case zm_norm::dual_n:
+      os << "DUAL_N";
+      break;
   }
   return os;
 }
@@ -195,7 +204,33 @@ std::istream &operator >>(std::istream &is, zm_norm &norm)
     norm = zm_norm::dual;
     return is;
   }
+  if (s=="RAW_N") {
+    norm = zm_norm::raw_n;
+    return is;
+  }
+  if (s=="ORTHO_N") {
+    norm = zm_norm::ortho_n;
+    return is;
+  }
+  if (s=="DUAL_N") {
+    norm = zm_norm::dual_n;
+    return is;
+  }
   return failed(is);
+}
+
+zm_norm make_norm(bool raw, bool dual, bool norm)
+{
+  if (norm) {
+    if (raw) return zm_norm::raw_n;
+    if (dual) return zm_norm::dual_n;
+    return zm_norm::ortho_n;
+  }
+  else {
+    if (raw) return zm_norm::raw;
+    if (dual) return zm_norm::dual;
+    return zm_norm::ortho;   
+  }
 }
 
 /** Output operator for \a zm_output. */
@@ -207,6 +242,12 @@ std::ostream &operator <<(std::ostream &os, zm_output output)
       break;
     case zm_output::complex:
       os << "COMPLEX";
+      break;
+    case zm_output::real_p:
+      os << "REAL_P";
+      break;
+    case zm_output::complex_p:
+      os << "COMPLEX_P";
       break;
   }
   return os;
@@ -225,7 +266,30 @@ std::istream &operator >>(std::istream &is, zm_output &output)
     output = zm_output::complex;
     return is;
   }
+  if (s=="REAL_P") {
+    output = zm_output::real_p;
+    return is;
+  }
+  if (s=="COMPLEX_P") {
+    output = zm_output::complex_p;
+    return is;
+  }
   return failed(is);
+}
+
+zm_output make_output(bool cplx, bool phase)
+{
+  return (zm_output) ((int) cplx + 2 * (int) phase);
+}
+
+bool flip_out(zm_output output)
+{
+  return output == zm_output::real_p || output == zm_output::complex_p;
+}
+
+bool real_out(zm_output output)
+{
+  return output == zm_output::real || output == zm_output::real_p;
 }
 
 /** Constructor.
@@ -306,8 +370,14 @@ void zernike::rescale(double new_scale)
 void zernike::normalize(zm_norm new_norm)
 {
   finish();
-  int dn = (int)new_norm - (int)norm;
-  if (dn == 0) return;
+  int dn = ((int)new_norm) % 3 - ((int)norm) % 3;
+  int fn = ((int)new_norm) / 3 - ((int)norm) / 3;
+  if (dn == 0 && fn == 0) return;
+  double fact = 1;
+  if (fn == 1)
+    fact = sqrt(3 / (4 * M_PI));
+  if (fn == -1)
+    fact = sqrt(4 * M_PI / 3);
   bool r = dn < 0;
   int f = abs(dn);
   double sn[2];
@@ -325,8 +395,10 @@ void zernike::normalize(zm_norm new_norm)
       sn[0] = 1 / sn[0];
       sn[1] = 1 / sn[1];
     }
+    sn[0] *= fact;
+    sn[1] *= fact;
     for (int l = 0 ; l <= 2 * n2 + 1 ; l++) {
-      double s = sn[l & 1]; // s = sqrt(2n+3)^dn
+      double s = sn[l & 1]; // s = sqrt(3/(4pi))^fn * sqrt(2n+3)^dn
       for (int m = -l ; m <= l ; m++, idz++)
         zm[idz] *= s;
     }
@@ -415,11 +487,15 @@ std::ostream &operator <<(std::ostream &os, const zernike &zm)
 {
   os << "ZM" << std::endl;
   os << zm.get_norm() << " " << zm.order() << " " << zm.output << std::endl;
+  const bool flip = flip_out(zm.output);
+  const bool real = real_out(zm.output);
   for (int n = 0 ; n <= zm.order() ; n++)
     for (int l = n & 1 ; l <= n ; l+=2) {
-      if (zm.output == zm_output::real)
+      if (real)
         for (int m = -l ; m <= l ; m++) {
-          const double z = zm.get(n, l, m);
+          double z = zm.get(n, l, m);
+          if (flip && m % 2 == 1)
+            z = -z;
           if (z != 0)
             os << n << " " << l << " " << m << " " << z << std::endl;
         }
@@ -428,8 +504,12 @@ std::ostream &operator <<(std::ostream &os, const zernike &zm)
         if (z0 != 0)
           os << n << " " << l << " 0 " << z0 << std::endl;
         for (int m = 1 ; m <= l ; m++) {
-          const double r = sqrt(0.5) * zm.get(n, l, m);
-          const double i = - sqrt(0.5) * zm.get(n, l, -m);
+          double r = sqrt(0.5) * zm.get(n, l, m);
+          double i = - sqrt(0.5) * zm.get(n, l, -m);
+          if (flip && m % 2 == 1) {
+            r = -r;
+            i = -i;
+          }
           if (r != 0 && i != 0)
             os << n << " " << l << " " << m << " " << r << " " << i << std::endl;
         }
@@ -454,6 +534,8 @@ smart_input &operator >>(smart_input &is, zernike &z)
   s >> norm >> n0 >> output;
   if (!s || n0 < 0)
     return is.failed();
+  const bool flip = flip_out(output);
+  const bool real = real_out(output);
   zernike z0(n0);
   z0.norm = norm;
   z0.output = output;
@@ -465,7 +547,9 @@ smart_input &operator >>(smart_input &is, zernike &z)
     if (!s || n < 0 || n > n0 || l < 0 || l > n || (l ^ n) == 1
         || m < -l || m > l)
       return is.failed();
-    if (m == 0 || output == zm_output::real)
+    if (flip && m % 2 == 1)
+      r = -r;
+    if (m == 0 || real)
       z0.zm[z0.index(n, l, m)] = r;
     else if (m < 0)
       return is.failed();
@@ -473,6 +557,8 @@ smart_input &operator >>(smart_input &is, zernike &z)
       s >> i;
       if (!s)
         return is.failed();
+      if (flip && m % 2 == 1)
+        i = -i;
       z0.zm[z0.index(n, l, m)] = sqrt(2) * r;
       z0.zm[z0.index(n, l, -m)] = - sqrt(2) * i;
     }
