@@ -510,7 +510,7 @@ std::ostream &operator <<(std::ostream &os, const zernike &zm)
             r = -r;
             i = -i;
           }
-          if (r != 0 && i != 0)
+          if (r != 0 || i != 0)
             os << n << " " << l << " " << m << " " << r << " " << i << std::endl;
         }
       }
