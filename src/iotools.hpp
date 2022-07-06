@@ -71,12 +71,12 @@ public:
 
   size_t line_count;
   std::string name;
+  std::istream *input;
 
 private:
   bool resend;
   std::string line;
   std::ifstream *file;
-  std::istream *input;
 };
 
 template <typename T>

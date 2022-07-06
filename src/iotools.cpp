@@ -65,7 +65,7 @@ void progression::progress(const std::string &s)
 }
 
 smart_input::smart_input(const std::string &n):
-line_count(0), name(n), resend(false), line(""), file(NULL), input(NULL)
+line_count(0), name(n), input(NULL), resend(false), line(""), file(NULL)
 {
   if (name == "-") {
     name = "standard input";
@@ -78,7 +78,7 @@ line_count(0), name(n), resend(false), line(""), file(NULL), input(NULL)
 }
 
 smart_input::smart_input(std::istream &is, const std::string &n):
-line_count(0), name(n), resend(false), line(""), file(NULL), input(&is)
+line_count(0), name(n), input(&is), resend(false), line(""), file(NULL)
 {}
 
 smart_input::~smart_input()
