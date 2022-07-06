@@ -24,10 +24,11 @@ string t_help = "runs internal sanity checks and exits";
 string m_help = "Computes Zernike moments";
 string i_help = "Computes Zernike rotational invariants";
 string s_help = "Computes signature invariants";
-string n_help = "Normalizes the moments such that order 0 gives 1";
+string n_help = "Alternative normalization (first polynomial is 1): moments * sqrt(3/4pi)";
 string a_help = "Computes the moments using approximate methods to get the required correct DIGITS";
-string z_help = "The Zernike moments are output in complex form";
-string c_help = "Chops to 0 very small Zenike moments";
+string c_help = "The Zernike moments are output in complex form";
+string p_help = "Multiplies the moments by the phase factor (-1)^m";
+string chop_help = "Chops to 0 very small Zenike moments";
 string raw_help = "Divides Zernike moments by sqrt(2n+3)";
 string dual_help = "Multiplies Zernike moments by sqrt(2n+3)";
 string d_help = "Reads Zernike moments in ZM format and substract them from the computed moments";
@@ -56,7 +57,6 @@ int main (int argc, char *argv[])
   string filename = "-";
   string zm_filename;
   p.prog_name = "zm";
-  zm_norm norm = zm_norm::ortho;
 
   // Set command line options 
 
@@ -66,10 +66,11 @@ int main (int argc, char *argv[])
   p.flag("i", "invariants", i_help);
   p.flag("s", "signatures", s_help);
   p.flag("n", "normalize", n_help);
-  p.flag("c", "chop", c_help);
+  p.flag("", "chop", chop_help);
   p.flag("", "raw", raw_help);
   p.flag("", "dual", dual_help);
-  p.flag("z", "complex", z_help);
+  p.flag("c", "complex", c_help);
+  p.flag("p", "phase", p_help);
   p.option("a", "approximate", "DIGITS", approx, a_help);
   p.option("d", "diff", "ZMFILE", zm_filename, d_help);
   p.option("f", "", "DIGITS", digit, f_help);
@@ -178,18 +179,10 @@ int main (int argc, char *argv[])
   else
     p.die(die_unknown_format + is.name);
   
-  // Select normalization and apply options -c -n --chop
+  // Select normalization and apply output options -c -p --chop
 
-  if (p("raw"))
-    norm = zm_norm::raw;
-  if (p("dual"))
-    norm = zm_norm::dual;
-  zm.normalize(norm);
-  
-  if (p("c"))
-    zm.output = zm_output::complex;
-  if (p("n"))
-    zm.rescale(1);
+  zm.normalize(make_norm(p("raw"), p("dual"), p("n")));
+  zm.output = make_output(p("c"), p("p"));
   if (p("chop"))
     zm.chop(zm.error / 10);
 
