@@ -557,12 +557,12 @@ const tetrahedron tetras[24] = { // the 24 tetrahedron around a point of the lat
 
 
 
-typedef u_int16_t sig_t;
+typedef u_int16_t sigtr_t;
 
-inline bool out(sig_t sig, int n)
+inline bool out(sigtr_t sig, int n)
 { return sig & (1 << n); }
 
-int count_bit(sig_t sig)
+int count_bit(sigtr_t sig)
 {
   int n = 0;
   for (; sig; sig &= sig - 1)
@@ -573,13 +573,13 @@ int count_bit(sig_t sig)
 class mt_node {
 public:
   size_t pos;
-  sig_t signature, rest;
-  std::vector<sig_t> groups;
+  sigtr_t signature, rest;
+  std::vector<sigtr_t> groups;
   vec vertex[14];
 
   size_t operator()(int n) const
   {
-    const sig_t mask = 1 << n;
+    const sigtr_t mask = 1 << n;
     size_t vpos = pos;
     for (auto g: groups) {
       if (g & mask)
@@ -611,7 +611,7 @@ public:
   bool connected(int n1, int n2) const
   { return nngh[n1][n2] != -1; }
 
-  const std::vector<sig_t> component(sig_t sig, int &n_in) const;
+  const std::vector<sigtr_t> component(sigtr_t sig, int &n_in) const;
 };
 
 #define NEIGH(x) x, -(x)
@@ -636,12 +636,12 @@ neighbors::neighbors(int dx, int dy, int dz)
     }
 }
 
-const std::vector<sig_t> neighbors::component(sig_t sig, int &n_in) const
+const std::vector<sigtr_t> neighbors::component(sigtr_t sig, int &n_in) const
 {
   int num = 0;
   std::vector<int> mark(14, 0);
   std::vector<int> stack;
-  std::vector<sig_t> groups;
+  std::vector<sigtr_t> groups;
   n_in = 0;
 
   for (int i = 0 ; i < 14 ; i++) {
@@ -649,7 +649,7 @@ const std::vector<sig_t> neighbors::component(sig_t sig, int &n_in) const
       continue;
     bool t = out(sig, i);
     mark[i] = ++num;
-    sig_t c = 1 << i;
+    sigtr_t c = 1 << i;
     stack.push_back(i);
     while (!stack.empty()) {
       int j = stack.back();
@@ -724,15 +724,15 @@ mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord 
     if (verbose)
       std::cerr << "Phase 2/4, computing vertices" << std::endl;
     progression prog(in_node.size(), verbose);
-    std::unordered_map<sig_t, std::vector<sig_t>> components;
-    std::unordered_map<sig_t, bool> collapsable;
+    std::unordered_map<sigtr_t, std::vector<sigtr_t>> components;
+    std::unordered_map<sigtr_t, bool> collapsable;
 
     for (auto idx: in_node) { // go through all points
       mt_node node;
       prog.progress();
       const vec pos = pos_vertex(sx, sy, sz, idx);
       const double v = val[idx];
-      sig_t sig = 0;
+      sigtr_t sig = 0;
       for (int i = 0 ; i < 14 ; i++) {// check all neighbors
         const size_t idx_ngh = idx + ngh[i];
         const double v_ngh = val[idx_ngh];
@@ -754,7 +754,7 @@ mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord 
           node.groups = it->second;
         else {
           int n_in;
-          std::vector<sig_t> compo = ngh.component(sig, n_in);
+          std::vector<sigtr_t> compo = ngh.component(sig, n_in);
           for (auto c:compo) {
             bool collapse;
             auto it = collapsable.find(c);
@@ -794,9 +794,9 @@ mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord 
       for (auto &v: surface) { // go through all inside points on surface
         mt_node &node = v.second;
         node.pos = m.points.size();
-        sig_t dispatch = 0;
+        sigtr_t dispatch = 0;
         for (size_t i = 0 ; i < node.groups.size() ; i++) {
-          sig_t g = node.groups[i];
+          sigtr_t g = node.groups[i];
           if (idx == reject[r_idx]) {
             r_idx++;
             dispatch |= g;
