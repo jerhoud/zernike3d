@@ -387,10 +387,12 @@ void zernike::normalize(zm_norm new_norm)
       sn[0] = sqrt(4 * n2 + 3);
       sn[1] = sqrt(4 * n2 + 5);
     }
-    else {
+    else if (f==2) {
       sn[0] = 4 * n2 + 3;
       sn[1] = 4 * n2 + 5;
     }
+    else
+      sn[0] = sn[1] = 1;
     if (r) {
       sn[0] = 1 / sn[0];
       sn[1] = 1 / sn[1];
