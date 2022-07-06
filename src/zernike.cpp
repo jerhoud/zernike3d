@@ -494,7 +494,7 @@ std::ostream &operator <<(std::ostream &os, const zernike &zm)
       if (real)
         for (int m = -l ; m <= l ; m++) {
           double z = zm.get(n, l, m);
-          if (flip && m % 2 == 1)
+          if (flip && (m & 1))
             z = -z;
           if (z != 0)
             os << n << " " << l << " " << m << " " << z << std::endl;
@@ -506,7 +506,7 @@ std::ostream &operator <<(std::ostream &os, const zernike &zm)
         for (int m = 1 ; m <= l ; m++) {
           double r = sqrt(0.5) * zm.get(n, l, m);
           double i = - sqrt(0.5) * zm.get(n, l, -m);
-          if (flip && m % 2 == 1) {
+          if (flip && (m & 1)) {
             r = -r;
             i = -i;
           }
@@ -547,7 +547,7 @@ smart_input &operator >>(smart_input &is, zernike &z)
     if (!s || n < 0 || n > n0 || l < 0 || l > n || (l ^ n) == 1
         || m < -l || m > l)
       return is.failed();
-    if (flip && m % 2 == 1)
+    if (flip && (m & 1))
       r = -r;
     if (m == 0 || real)
       z0.zm[z0.index(n, l, m)] = r;
@@ -557,7 +557,7 @@ smart_input &operator >>(smart_input &is, zernike &z)
       s >> i;
       if (!s)
         return is.failed();
-      if (flip && m % 2 == 1)
+      if (flip && (m & 1))
         i = -i;
       z0.zm[z0.index(n, l, m)] = sqrt(2) * r;
       z0.zm[z0.index(n, l, -m)] = - sqrt(2) * i;
