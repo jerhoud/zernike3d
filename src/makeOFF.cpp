@@ -171,6 +171,8 @@ int main (int argc, char *argv[])
          << int(m.points.size() - r.count + m.triangles.size()) << endl;
     if (r.border != 0)
       cout << "There are " << r.border << " border edges." << endl;
+    if (r.bad_orient != 0)
+      cout << "There are " << r.bad_orient << " ill oriented edges." << endl;
     if (r.strange != 0)
       cout << "There are " << r.strange << " edges connected to more than 2 facets." << endl;
     cout << endl;

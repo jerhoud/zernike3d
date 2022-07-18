@@ -362,12 +362,14 @@ edge_report mesh::edges() const
     edge_register(m, {t.i2, t.i3});
     edge_register(m, {t.i3, t.i1});
   }
-  edge_report r = {m.size(), 0, 0};
+  edge_report r = {m.size(), 0, 0, 0};
   for (auto &i: m) {
     if (i.second.count > 2)
       r.strange++;
-    else if (i.second.order != 0)
+    else if (abs(i.second.order) == 1)
       r.border++;
+    else if (abs(i.second.order) == 2)
+      r.bad_orient++;
   }
   return r;
 }

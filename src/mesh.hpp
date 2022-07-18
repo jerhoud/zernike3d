@@ -85,7 +85,7 @@ std::ostream &operator <<(std::ostream &, const t_mesh &t);
 /** a class to store information about a mesh.*/
 class edge_report {
 public:
-  size_t count, border, strange;
+  size_t count, border, strange, bad_orient;
 };
 
 /** A triangular mesh. */
