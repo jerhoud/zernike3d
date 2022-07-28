@@ -11,21 +11,28 @@
 #define M_PI 3.141592653589793238
 #endif
 
+void help2::set_sh(int l, int m)
+{
+  if (m < l - 1) {
+    const double a = (2 * l + 1) / (double) ((l + m) * (l - m));
+    c1 = sqrt(a * (2 * l - 1));
+    c2 = sqrt(a * (l + m - 1) * (l - m - 1) / (double) (2 * l - 3));
+  }
+  else if (m == l - 1)
+    c1 = sqrt(2 * l + 1);
+  else
+    c1 = sqrt(1 + 0.5 / l);
+}
+
 /** Constructor.
   @param n Maximum order N for the computation. Should be positive.
 */
 spherical_harmonics::spherical_harmonics(int n):
 N(n), sh((N + 1) * (N + 1), 0), help((N + 1) * (N + 2)  / 2, {0, 0})
 {
-  for (int l = 1, i = 1 ; l <= N ; l++) {
-    for (int m = 0 ; m < l - 1 ; m++, i++) {
-      const double a = (2 * l + 1) / (double) ((l + m) * (l - m));
-      help[i].c1 = sqrt(a * (2 * l - 1));
-      help[i].c2 = sqrt(a * (l + m - 1) * (l - m - 1) / (double) (2 * l - 3));
-    }
-    help[i++].c1 = sqrt(2 * l + 1);
-    help[i++].c1 = sqrt(1 + 0.5 / l);
-  }
+  for (int l = 1, i = 1 ; l <= N ; l++)
+    for (int m = 0 ; m <= l ; m++, i++)
+      help[i].set_sh(l, m);
 }
 
 /** Runs the computation.
@@ -84,7 +91,7 @@ zernike_radial &zernike_radial::operator +=(const zernike_radial &zr2)
   return *this;
 }
 
-void zhelp::set(int n, int l)
+void help3::set_r(int n, int l)
 {
   if (n > l) {
     const double np1 = 2 * n + 1;
@@ -106,8 +113,8 @@ zernike_radial(n), help((N / 2 + 1) * (N / 2 + 2), {0, 0, 0})
   int i = 0;
   for (int n2 = 0 ; n2 <= N / 2 ; n2++)
     for (int l2 = 0 ; l2 <= n2 ; l2++) {
-      help[i++].set(2 * n2, 2 * l2);
-      help[i++].set(2 * n2 + 1, 2 * l2 + 1);
+      help[i++].set_r(2 * n2, 2 * l2);
+      help[i++].set_r(2 * n2 + 1, 2 * l2 + 1);
     }
 }
 
@@ -117,7 +124,7 @@ zernike_radial(n), help((N / 2 + 1) * (N / 2 + 2), {0, 0, 0})
 void zernike_r::eval_zr(double r, double weight)
 {
   const double r2 = r * r;
-  const zhelp *h;
+  const help3 *h;
   double rn = r2 * weight;
 
   zr[0] = weight;
