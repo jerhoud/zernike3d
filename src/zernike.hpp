@@ -12,14 +12,15 @@
 
 /** A pair of double.
 
-  It stores coefficients for computing spherical harmonics.
-  Used by spherical_harmonics.
+  It stores coefficients for computing spherical harmonics and integrated zernike radial part.
+  Used by spherical_harmonics and zernike_int0.
 */
 class help2
 {
 public:
   double c1, c2;
   void set_sh(int l, int m);
+  void set_int0(int n, int l);
 };
 
 /** A class for computing spherical harmonics.
@@ -114,12 +115,13 @@ protected:
   std::vector<double> zr; /**< Storage for the result. */
 };
 
-/** A truple of coefficients used by zernike_r. */
+/** A truple of coefficients used by zernike_r and zernike_int2. */
 class help3
 {
 public:
   double c1, c2, c3;
   void set_r(int n, int l);
+  void set_int2(int n, int l);
 };
 
 /** A class to compute the radial part of the Zernike polynomials.
@@ -143,6 +145,26 @@ public:
   void eval_zr(double r, double weight = 1);
 private:
   std::vector<help3> help; /**< Fixed coefficients used in the computation. */
+};
+
+class zernike_int0: public zernike_radial
+{
+public:
+  zernike_int0(int n);
+  void eval_zr(double r, double weight = 1);
+private:
+  std::vector<help2> help; /**< Fixed coefficients used in the computation. */
+  zernike_r base_r;
+};
+
+class zernike_int2: public zernike_radial
+{
+public:
+  zernike_int2(int n);
+  void eval_zr(double r, double weight = 1);
+private:
+  std::vector<help3> help; /**< Fixed coefficients used in the computation. */
+  zernike_int0 base_0;
 };
 
 /** A class to compute the integrated radial part of the Zernike polynomials.

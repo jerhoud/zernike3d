@@ -24,6 +24,12 @@ void help2::set_sh(int l, int m)
     c1 = sqrt(1 + 0.5 / l);
 }
 
+void help2::set_int0(int n, int l)
+{
+  c1 = (2 * l + 3) / (double) ((2 * n + 3) * (l + 1));
+  c2 = (l + 1) / (double) (l + 1);
+}
+
 /** Constructor.
   @param n Maximum order N for the computation. Should be positive.
 */
@@ -104,6 +110,18 @@ void help3::set_r(int n, int l)
   }
 }
 
+void help3::set_int2(int n, int l)
+{
+  if (n > l) {
+    const double np1 = 2 * n + 1;
+    const double np3 = np1 + 2;
+    const double np5 = np3 + 2;
+    c1 = (n - l + 2) * (n + l + 3) / (np3 * np5);
+    c2 = 0.5 * (1 + (2 * l + 1) * (2 * l + 1) / (np5 * np1));  
+    c3 = (n - l) * (n + l + 1) / (np3 * np1);
+  }
+}
+
 /** Constructor.
   @param n Maximum order needed. Should be positive.
 */
@@ -141,6 +159,70 @@ void zernike_r::eval_zr(double r, double weight)
     zr[i] = h->c1 * (r2 - h->c2) * zr[i - 2 * n2];
     zr[++i] = rn;
     zr[++i] = r * rn;
+  }
+}
+
+zernike_int0::zernike_int0(int n):
+zernike_radial(n), help((N / 2 + 1) * (N / 2 + 2), {0, 0}), base_r(n+1)
+{
+  int i = 0;
+  for (int n2 = 0 ; n2 <= N / 2 ; n2++)
+    for (int l2 = 0 ; l2 <= n2 ; l2++) {
+      help[i++].set_int0(2 * n2, 2 * l2);
+      help[i++].set_int0(2 * n2 + 1, 2 * l2 + 1);
+    }
+}
+
+void zernike_int0::eval_zr(double r, double weight)
+{
+  base_r.eval_zr(r, weight);
+  const std::vector<double> zr0 = base_r.get_zr();
+  const help2 *h;
+  const double r2 = r * r;
+  double rn1 = r * weight;
+  zr[0] = rn1;
+  zr[1] = 0.5 * r * rn1;
+  for (int n2 = 1, i = 6 ; n2 <= N / 2 ; n2++, rn1 *= r2, i += 4 * n2 + 2) {
+    double todd = zr[--i] = r * rn1 / (double) (2 * n2 + 2);
+    double teven = zr[--i] = rn1 / (double) (2 * n2 + 1);
+    for (int l2 = n2 - 1 ; l2 >=0 ; l2--) {
+      h = &(help[--i]);
+      todd = zr[i] = h->c1 * (zr0[i + 2 * n2 + 3] - zr0[i + 1]) - h->c2 * todd;
+      h = &(help[--i]);
+      teven = zr[i] = h->c1 * (zr0[i + 1] - zr0[i - 2 * n2 + 1]) - h->c2 * teven;
+    }
+  }
+}
+
+zernike_int2::zernike_int2(int n):
+zernike_radial(n), help((N / 2 + 1) * (N / 2 + 2), {0, 0, 0}), base_0(n+2)
+{
+  int i = 0;
+  for (int n2 = 0 ; n2 <= N / 2 ; n2++)
+    for (int l2 = 0 ; l2 <= n2 ; l2++) {
+      help[i++].set_int2(2 * n2, 2 * l2);
+      help[i++].set_int2(2 * n2 + 1, 2 * l2 + 1);
+    }
+}
+
+void zernike_int2::eval_zr(double r, double weight)
+{
+  base_0.eval_zr(r, weight);
+  const std::vector<double> zr0 = base_0.get_zr();
+  const double r2 = r * r;
+  const help3 *h;
+  double rn = r2 * r * weight;
+
+  zr[0] = rn / 3;
+  zr[1] = r * rn / 4;
+  rn *= r2;
+  for (int n2 = 1, i = 2 ; n2 <= N / 2 ; n2++, rn *= r2, i++) {
+    for (int l = 0 ; l <= 2 * n2 - 2 ; l++, i++) {
+      h = &(help[i]);
+      zr[i] = h->c1 * zr0[i + 2 * n2 + 2] + h->c2 * zr0[i] + h->c3 * zr0[i - 2 * n2];
+    }
+    zr[++i] = rn / (double) (2 * n2 + 3);
+    zr[++i] = r * rn / (double) (2 * n2 + 4);
   }
 }
 
