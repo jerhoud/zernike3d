@@ -182,6 +182,7 @@ void zernike_int0::eval_zr(double r, double weight)
   double rn1 = r * weight;
   zr[0] = rn1;
   zr[1] = 0.5 * r * rn1;
+  rn1 *= r2;
   for (int n2 = 1, i = 6 ; n2 <= N / 2 ; n2++, rn1 *= r2, i += 4 * n2 + 2) {
     double todd = zr[--i] = r * rn1 / (double) (2 * n2 + 2);
     double teven = zr[--i] = rn1 / (double) (2 * n2 + 1);
