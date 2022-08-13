@@ -27,7 +27,7 @@ void help2::set_sh(int l, int m)
 void help2::set_int0(int n, int l)
 {
   c1 = (2 * l + 3) / (double) ((2 * n + 3) * (l + 1));
-  c2 = (l + 1) / (double) (l + 1);
+  c2 = (l + 2) / (double) (l + 1);
 }
 
 /** Constructor.
