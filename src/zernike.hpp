@@ -322,10 +322,10 @@ public:
     6. go to 2.
  */
 class zernike_m_int:
-public zernike_int, public spherical_harmonics, public zernike
+public zernike_int2, public spherical_harmonics, public zernike
 {
 public:
-  zernike_m_int(int n, const gauss_selector &gs);
+  zernike_m_int(int n);
   void add(const w_vec &p);
 };
 

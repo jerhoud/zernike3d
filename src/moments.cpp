@@ -34,12 +34,12 @@ void cloud_integrate(const w_cloud &c, zernike_m_r &z, bool verbose)
 /** Computes the Zernike moments of a mesh.
   This suppose that the order sought is not larger than the order of the integration scheme.
 */
-zernike mesh_exact_integrate(const mesh &m, int n, const triquad_selector &ts, const gauss_selector &gs, bool verbose)
+zernike mesh_exact_integrate(const mesh &m, int n, const triquad_selector &ts, bool verbose)
 {
   if (n <= 0)
     return zernike();
   
-  zernike_m_int zm(n, gs);
+  zernike_m_int zm(n);
   const triquad_scheme &s = ts.get_scheme(n);
   progression prog(m.triangles.size(), verbose);
   for (auto &i: m.triangles) {
@@ -86,12 +86,12 @@ int facet_approx_integrate(const triangle &t, double error, const triquad_select
   }
 }
 
-zernike mesh_approx_integrate(const mesh &m, int n, double error, const triquad_selector &ts, const gauss_selector &gs, bool verbose)
+zernike mesh_approx_integrate(const mesh &m, int n, double error, const triquad_selector &ts, bool verbose)
 {
   if (n <= 0)
     return zernike();
   zernike z(n);
-  zernike_m_int z1(n, gs), z2(n, gs);
+  zernike_m_int z1(n), z2(n);
   zernike_m_int *za = &z1, *zb = &z2;
   error /= m.triangles.size();
   progression prog(m.triangles.size(), verbose);

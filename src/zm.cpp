@@ -10,7 +10,6 @@ using namespace std;
 using namespace argparse;
 
 const triquad_selector triquad_schemes;
-const gauss_selector gauss_schemes;
 const int N_exact = triquad_schemes.max_order();
 const string n_exact = to_string(N_exact);
 
@@ -101,9 +100,6 @@ int main (int argc, char *argv[])
   // Option -t auto tests and exits
 
   if (p("t")) {
-    cout << "checking gauss quadratures on the segment" << endl;
-    for (auto &s: gauss_schemes.schemes)
-      cout << s;
     cout << "checking primary quadratures on the triangle" << endl;
       for (auto &s: triquad_schemes.schemes)
       cout << s;
@@ -170,11 +166,11 @@ int main (int argc, char *argv[])
         out << scientific << facet_error;
         p.warn(approx_warning + out.str());
       }
-      zm = mesh_approx_integrate(m, N, approx_err, triquad_schemes, gauss_schemes, p("v"));
+      zm = mesh_approx_integrate(m, N, approx_err, triquad_schemes, p("v"));
       cout << "# approximation error estimate: " << zm.error << endl;
     }
     else
-      zm = mesh_exact_integrate(m, N, triquad_schemes, gauss_schemes, p("v"));
+      zm = mesh_exact_integrate(m, N, triquad_schemes, p("v"));
   }
   else
     p.die(die_unknown_format + is.name);

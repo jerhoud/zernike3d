@@ -682,8 +682,8 @@ void zernike_m_r::add(const w_vec &p)
 /** Constructor.
   @param n Maximum order needed. Should be positive.
 */
-zernike_m_int::zernike_m_int(int n, const gauss_selector &gs):
-zernike_int(n, gs), spherical_harmonics(n), zernike(n)
+zernike_m_int::zernike_m_int(int n):
+zernike_int2(n), spherical_harmonics(n), zernike(n)
 {}
 
 /** Add integrated Zernike polynomials for the given point and weight.
@@ -692,7 +692,7 @@ zernike_int(n, gs), spherical_harmonics(n), zernike(n)
 void zernike_m_int::add(const w_vec &p)
 {
   s_vec sp = p.v.spherical();
-  eval_zr(sp.r);
+  eval_zr(sp.r, 1 / (sp.r * sp.r * sp.r));
   eval_sh(sp.theta, sp.phi);
   add_core(zr, sh, p.weight);
 }
