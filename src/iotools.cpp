@@ -5,7 +5,7 @@ const std::string invalid_file_msg = "Cannot read file ";
 const std::string bad_file_msg = "Something bad happens when reading file ";
 const std::string unexpect_eof_msg = "Unexpected end of file ";
 
-/** Marks the stream as failed and returns it. */
+/** Marks a stream as failed and returns it. */
 std::istream &failed(std::istream &is)
 {
   is.setstate(std::ios_base::failbit);
@@ -16,12 +16,17 @@ elapsed::elapsed():
 start_time(std::chrono::system_clock::now())
 {}
 
+/** returns the time in seconds since the creation of the object. */ 
 double elapsed::seconds() const
 {
   std::chrono::duration<double> diff_time =  std::chrono::system_clock::now() - start_time;
   return diff_time.count();
 }
 
+/** Creates a progression object.
+ @param sz The number of steps in the progression.
+ @param show Whether to show the progression.
+ */
 progression::progression(size_t sz, bool show):
 timer(), size(sz), step(0),
 old_percent(-1), old_rest(-1), silent(!show)
@@ -45,6 +50,7 @@ progression::~progression()
   }
 }
 
+/** Advances the progression by one step.*/
 void progression::progress(const std::string &s)
 {
   ++step;
@@ -64,6 +70,10 @@ void progression::progress(const std::string &s)
   }
 }
 
+/** Creates a smart_input from a filename.
+ Uses cin if filename is set to "-".
+ The created file is properly closed at destruction.
+*/
 smart_input::smart_input(const std::string &n):
 line_count(0), name(n), input(NULL), resend(false), line(""), file(NULL)
 {
@@ -77,6 +87,7 @@ line_count(0), name(n), input(NULL), resend(false), line(""), file(NULL)
   }
 }
 
+/** Make a smart_input from an istream with the given name (for error messages).*/
 smart_input::smart_input(std::istream &is, const std::string &n):
 line_count(0), name(n), input(&is), resend(false), line(""), file(NULL)
 {}
@@ -89,11 +100,16 @@ smart_input::~smart_input()
   }
 }
 
+/** To check whether the input is Ok.*/
 smart_input::operator bool() const
 {
   return bool(*input);
 }
 
+/** Returns the next line of the file in iss (properly reset).
+ Ignores empty lines and lines starting with '#'. 
+ Always check the status of the smart_input before using it.
+*/
 smart_input &smart_input::next_line(std::istringstream &iss)
 {
   if (resend) {
@@ -115,6 +131,7 @@ smart_input &smart_input::next_line(std::istringstream &iss)
   return *this;
 }
 
+/** Look at the next line of the file without actually removing it. */
 smart_input &smart_input::peek_line(std::istringstream &iss)
 {
   next_line(iss);
@@ -122,6 +139,7 @@ smart_input &smart_input::peek_line(std::istringstream &iss)
   return *this;
 }
 
+/** marks the smart_input as failed. */
 smart_input &smart_input::failed()
 {
   input->setstate(std::ios_base::failbit);

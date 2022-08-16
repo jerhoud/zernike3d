@@ -21,6 +21,7 @@ extern const std::string unexpect_eof_msg;
 
 std::istream &failed(std::istream &is);
 
+/** A class to measure ealpsed time. */
 class elapsed
 {
 public:
@@ -30,6 +31,7 @@ public:
   double seconds() const;
 };
 
+/** A class to show a simple progression status on cerr. */
 class progression
 {
 public:
@@ -43,6 +45,10 @@ public:
   void progress(const std::string &s ="");
 };
 
+/** A class to help read whole files as object.
+  It ignores empty lines and lines starting with '#'.
+  It prints helpful messages to cerr in case of error including line count.
+*/
 class smart_input
 {
 public:
@@ -79,6 +85,7 @@ private:
   std::ifstream *file;
 };
 
+/** Reads an object from a smart_input, so you can use them like any istream.*/
 template <typename T>
 smart_input &operator>>(smart_input &is, T &x)
 {
@@ -86,6 +93,9 @@ smart_input &operator>>(smart_input &is, T &x)
   return is;
 }
 
+/** Reads an object from a smart_input with error messages.
+  It can prints more info to cerr with verbose set to true.
+  */
 template<typename T>
 std::string read_object(smart_input &is, T &x,  bool verbose = false)
 {
@@ -105,6 +115,10 @@ std::string read_object(smart_input &is, T &x,  bool verbose = false)
   return "";
 }
 
+/** Reads a file into an object with helpful error messages printed to cerr.
+ It uses cin if filename is "-".
+ It prints more info to cerr with verbose set to true.
+ */
 template <typename T>
 std::string read_file(const std::string &filename, T &x,  bool verbose = false)
 {
