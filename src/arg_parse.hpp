@@ -48,7 +48,7 @@ const string selection_msg = "You must use one of the following options: ";
 const string bad_test_msg = "Bug: testing unkown option: ";
 const string bad_opt_arg = "Bug: optional argument before non-optional argument: ";
 
-/** returns a string which represent the current date and time. */
+/** returns a string which represents the current date and time. */
 string now()
 {
   time_t rawtime;
@@ -126,6 +126,7 @@ void show_paragraph(ostream &os, int w, const string &h)
   os << h.substr(p, pp - p) << endl;
 }
 
+/* a class to store the use of an option in a recorder */
 class opt_recorder
 {
 public:
@@ -337,6 +338,12 @@ public:
   vector<vector<string> > exclusions;
   vector<vector<string> > selections;
 
+  /** The constructor
+    
+    @param sh The help string written before the arg / opt descriptions
+    @param eh The help string written after the arg / opt descriptions
+    @param v The version string (for opt --version) default is macro VERSION
+   */
   parser(const string &sh, const string &eh, const string &v=stringify(VERSION)):
   start_help(sh), end_help(eh), version_text(v)
   {
