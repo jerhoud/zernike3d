@@ -8,7 +8,6 @@
 
 #include "iotools.hpp"
 #include "vec.hpp"
-#include "gauss.hpp"
 
 /** A pair of double.
 
@@ -134,8 +133,8 @@ public:
 
   Usage:
     1. create one instance with the maximum order needed.
-    2. use zernike_r::eval with chosen parameters.
-    3. get results with zernike_r::get.
+    2. use zernike_r::eval_zr with chosen parameters.
+    3. get results with zernike_r::get_zr.
     4. go to step 2.
 */
 class zernike_r: public zernike_radial
@@ -147,6 +146,21 @@ private:
   std::vector<help3> help; /**< Fixed coefficients used in the computation. */
 };
 
+/** A class to compute the integrated radial part of the Zernike polynomials.
+
+  It allows the computation of all integrated radial parts
+  up to order N given at creation.
+
+  More precisely it computes:
+  \f[ \int_0^r R_{n,l}(x)\mathrm dx, \f]
+  where the normalization of \f$R\f$ is the same as in zernike_r.
+
+  Usage:
+    1. create one instance with the maximum order needed.
+    2. use zernike_int0::eval_zr with chosen parameters.
+    3. get results zernike_int0::get_zr.
+    4. go to step 2.
+*/
 class zernike_int0: public zernike_radial
 {
 public:
@@ -157,6 +171,21 @@ private:
   zernike_r base_r;
 };
 
+/** A class to compute the integrated radial part of the Zernike polynomials.
+
+  It allows the computation of all integrated radial parts
+  up to order N given at creation.
+
+  More precisely it computes:
+  \f[ \int_0^r x^2 R_{n,l}(x)\mathrm dx, \f]
+  where the normalization of \f$R\f$ is the same as in zernike_r.
+
+  Usage:
+    1. create one instance with the maximum order needed.
+    2. use zernike_int2::eval_zr with chosen parameters.
+    3. get results zernike_int2::get_zr.
+    4. go to step 2.
+*/
 class zernike_int2: public zernike_radial
 {
 public:
@@ -165,32 +194,6 @@ public:
 private:
   std::vector<help3> help; /**< Fixed coefficients used in the computation. */
   zernike_int0 base_0;
-};
-
-/** A class to compute the integrated radial part of the Zernike polynomials.
-
-  It allows the computation of all integrated radial parts
-  up to order N given at creation.
-
-  More precisely it computes:
-  \f[ \frac 1{r^3}\int_0^r x^2 R_{n,l}(x)\mathrm dx, \f]
-  where the normalization of \f$R\f$ is the same as in zernike_r.
-
-  Usage:
-    1. create one instance with the maximum order needed.
-    2. use zernike_int::eval with chosen parameters.
-    3. get results zernike_int::get.
-    4. go to step 2.
-*/
-class zernike_int: public zernike_radial
-{
-public:
-  zernike_int(int n, const gauss_selector &gs);
-  void eval_zr(double r);
-  void add(double r, double weight);
-protected:
-  zernike_r tmp_zr;
-  const gauss_scheme &g;
 };
 
 /** Enumeration to represent possible Zernike moments normalizations.

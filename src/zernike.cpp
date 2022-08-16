@@ -162,6 +162,9 @@ void zernike_r::eval_zr(double r, double weight)
   }
 }
 
+/** Constructor.
+  @param n Maximum order needed. Should be positive.
+*/
 zernike_int0::zernike_int0(int n):
 zernike_radial(n), help((N / 2 + 1) * (N / 2 + 2), {0, 0}), base_r(n+1)
 {
@@ -173,6 +176,10 @@ zernike_radial(n), help((N / 2 + 1) * (N / 2 + 2), {0, 0}), base_r(n+1)
     }
 }
 
+/** Runs the computation.
+  @param r The radial parameter. Between 0 and 1.
+  @param weight An optional multiplicative weight.
+*/
 void zernike_int0::eval_zr(double r, double weight)
 {
   base_r.eval_zr(r, weight);
@@ -195,6 +202,9 @@ void zernike_int0::eval_zr(double r, double weight)
   }
 }
 
+/** Constructor.
+  @param n Maximum order needed. Should be positive.
+*/
 zernike_int2::zernike_int2(int n):
 zernike_radial(n), help((N / 2 + 1) * (N / 2 + 2), {0, 0, 0}), base_0(n+2)
 {
@@ -206,6 +216,10 @@ zernike_radial(n), help((N / 2 + 1) * (N / 2 + 2), {0, 0, 0}), base_0(n+2)
     }
 }
 
+/** Runs the computation.
+  @param r The radial parameter. Between 0 and 1.
+  @param weight An optional multiplicative weight.
+*/
 void zernike_int2::eval_zr(double r, double weight)
 {
   base_0.eval_zr(r, weight);
@@ -225,30 +239,6 @@ void zernike_int2::eval_zr(double r, double weight)
     zr[++i] = rn / (double) (2 * n2 + 3);
     zr[++i] = r * rn / (double) (2 * n2 + 4);
   }
-}
-
-/** Constructor.
-  @param n Maximum order needed. Should be positive.
-*/
-zernike_int::zernike_int(int n, const gauss_selector &gs):
-zernike_radial(n), tmp_zr(n), g(gs.get_scheme(n + 2))
-{}
-
-/** Runs the computation.
-  @param r The radial parameter. Between 0 and 1.
-  @param gs The integration scheme to use.
-*/
-void zernike_int::eval_zr(double r)
-{
-  reset_zr();
-  if (r > 0)
-    g.integrate(*this, 0, r, 1 / (r * r * r));
-}
-
-void zernike_int::add(double r, double weight)
-{
-  tmp_zr.eval_zr(r, r * r * weight);
-  *this += tmp_zr;
 }
 
 /** Output operator for \a zm_norm. */

@@ -10,7 +10,7 @@ BIN_DIR = ~/bin/
 
 WITNESS = $(BUILD_DIR)/witness
 EXEC = makeOFF zm rzm
-MODS = iotools mesh moments triangle vec zernike gauss
+MODS = iotools mesh moments triangle vec zernike
 HEADERS = arg_parse
 OTHER = Makefile
 
