@@ -200,9 +200,15 @@ private:
  raw is ortho / sqrt{2n+3}, it is used for evaluation of the moments
  ortho is the orthonormal normalization
  dual is ortho * sqrt{2n+3}, it is used for reconstruction of the original density
+
+ raw_n, ortho_n, dual_n are the same with an additional 3/(4pi) factor.
+ All zernike moments are created raw. Use zernike::normalize to change this.
 */
 enum class zm_norm {raw, ortho, dual, raw_n, ortho_n, dual_n};
 
+/** Creates zm_norm object. 
+ By defaut (all args false) it gives ortho, the args sets the different possibilities.
+*/
 zm_norm make_norm(bool raw, bool dual, bool norm);
 
 /** Enumeration to represent types of output for Zernike moments.*/
@@ -223,7 +229,7 @@ public:
 
   /** Index of element n, l, m in storage.
 
-    The order for n and l is the same as zernike
+    The order for n and l is the same as zernike_radial
     and for each value of n and l, m change from -l to l, namely:
     (0, 0, 0), (1, 1, -1), (1, 1, 0), (1, 1, 1),
     (2, 0, 0), (3, 1, -1), (3, 1, 0), (3, 1, 1),
@@ -242,7 +248,6 @@ public:
   }
 
   /** Value of element n, l, m.
-
     @param n Between 0 and N (included).
     @param l Between 0 and n (included), should have the same parity as n.
     @param m Between -l and l (included).
@@ -259,6 +264,7 @@ public:
   zm_norm get_norm() const
   { return norm; }
 
+  /** An estimation of the error made during evaluation.*/
   double get_error() const
   { return error; }
 
@@ -313,7 +319,7 @@ public:
 
 /** Class for computing weighted sums of integrated zernike polynomials.
 
-  Normalization is the one from zernike_int.
+  Normalization is the one from zernike_int2.
 
   Usage :
     1. create one instance with the maximum order needed.

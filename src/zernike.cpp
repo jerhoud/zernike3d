@@ -697,7 +697,7 @@ zernike_m_r(mom.order()), moments(mom)
   moments.normalize(zm_norm::dual);
 }
 
-/** Evaluation of the build density.
+/** Evaluation of the built density.
  @param v The position where the density must be evaluated.
  @return The value of the density at \a v.
 */
