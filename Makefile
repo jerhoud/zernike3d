@@ -7,26 +7,23 @@ OPT = -O3
 SOURCE_DIR = src
 BUILD_DIR = build
 BIN_DIR = ~/bin/
+DEPEND_FILE = $(BUILD_DIR)/.depend
 
 EXEC = makeOFF zm rzm
 MODS = iotools mesh moments triangle vec zernike
-HEADERS = arg_parse
 OTHER = Makefile
 
 TARGETS = $(addprefix $(BUILD_DIR)/, $(EXEC))
 OBJ = $(addsuffix .o, $(addprefix $(BUILD_DIR)/, $(MODS)))
-DEP = $(addsuffix .hpp, $(addprefix $(SOURCE_DIR)/, $(MODS) $(HEADERS))) $(OTHER) | $(BUILD_DIR)
+OBJ_DEP = $(OTHER) | $(BUILD_DIR)
+
+.SUFFIXES:
+.PHONY: all bin doc clean
 
 all: $(TARGETS)
 
-$(BUILD_DIR):
-	mkdir $(BUILD_DIR)
-
 bin: all
 	cp -f $(TARGETS) $(BIN_DIR)
-
-$(TARGETS): $(BUILD_DIR)/%: $(SOURCE_DIR)/%.cpp $(OBJ) $(DEP)
-	$(CC) $(CFLAGS) $(OPT) -o $@ $< $(OBJ) $(LDFLAGS)
 
 doc:
 	cd $(SOURCE_DIR) && doxygen
@@ -34,8 +31,21 @@ doc:
 	ln -f -s $(BUILD_DIR)/latex/refman.pdf
 	ln -f -s $(BUILD_DIR)/html/index.html
 
-$(OBJ): $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp $(DEP)
+clean:
+	rm -rf $(BUILD_DIR) refman.pdf index.html
+
+$(BUILD_DIR):
+	mkdir $(BUILD_DIR)
+
+$(TARGETS): $(BUILD_DIR)/%: $(SOURCE_DIR)/%.cpp $(OBJ)
+	$(CC) $(CFLAGS) $(OPT) -o $@ $< $(OBJ) $(LDFLAGS)
+
+$(OBJ): $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp $(OBJ_DEP)
 	$(CC) $(CFLAGS) $(OPT) -o $@ -c $<
 
-clean:
-	rm -rf build refman.pdf index.html
+$(DEPEND_FILE): | $(BUILD_DIR)
+	$(info creating $(DEPEND_FILE))
+	$(foreach mod, $(MODS), $(eval($(shell g++ -MM -MT $(BUILD_DIR)/$(mod).o $(SOURCE_DIR)/$(mod).cpp >> $(DEPEND_FILE)))))
+	$(foreach prog, $(EXEC), $(eval($(shell g++ -MM -MT $(BUILD_DIR)/$(prog) $(SOURCE_DIR)/$(prog).cpp >> $(DEPEND_FILE)))))
+
+include $(DEPEND_FILE)
