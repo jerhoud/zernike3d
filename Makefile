@@ -8,7 +8,6 @@ SOURCE_DIR = src
 BUILD_DIR = build
 BIN_DIR = ~/bin/
 
-WITNESS = $(BUILD_DIR)/witness
 EXEC = makeOFF zm rzm
 MODS = iotools mesh moments triangle vec zernike
 HEADERS = arg_parse
@@ -16,14 +15,12 @@ OTHER = Makefile
 
 TARGETS = $(addprefix $(BUILD_DIR)/, $(EXEC))
 OBJ = $(addsuffix .o, $(addprefix $(BUILD_DIR)/, $(MODS)))
-DEP = $(addsuffix .hpp, $(addprefix $(SOURCE_DIR)/, $(MODS) $(HEADERS))) $(OTHER) $(WITNESS)
+DEP = $(addsuffix .hpp, $(addprefix $(SOURCE_DIR)/, $(MODS) $(HEADERS))) $(OTHER) | $(BUILD_DIR)
 
 all: $(TARGETS)
 
-
-$(WITNESS):
-	mkdir -p $(BUILD_DIR)
-	touch $(WITNESS)
+$(BUILD_DIR):
+	mkdir $(BUILD_DIR)
 
 bin: all
 	cp -f $(TARGETS) $(BIN_DIR)
