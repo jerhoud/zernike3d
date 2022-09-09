@@ -5,7 +5,6 @@
 
 #include <unordered_map>
 #include <algorithm>
-#include "iotools.hpp"
 #include "mesh.hpp"
 
 #ifndef M_PI
