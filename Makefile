@@ -1,5 +1,5 @@
 CC = g++
-LDFLAGS = -DVERSION=$(shell git describe --tags)
+LDFLAGS = -DVERSION=$(shell git describe --tags) -pthread
 CFLAGS = -Wall -Wextra -Wfatal-errors -pedantic -std=c++11
 OPT = -O3
 # OPT = -ggdb

@@ -3,7 +3,7 @@
   It can also computes rotational invariants.
 */
 #include "arg_parse.hpp"
-#include "iotools.hpp"
+#include "parallel.hpp"
 #include "moments.hpp"
 
 using namespace std;
@@ -19,7 +19,8 @@ string sh =
 string eh = "Currently works up to N = " + n_exact
             + " for the exact computation of the moments.\n";
 string v_help = "outputs more informations, including progression bars";
-string t_help = "runs internal sanity checks and exits";
+string t_help = "number of threads to use in parallel, use 0 to adapt to the machine";
+string tests_help = "runs internal sanity checks and exits";
 string m_help = "Computes Zernike moments";
 string i_help = "Computes Zernike rotational invariants";
 string s_help = "Computes signature invariants";
@@ -52,6 +53,7 @@ int main (int argc, char *argv[])
   int N = 0;
   int digit = 6;
   int approx = 13;
+  int nt = 1;
 
   string filename = "-";
   string zm_filename;
@@ -60,7 +62,8 @@ int main (int argc, char *argv[])
   // Set command line options 
 
   p.flag("v", "verbose", v_help);
-  p.flag("t", "tests", t_help);
+  p.option("t", "threads", "N_THREAD", nt, t_help);
+  p.flag("", "tests", tests_help);
   p.flag("m", "moments", m_help);
   p.flag("i", "invariants", i_help);
   p.flag("s", "signatures", s_help);
@@ -77,7 +80,7 @@ int main (int argc, char *argv[])
   p.arg("N", N, N_help);
   p.opt_arg("FILE", filename, FILE_help);
 
-  p.selection({"t", "m", "i", "s"});
+  p.selection({"tests", "m", "i", "s"});
   p.exclusion({"raw", "dual"});
 
   // Parse command line
@@ -97,9 +100,9 @@ int main (int argc, char *argv[])
     cout << scientific;
   cout << setprecision(digit);
 
-  // Option -t auto tests and exits
+  // Option --tests auto tests and exits
 
-  if (p("t")) {
+  if (p("tests")) {
     cout << "checking primary quadratures on the triangle" << endl;
       for (auto &s: triquad_schemes.schemes)
       cout << s;
@@ -107,6 +110,17 @@ int main (int argc, char *argv[])
    for (auto &s: triquad_schemes.secondary_schemes)
       cout << s;
     return 0;
+  }
+
+  // number of threads
+  if (nt < 0)
+    nt = 1;
+  if (nt == 0) {
+    nt = thread::hardware_concurrency();
+    if (nt == 0)
+      nt = 1;
+    if (p("v"))
+      cerr << "Choosing to run on " << nt << " threads" << endl;
   }
 
   // 
@@ -166,11 +180,13 @@ int main (int argc, char *argv[])
         out << scientific << facet_error;
         p.warn(approx_warning + out.str());
       }
-      zm = mesh_approx_integrate(m, N, approx_err, triquad_schemes, p("v"));
+      zm = mesh_approx_integrate(m, N, approx_err, triquad_schemes, nt, p("v"));
       cout << "# approximation error estimate: " << zm.error << endl;
     }
-    else
-      zm = mesh_exact_integrate(m, N, triquad_schemes, p("v"));
+    else {
+      zm = mesh_exact_integrate(m, N, triquad_schemes, nt, p("v"));
+    }
+
   }
   else
     p.die(die_unknown_format + is.name);
@@ -193,7 +209,7 @@ int main (int argc, char *argv[])
     cout << "# Substracted data from file " << zm_filename << endl;
   }
 
-// command -m output moments
+  // command -m output moments
   if (p("m")) {
     if (p("d"))
       zm = zm - zm2;
