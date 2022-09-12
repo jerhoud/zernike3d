@@ -268,6 +268,7 @@ public:
 
   void reset_zm();
   void normalize(zm_norm new_norm);
+  double operator()(const vec &v) const;
   void chop(double epsilon);
   void finish();
   double distance(const zernike &z) const;
@@ -333,18 +334,6 @@ public zernike_int2, public spherical_harmonics, public zernike
 public:
   zernike_m_int(int n);
   void add(const w_vec &p);
-};
-
-
-/** Class for evaluating functions built from Zernike moments.
- */
-class zernike_eval
-{
-public:
-  zernike moments;
-
-  zernike_eval(const zernike &mom);
-  double operator()(const vec &v);
 };
 
 /** Class for computing rotational invariants from Zernike moments.

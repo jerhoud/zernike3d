@@ -465,6 +465,40 @@ void zernike::normalize(zm_norm new_norm)
   norm = new_norm;
 }
 
+/** Evaluates the function corresponding to this moments at the given point.
+ important: this suppose that the normalization is dual.
+ use normalize to set this before calling.
+*/
+double zernike::operator()(const vec &v) const
+{
+  if (v.length_square() > 1)
+    return 0;
+
+  zernike_r r(N);
+  spherical_harmonics s(N);
+  
+  s_vec sp = v.spherical();
+  r.eval_zr(sp.r);
+  s.eval_sh(sp.theta, sp.phi);
+
+  const std::vector<double> &z = r.get_zr();
+  const std::vector<double> &sh = s.get_sh();
+
+  int idzr = 0;
+  int idz = 0;
+  double sum = 0;
+  for (int n2 = 0 ; n2 <= N / 2 ; n2++) {
+    int idsh = 0;
+    for (int l = 0 ; l <= 2 * n2 + 1 ; l++, idzr++) {
+      double sum_m = 0;
+      for (int m = -l ; m <= l ; m++, idsh++, idz++)
+        sum_m += sh[idsh] * zm[idz];
+      sum += z[idzr] * sum_m;
+    }
+  }
+  return sum;
+}
+
 /** Remove moments smaller than espilon in absolute value. */
 void zernike::chop(double epsilon)
 {
@@ -663,29 +697,6 @@ void zernike_m_int::add(const w_vec &p)
   eval_zr(sp.r, 1 / (sp.r * sp.r * sp.r));
   eval_sh(sp.theta, sp.phi);
   add_core(zr, sh, p.weight);
-}
-
-/** Constructor.
- @param mom The Zernike moments of the density to build.
-*/
-zernike_eval::zernike_eval(const zernike &mom):
-moments(mom)
-{
-  moments.normalize(zm_norm::dual);
-}
-
-/** Evaluation of the built density.
- @param v The position where the density must be evaluated.
- @return The value of the density at \a v.
-*/
-double zernike_eval::operator()(const vec &v)
-{
-  if (v.length_square() > 1)
-    return 0;
-  
-  zernike_m_r zm(moments.order());
-  zm.add({1, v});
-  return std::inner_product(zm.get_zm().begin(), zm.get_zm().end(), moments.get_zm().begin(), 0.);
 }
 
 /** Dummy constructor for operator >>.
