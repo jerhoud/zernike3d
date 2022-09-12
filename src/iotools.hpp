@@ -37,7 +37,7 @@ class progression
 public:
   elapsed timer;
   size_t size, step;
-  int old_percent, old_rest;
+  double old_sec;
   bool silent;
 
   progression(size_t sz, bool show);

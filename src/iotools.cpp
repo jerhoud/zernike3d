@@ -29,7 +29,7 @@ double elapsed::seconds() const
  */
 progression::progression(size_t sz, bool show):
 timer(), size(sz), step(0),
-old_percent(-1), old_rest(-1), silent(!show)
+old_sec(-1), silent(!show)
 {
   if (!silent)
     std::cerr << "Starting 0/" << sz;
@@ -58,14 +58,13 @@ void progression::progress(const std::string &s)
     const double sec = timer.seconds();
     const int rest = (int) ((sec / step) * (size - step) + 0.5);
     const int percent = (int)(100 * double(step) / size + 0.5);
-    if ((rest != old_rest) || (percent != old_percent)) {
+    if (sec > old_sec + 0.1) {
       std::cerr << "\r";
       std::cerr << step << "/" << size << ": "
                 << percent
                 << "% (" << rest << " s)";
       std::cerr << s << "\033[K";
-      old_rest = rest;
-      old_percent = percent;
+      old_sec = sec;
     }
   }
 }
