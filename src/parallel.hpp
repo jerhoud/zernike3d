@@ -58,7 +58,7 @@ const C parallel_collect(int nt, const std::vector<T> &v, const C &collector, bo
     size_t idx = 0;
     std::mutex mtx;
     for (int it = 0 ; it < nt ; it++) {
-      threads[it] = std::thread([&]{
+      threads[it] = std::thread([&, it]{
         mtx.lock();
         size_t i = idx++;
         mtx.unlock();
