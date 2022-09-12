@@ -267,7 +267,6 @@ public:
   { return error; }
 
   void reset_zm();
-  void rescale(double new_scale);
   void normalize(zm_norm new_norm);
   void chop(double epsilon);
   void finish();

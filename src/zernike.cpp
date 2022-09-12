@@ -421,20 +421,6 @@ void zernike::reset_zm()
     i = 0;
 }
 
-/** Normalizes so that element 0, 0, 0 is set to new_scale.
-  Element 0, 0, 0 should not be null.
-  Do not use this before the computation of the moments is over.
-
-  @param new_scale The new value for element 0, 0, 0.
-*/
-void zernike::rescale(double new_scale)
-{
-  const double c = new_scale / zm[0];
-  for (auto &i: zm)
-    i *= c;
-  finish();
-}
-
 /** To use to get the correct normalization for orthonormal Zernike polynomials.
   Do not use this before the computation of the moments is over.
 */
@@ -488,7 +474,7 @@ void zernike::chop(double epsilon)
 }
 
 /** Call this after the moments have been computed and before using them.
- \a rescale and \a normalize do it for you.
+ \a normalize do it for you.
  It is ok but useless to do it more than once.
 */
 void zernike::finish()
