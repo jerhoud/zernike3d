@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include "mesh.hpp"
+#include "parallel.hpp"
 
 #ifndef M_PI
 #define M_PI 3.141592653589793238
@@ -687,33 +688,26 @@ vec pos_vertex(const mt_coord &sx, const mt_coord &sy, const mt_coord &sz, size_
 }
 
 mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord &sz,
-                      std::function<double(const vec &)> f, double thresh, bool regularized, bool verbose)
+                      std::function<double(const vec &)> f, double thresh, bool regularized,
+                      int nt, bool verbose)
 {
   const size_t N = sz.maxN()*((2 * sy.maxN() - 1) * sx.maxN() - 1);
-  std::vector<float> val(N+1);
+  std::vector<float> val(N);
   std::vector<size_t> in_node;
   { // Phase 1
     if (verbose)
       std::cerr << "Phase 1/4, function evaluation" << std::endl;
-    progression prog(N + sz.maxN(), verbose);
-    int s = 0;
-    size_t idx = 0;
-    for (int nz = 0 ; nz < sz.maxN() * 2 ; nz++, s = 1 - s) {
-      for (int ny = 0 ; ny < sy.maxN() - s ; ny++) // remove one line every two layers 
-        for (int nx = 0 ; nx < sx.maxN() ; nx++, idx++) {
-          const vec pos { sx.pos(nx, s), sy.pos(ny, s), sz.pos(nz / 2, s) };
-          double v = f(pos) - thresh;
-          if (v > 0 && (nx <= 0 || nx >= sx.maxN() - 1
-                    || ny <= 0 || ny >= sy.maxN() - 1))
-            v = -1;
-          val[idx] = v;
-          if (v > 0)
-            in_node.push_back(idx);
-          prog.progress();
-        }
-      if (s == 1) // remove one point every two layers
-        idx--;
-    }
+    parallel_eval<float>(nt, val, [&] (size_t idx) {
+      const vec pos = pos_vertex(sx, sy, sz, idx);
+      double v = f(pos) - thresh;
+      if (v > 0 && (pos.x < sx.min || pos.x > sx.max
+                 || pos.y < sy.min || pos.y > sy.min
+                 || pos.z < sz.min || pos.z > sz.min))
+        v = -1;
+      if (v > 0)
+        in_node.push_back(idx);
+      return v;
+    }, verbose);
   }
 
   if (in_node.empty())

@@ -147,6 +147,7 @@ public:
 };
 
 mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord &sz,
-                      std::function<double(const vec &)> f, double thresh, bool regularized, bool verbose = false);
+                      std::function<double(const vec &)> f, double thresh, bool regularized,
+                      int nt = 1, bool verbose = false);
 
 #endif

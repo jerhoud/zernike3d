@@ -5,7 +5,7 @@
   and build a mesh (in OFF format) using marching tetrahedra.
 */
 
-#include "iotools.hpp"
+#include "parallel.hpp"
 #include "arg_parse.hpp"
 #include "mesh.hpp"
 #include "zernike.hpp"
@@ -18,9 +18,10 @@ string sh =
   "Input should be in ZM format as produced by zm.";
 string eh = "";
 string v_help = "Outputs additional informations including progression bars";
+string t_help = "number of threads to use in parallel, use 0 to adapt to the machine";
 string f_help = "Numerical precision in fixed notation";
 string e_help = "Numerical precision in scientific notation";
-string t_help = "Threshold value which separates the inside\n"
+string thresh_help = "Threshold value which separates the inside\n"
                 "from the outside (default is 1/2)";
 string r_help = "Does not regularized the mesh";
 string N_help = "The maximum order of Zernike moments to use (if available)";
@@ -39,13 +40,15 @@ int main (int argc, char *argv[])
 {
   elapsed timer;
   string filename = "-";
+  int nt = 1;
   p.prog_name = "rzm";
 
   p.flag("v", "verbose", v_help);
+  p.option("t", "threads", "N_THREAD", nt, t_help);
   p.option("f", "", "DIGITS", digit, f_help);
   p.option("e", "", "DIGITS", digit, e_help);
   p.flag("r", "raw", r_help);
-  p.option("t", "threshold", "THRESH", thresh, t_help);
+  p.option("", "threshold", "THRESH", thresh, thresh_help);
   p.arg("N", N, N_help);
   p.arg("RES", res, RES_help);
   p.opt_arg("FILE", filename, FILE_help);
@@ -62,6 +65,17 @@ int main (int argc, char *argv[])
   if (N < 0)
     p.die(die_N_msg);
 
+  // number of threads
+  if (nt < 0)
+    nt = 1;
+  if (nt == 0) {
+    nt = thread::hardware_concurrency();
+    if (nt == 0)
+      nt = 1;
+    if (p("v"))
+      cerr << "Choosing to run on " << nt << " threads" << endl;
+  }
+
   cout << "# Produced by rzm (" << p.version_text << ") from file: " << filename << endl;
   cout << "# Date: " << now() << endl;
 
@@ -75,7 +89,7 @@ int main (int argc, char *argv[])
   }
   zm.normalize(zm_norm::dual);
 
-  mesh m = marching_tetrahedra({-1, 1, res}, {-1, 1, res}, {-1, 1, res}, zm, thresh, !p("r"), p("v"));
+  mesh m = marching_tetrahedra({-1, 1, res}, {-1, 1, res}, {-1, 1, res}, zm, thresh, !p("r"), nt, p("v"));
   
   cout << m;
   
