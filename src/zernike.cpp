@@ -88,15 +88,6 @@ void zernike_radial::reset_zr()
     v = 0;
 }
 
-zernike_radial &zernike_radial::operator +=(const zernike_radial &zr2)
-{
-  const std::vector<double> &z2 = zr2.get_zr();
-  const size_t n = std::min(zr.size(), z2.size());
-  for (size_t i = 0 ; i != n ; i++)
-    zr[i] += z2[i];
-  return *this;
-}
-
 void help3::set_r(int n, int l)
 {
   if (n > l) {
@@ -692,7 +683,7 @@ void zernike_m_int::add(const w_vec &p)
  @param mom The Zernike moments of the density to build.
 */
 zernike_eval::zernike_eval(const zernike &mom):
-zernike_m_r(mom.order()), moments(mom)
+moments(mom)
 {
   moments.normalize(zm_norm::dual);
 }
@@ -706,9 +697,9 @@ double zernike_eval::operator()(const vec &v)
   if (v.length_square() > 1)
     return 0;
   
-  reset_zm();
-  add({1, v});
-  return std::inner_product(zm.begin(), zm.end(), moments.get_zm().begin(), 0.);
+  zernike_m_r zm(moments.order());
+  zm.add({1, v});
+  return std::inner_product(zm.get_zm().begin(), zm.get_zm().end(), moments.get_zm().begin(), 0.);
 }
 
 /** Dummy constructor for operator >>.

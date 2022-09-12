@@ -108,8 +108,6 @@ public:
   /** Reset all elements to zero. */
   void reset_zr();
 
-  zernike_radial &operator +=(const zernike_radial &zr2);
-
 protected:
   std::vector<double> zr; /**< Storage for the result. */
 };
@@ -341,8 +339,7 @@ public:
 
 /** Class for evaluating functions built from Zernike moments.
  */
-class zernike_eval:
-public zernike_m_r
+class zernike_eval
 {
 public:
   zernike moments;
