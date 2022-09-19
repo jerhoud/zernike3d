@@ -126,4 +126,41 @@ std::string read_file(const std::string &filename, T &x,  bool verbose = false)
   return read_object(is, x, verbose);
 }
 
+class smart_output
+{
+public:
+  smart_output(const std::string &name);
+  smart_output(std::ostream &os, const std::string &name);
+  ~smart_output();
+  smart_output(const smart_output &) = delete;
+  smart_output &operator=(const smart_output &) = delete;
+
+ bool bad() const
+  { return output->bad(); }
+
+  bool fail() const
+  {return output->fail(); }
+
+  bool eof() const
+  { return output->eof(); }
+
+  void clear()
+  { output->clear(); }
+  
+  explicit operator bool() const;
+  
+  std::string name;
+  std::ostream *output;
+private:
+  std::ofstream *file;
+};
+
+/** Reads an object from a smart_input, so you can use them like any istream.*/
+template <typename T>
+smart_output &operator<<(smart_output &os, const T &x)
+{
+  *os.output << x;
+  return os;
+}
+
 #endif

@@ -144,3 +144,35 @@ smart_input &smart_input::failed()
   input->setstate(std::ios_base::failbit);
   return *this;
 }
+
+/** Creates a smart_output from a filename.
+ Uses cout if filename is set to "-".
+ The created file is properly closed at destruction.
+*/
+smart_output::smart_output(const std::string &n):
+name(n), output(NULL), file(NULL)
+{
+  if (name == "-") {
+    name = "standard output";
+    output = &std::cout;
+  }
+  else {
+    file = new std::ofstream(name);
+    output = file;
+  }
+}
+
+smart_output::~smart_output()
+{
+  if (file != NULL) {
+    file->close();
+    delete file;
+  }
+}
+
+/** To check whether the output is Ok.*/
+smart_output::operator bool() const
+{
+  return bool(*output);
+}
+
