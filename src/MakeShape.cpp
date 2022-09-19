@@ -22,7 +22,8 @@ string eh =
   "MakeShape -l file -t \"1 0 0\": translates the given form with the given vector.\n"
   "MakeShape -l file1 -l file2 -l file3: creates a form containing the 3 forms given in files.\n"
   "MakeShape --sphere -s4: creates a sphere with 5120 facets.\n";
-string l_help =  "adds file FILE in OFF format to the current shape\n";
+string l_help = "adds file FILE in OFF format to the current shape\n";
+string o_help = "save current shape in OFF format to file FILE\n";
 string c_help = "centers the shape around the center of mass";
 string r_help = "rescales the shape to fix the radius to R";
 string s_help = "multiplies the number of facets by four N times,\n"
@@ -49,40 +50,38 @@ string tor_help = "creates a torus with the given inner radius\n"
 string mem_help = "Memorizes the current shape under the given NAME";
 string rec_help = "Adds the shape memorized under NAME to the current shape";
 string clear_help = "Starts with a fresh empty shape\n";
+string bad_output_msg = "Cannot open output file: ";
 
 int main (int argc, char *argv[])
 {
   int digit = 6;
-  vector<string> fn;
-  vector<double> tor_radius;
-  vector<int> s;
-  vector<double> r;
-  vector<vec> t;
-  vector<vec> d;
-  vector<w_vec> a;
+  vector<string> string_dat;
+  vector<double> double_dat;
+  vector<int> int_dat;
+  vector<vec> vec_dat;
+  vector<w_vec> wvec_dat;
   double project = 0;
   vector<opt_recorder> rec;
-  vector<string> mem;
-  vector<string> recall;
 
   parser p(sh, eh);
   p.prog_name = "MakeShape";
-  p.rec_list_option("l", "load", "FILE", fn, rec, l_help);
+  p.rec_list_option("l", "load", "FILE", string_dat, rec, l_help);
+  p.rec_list_option("o", "save", "FILE", string_dat, rec, o_help);
   p.rec_flag("", "cube", rec, cub_help);
   p.rec_flag("", "icosahedron", rec, ico_help);
   p.rec_flag("", "octahedron", rec, oct_help);
   p.rec_flag("", "tetrahedron", rec, tet_help);
   p.rec_flag("", "dodecahedron", rec, dod_help);
   p.rec_flag("", "sphere", rec, sph_help);
-  p.rec_list_option("", "torus", "RADIUS", tor_radius, rec, tor_help);
-  p.rec_list_option("s", "", "N", s, rec, s_help);
+  p.rec_list_option("", "torus", "RADIUS", double_dat, rec, tor_help);
+  p.rec_list_option("s", "", "N", int_dat, rec, s_help);
   p.rec_flag("c", "", rec, c_help);
-  p.rec_list_option("r", "", "R", r, rec, r_help);
-  p.rec_list_option("d", "", "FACTORS", d, rec, d_help);
-  p.rec_list_option("t", "", "VEC", t, rec, t_help);
-  p.rec_list_option("a", "", "VEC_ANGLE", a, rec, a_help);
-  p.rec_list_option("", "memorize", "NAME", mem, rec, mem_help);
-  p.rec_list_option("", "recall", "NAME", recall, rec, rec_help);
+  p.rec_list_option("r", "", "R", double_dat, rec, r_help);
+  p.rec_list_option("d", "", "FACTORS", vec_dat, rec, d_help);
+  p.rec_list_option("t", "", "VEC", vec_dat, rec, t_help);
+  p.rec_list_option("a", "", "VEC_ANGLE", wvec_dat, rec, a_help);
+  p.rec_list_option("", "memorize", "NAME", string_dat, rec, mem_help);
+  p.rec_list_option("", "recall", "NAME", string_dat, rec, rec_help);
   p.rec_flag("", "clear", rec, clear_help);
   p.option("f", "", "DIGITS", digit, f_help);
   p.option("e", "", "DIGITS", digit, e_help);
@@ -90,23 +89,35 @@ int main (int argc, char *argv[])
 
   p.run(argc, argv);
 
-  if (p("f"))
-    cout << fixed << setprecision(digit);
-  else if (p("e"))
-    cout << scientific << setprecision(digit);
 
   map<string, mesh> memo;
   mesh m;
   
+  if (rec.empty() || rec.back().name!="o") {
+    int pos = string_dat.size();
+    string_dat.push_back("-");
+    rec.push_back(opt_recorder("o", pos));
+  }
+
   for (auto opt: rec) {
     const string &n = opt.name;
 
     if (n == "l") {
       mesh m0;
-      string err = read_file(fn[opt.pos], m0);
+      string err = read_file(string_dat[opt.pos], m0);
       if (!err.empty())
         p.die(err);
       m.add(m0);
+    }
+    else if (n == "o") {
+      smart_output out(string_dat[opt.pos]);
+      if (!out)
+        p.die(bad_output_msg + n + " (" + strerror(errno) + ")");
+      if (p("f"))
+        out << fixed << setprecision(digit);
+      else if (p("e"))
+        out << scientific << setprecision(digit);
+      out << m;
     }
     else if (n == "sphere") {
       project = (m.empty()) ? -1 : -2;
@@ -114,12 +125,12 @@ int main (int argc, char *argv[])
       continue;
     }
     else if (n == "torus") {
-      project = (m.empty()) ? tor_radius[opt.pos] : -2;
-      m.add(make_torus(tor_radius[opt.pos]));
+      project = (m.empty()) ? double_dat[opt.pos] : -2;
+      m.add(make_torus(double_dat[opt.pos]));
       continue;
     }
     else if (n == "s") {
-      for (int i = 0 ; i < s[opt.pos] ; i++) {
+      for (int i = 0 ; i < int_dat[opt.pos] ; i++) {
         m = m.split();
         if (project == -1)
           m.sphere_project();
@@ -143,19 +154,19 @@ int main (int argc, char *argv[])
     if (n == "c")
       m -= m.mass_center();
     else if (n == "r")
-      m *= r[opt.pos] / m.radius();
+      m *= double_dat[opt.pos] / m.radius();
     else if (n == "d")
-      m.apply(diag_mat(d[opt.pos]));
+      m.apply(diag_mat(vec_dat[opt.pos]));
     else if (n == "a")
-      m.apply(rotation_mat(a[opt.pos].v.normalize(),
-              a[opt.pos].weight * 3.141592653589793238 / 180));
+      m.apply(rotation_mat(wvec_dat[opt.pos].v.normalize(),
+              wvec_dat[opt.pos].weight * 3.141592653589793238 / 180));
     else if (n == "t")
-      m += t[opt.pos];
+      m += vec_dat[opt.pos];
     
     if (n == "memorize")
-      memo[mem[opt.pos]] = m;
+      memo[string_dat[opt.pos]] = m;
     else if (n == "recall")
-      m.add(memo[recall[opt.pos]]);
+      m.add(memo[string_dat[opt.pos]]);
     else if (n == "clear")
       m = mesh();
   }
@@ -181,6 +192,4 @@ int main (int argc, char *argv[])
     cout << "Area: " << m.area() << endl;
     cout << "Volume: " << m.volume() << endl;
   }
-  else
-    cout << m;
 }

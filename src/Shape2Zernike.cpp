@@ -19,6 +19,7 @@ string sh =
 string eh = "Currently works up to N = " + n_exact
             + " for the exact computation of the moments.\n";
 string v_help = "outputs more informations, including progression bars";
+string o_help = "Save output to the given file instead of standard output";
 string t_help = "number of threads to use in parallel, use 0 to adapt to the machine";
 string tests_help = "runs internal sanity checks and exits";
 string m_help = "Computes Zernike moments";
@@ -44,7 +45,7 @@ string radius_warning =
 string die_approx_msg = "-a option: ERROR must be positive";
 string approx_warning = "Warning; requested precision is very small, program may not halt. Allowed error by facet: ";
 string die_unknown_format = "Unknown file format (should be OFF or ZM): ";
-
+string bad_output_msg = "Cannot open output file: ";
 
 int main (int argc, char *argv[])
 {
@@ -56,12 +57,14 @@ int main (int argc, char *argv[])
   int nt = 1;
 
   string filename = "-";
+  string output = "-";
   string zm_filename;
   p.prog_name = "Shape2Zernike";
 
   // Set command line options 
 
   p.flag("v", "verbose", v_help);
+  p.option("o", "output", "FILE", output, o_help);
   p.option("t", "threads", "N_THREAD", nt, t_help);
   p.flag("", "tests", tests_help);
   p.flag("m", "moments", m_help);
@@ -87,7 +90,11 @@ int main (int argc, char *argv[])
 
   p.run(argc, argv);
 
-  // Apply options -e and -f
+  smart_output out(output);
+  if (!out)
+    p.die(bad_output_msg + output + " (" + strerror(errno) + ")");
+
+// Apply options -e and -f
 
   const double approx_err = pow(0.1, approx);
   if (p("a") && !p("e") && !p("f"))
@@ -95,20 +102,20 @@ int main (int argc, char *argv[])
   if (digit < 0)
     digit = 6;
   if (p("f"))
-    cout << fixed;
+    out << fixed;
   else if (p("e"))
-    cout << scientific;
-  cout << setprecision(digit);
+    out << scientific;
+  out << setprecision(digit);
 
   // Option --tests auto tests and exits
 
   if (p("tests")) {
-    cout << "checking primary quadratures on the triangle" << endl;
-      for (auto &s: triquad_schemes.schemes)
-      cout << s;
-     cout << "checking secondary quadratures on the triangle" << endl;
-   for (auto &s: triquad_schemes.secondary_schemes)
-      cout << s;
+    out << "checking primary quadratures on the triangle\n";
+    for (auto &s: triquad_schemes.schemes)
+      out << s;
+    out << "checking secondary quadratures on the triangle\n";
+    for (auto &s: triquad_schemes.secondary_schemes)
+      out << s;
     return 0;
   }
 
@@ -134,8 +141,8 @@ int main (int argc, char *argv[])
 
   // Output header
 
-  cout << "# Produced by " << p.prog_name << " (" << p.version_text << ") from file: " << is.name << endl;
-  cout << "# Date: " << now() << endl;
+  out << "# Produced by " << p.prog_name << " (" << p.version_text << ") from file: " << is.name << "\n";
+  out << "# Date: " << now() << "\n";
 
   // Identify type of input file
   
@@ -163,9 +170,9 @@ int main (int argc, char *argv[])
       p.die(err);
 
     double rad = m.radius();
-    cout << "# Mesh: " << m.points.size() << " vertices, "
-         << m.triangles.size() << " facets, "
-         << "radius: " << rad << endl;
+    out << "# Mesh: " << m.points.size() << " vertices, "
+        << m.triangles.size() << " facets, "
+        << "radius: " << rad << "\n";
 
     if (rad > 1.001)
       p.warn(radius_warning);
@@ -181,7 +188,7 @@ int main (int argc, char *argv[])
         p.warn(approx_warning + out.str());
       }
       zm = mesh_approx_integrate(m, N, approx_err, triquad_schemes, nt, p("v"));
-      cout << "# approximation error estimate: " << zm.error << endl;
+      out << "# approximation error estimate: " << zm.error << "\n";
     }
     else {
       zm = mesh_exact_integrate(m, N, triquad_schemes, nt, p("v"));
@@ -206,14 +213,14 @@ int main (int argc, char *argv[])
     if (!err.empty())
       p.die(err);
     zm2.normalize(zm_norm::ortho);
-    cout << "# Substracted data from file " << zm_filename << endl;
+    out << "# Substracted data from file " << zm_filename << "\n";
   }
 
   // command -m output moments
   if (p("m")) {
     if (p("d"))
       zm = zm - zm2;
-    cout << zm;
+    out << zm;
   }
   // command -i output rotational invariants
   else if (p("i")) {
@@ -222,7 +229,7 @@ int main (int argc, char *argv[])
       rotational_invariants ri2(zm2);
       ri = ri - ri2;
     }
-    cout << ri;
+    out << ri;
   }
   // command -s output signature
   else if (p("s")) {
@@ -231,7 +238,7 @@ int main (int argc, char *argv[])
       signature_invariants si2(zm2);
       si = si - si2;
     }
-    cout << si;
+    out << si;
   }
 
   if (p("v"))

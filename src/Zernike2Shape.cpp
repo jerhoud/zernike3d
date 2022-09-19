@@ -18,6 +18,7 @@ string sh =
   "Input should be in ZM format as produced by Shape2Zernike.";
 string eh = "";
 string v_help = "Outputs additional informations including progression bars";
+string o_help = "Save output to the given file instead of standard output";
 string t_help = "number of threads to use in parallel, use 0 to adapt to the machine";
 string f_help = "Numerical precision in fixed notation";
 string e_help = "Numerical precision in scientific notation";
@@ -29,6 +30,7 @@ string RES_help = "Résolution of the mesh (i.e. number of intervals between -1 
 string FILE_help = "Reads FILE in ZM format (default is standard input)";
 string die_N_msg = "N must be positive.";
 string warn_N_msg = "N larger than maximum moment available. Adapting.";
+string bad_output_msg = "Cannot open output file: ";
 
 parser p(sh, eh);
 int N = 0;
@@ -40,11 +42,13 @@ int main (int argc, char *argv[])
 {
   elapsed timer;
   string filename = "-";
+  string output = "-";
   int nt = 1;
   p.prog_name = "Zernike2Shape";
 
   p.flag("v", "verbose", v_help);
   p.option("t", "threads", "N_THREAD", nt, t_help);
+  p.option("o", "output", "FILE", output, o_help);
   p.option("f", "", "DIGITS", digit, f_help);
   p.option("e", "", "DIGITS", digit, e_help);
   p.flag("r", "raw", r_help);
@@ -55,15 +59,19 @@ int main (int argc, char *argv[])
 
   p.run(argc, argv);
 
-  if (digit < 0)
-    digit = 6;
-  if (p("f"))
-    cout << fixed << setprecision(digit);
-  else if (p("e"))
-    cout << scientific << setprecision(digit);
+  smart_output out(output);
+  if (!out)
+    p.die(bad_output_msg + output + " (" + strerror(errno) + ")");
 
   if (N < 0)
     p.die(die_N_msg);
+
+  if (digit < 0)
+    digit = 6;
+  if (p("f"))
+    out << fixed << setprecision(digit);
+  else if (p("e"))
+    out << scientific << setprecision(digit);
 
   // number of threads
   if (nt < 0)
@@ -76,9 +84,6 @@ int main (int argc, char *argv[])
       cerr << "Choosing to run on " << nt << " threads" << endl;
   }
 
-  cout << "# Produced by " << p.prog_name << " (" << p.version_text << ") from file: " << filename << endl;
-  cout << "# Date: " << now() << endl;
-
   zernike zm;
   string err = read_file(filename, zm, p("v"));
   if (!err.empty())
@@ -90,9 +95,11 @@ int main (int argc, char *argv[])
   zm.normalize(zm_norm::dual);
 
   mesh m = marching_tetrahedra({-1, 1, res}, {-1, 1, res}, {-1, 1, res}, zm, thresh, !p("r"), nt, p("v"));
-  
-  cout << m;
-  
+
+  out << "# Produced by " << p.prog_name << " (" << p.version_text << ") from file: " << filename << "\n";
+  out << "# Date: " << now() << "\n";
+  out << m;
+
   if (p("v"))
     cerr << p.prog_name << " used " << (int) (timer.seconds() * 100) / 100. << " seconds to run.\n"; 
 }
