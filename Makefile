@@ -9,7 +9,7 @@ BUILD_DIR = build
 BIN_DIR = ~/bin/
 DEPEND_FILE = $(BUILD_DIR)/.depend
 
-EXEC = makeOFF zm rzm
+EXEC = MakeShape Shape2Zernike Zernike2Shape
 MODS = iotools mesh moments triangle vec zernike
 OTHER = Makefile
 

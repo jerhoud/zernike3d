@@ -1,7 +1,7 @@
-/** \file rzm.cpp.
+/** \file Zernike2Shape.cpp.
   A standalone program to compute a mesh from zernike moments.
 
-  It reads Zernike moments from a ZM file (as produced by zm)
+  It reads Zernike moments from a ZM file (as produced by Shape2Zernike)
   and build a mesh (in OFF format) using marching tetrahedra.
 */
 
@@ -15,7 +15,7 @@ using namespace argparse;
 
 string sh =
   "Computes a mesh from Zernike moments.\n"
-  "Input should be in ZM format as produced by zm.";
+  "Input should be in ZM format as produced by Shape2Zernike.";
 string eh = "";
 string v_help = "Outputs additional informations including progression bars";
 string t_help = "number of threads to use in parallel, use 0 to adapt to the machine";
@@ -41,7 +41,7 @@ int main (int argc, char *argv[])
   elapsed timer;
   string filename = "-";
   int nt = 1;
-  p.prog_name = "rzm";
+  p.prog_name = "Zernike2Shape";
 
   p.flag("v", "verbose", v_help);
   p.option("t", "threads", "N_THREAD", nt, t_help);
@@ -76,7 +76,7 @@ int main (int argc, char *argv[])
       cerr << "Choosing to run on " << nt << " threads" << endl;
   }
 
-  cout << "# Produced by rzm (" << p.version_text << ") from file: " << filename << endl;
+  cout << "# Produced by " << p.prog_name << " (" << p.version_text << ") from file: " << filename << endl;
   cout << "# Date: " << now() << endl;
 
   zernike zm;
@@ -94,5 +94,5 @@ int main (int argc, char *argv[])
   cout << m;
   
   if (p("v"))
-    cerr << "rzm used " << (int) (timer.seconds() * 100) / 100. << " seconds to run.\n"; 
+    cerr << p.prog_name << " used " << (int) (timer.seconds() * 100) / 100. << " seconds to run.\n"; 
 }

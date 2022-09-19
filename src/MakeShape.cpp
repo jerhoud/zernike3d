@@ -1,4 +1,4 @@
-/** \file makeOFF.cpp
+/** \file MakeShape.cpp
   A standalone program to create simple shapes in OFF format.
 */
 #include <map>
@@ -15,13 +15,13 @@ string sh =
 string eh =
   "Operations are executed in the order of the command line.\n"
   "One can read or create multiple shapes into one.\n"
-  "The shapes created by makeOFF have originally a radius equal to one.\n\n"
+  "The shapes created by MakeShape have originally a radius equal to one.\n\n"
   "Examples:\n"
-  "makeOFF --cube: creates a cube.\n"
-  "makeOFF -l file -cr 1 : reads shape from file, centers it and fixes its radius to 1.\n"
-  "makeOFF -l file -t \"1 0 0\": translates the given form with the given vector.\n"
-  "makeOFF -l file1 -l file2 -l file3: creates a form containing the 3 forms given in files.\n"
-  "makeOFF --sphere -s4: creates a sphere with 5120 facets.\n";
+  "MakeShape --cube: creates a cube.\n"
+  "MakeShape -l file -cr 1 : reads shape from file, centers it and fixes its radius to 1.\n"
+  "MakeShape -l file -t \"1 0 0\": translates the given form with the given vector.\n"
+  "MakeShape -l file1 -l file2 -l file3: creates a form containing the 3 forms given in files.\n"
+  "MakeShape --sphere -s4: creates a sphere with 5120 facets.\n";
 string l_help =  "adds file FILE in OFF format to the current shape\n";
 string c_help = "centers the shape around the center of mass";
 string r_help = "rescales the shape to fix the radius to R";
@@ -66,7 +66,7 @@ int main (int argc, char *argv[])
   vector<string> recall;
 
   parser p(sh, eh);
-  p.prog_name = "makeOFF";
+  p.prog_name = "MakeShape";
   p.rec_list_option("l", "load", "FILE", fn, rec, l_help);
   p.rec_flag("", "cube", rec, cub_help);
   p.rec_flag("", "icosahedron", rec, ico_help);

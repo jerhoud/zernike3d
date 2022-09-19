@@ -5,17 +5,18 @@ zernike3D contains routines to compute 3D Zernike polynomials and 3D Zernike mom
 
 It also contains 3 standalone programs:
 
-## zm
-zm computes Zernike moments for triangular mesh surfaces given in OFF format.
+## Shape2Zernike
+Shape2Zernike computes Zernike moments for triangular mesh surfaces given in OFF format.
 
-## rzm
-rzm takes a set of 3D Zernike moments as computed by zm and builds the corresponding shape as a triangular mesh surface in OFF format.
+## Zernike2Shape
+Zernike2Shape takes a set of 3D Zernike moments as computed by Shape2Zernike and builds the corresponding shape as a triangular mesh surface in OFF format.
 
-## makeOFF
-makeOFF is a little tool to build shapes in OFF format.
+## MakeShape
+MakeShape is a little tool to build shapes in OFF format.
 
 ## Installation
-This is made for linux, I have not the knowledge for other operating systems.
+This is made for linux, it seems to work on MacOS. It may or may not work on other operating systems including Windows.
+It is written in standard c++-11 and uses std::threads for parallelization.
 
 1. Clone the repository.
 2. Call `make` in the root directory. The Makefile assumes a g++ compiler change the first lines of Makefile to adapt. You need a c++11 compiler for this.

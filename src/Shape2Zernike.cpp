@@ -1,4 +1,4 @@
-/** \file zm.cpp
+/** \file Shape2Zernike.cpp
   A standalone program to compute zernike moments from an OFF file.
   It can also computes rotational invariants.
 */
@@ -57,7 +57,7 @@ int main (int argc, char *argv[])
 
   string filename = "-";
   string zm_filename;
-  p.prog_name = "zm";
+  p.prog_name = "Shape2Zernike";
 
   // Set command line options 
 
@@ -134,7 +134,7 @@ int main (int argc, char *argv[])
 
   // Output header
 
-  cout << "# Produced by zm (" << p.version_text << ") from file: " << is.name << endl;
+  cout << "# Produced by " << p.prog_name << " (" << p.version_text << ") from file: " << is.name << endl;
   cout << "# Date: " << now() << endl;
 
   // Identify type of input file
@@ -235,5 +235,5 @@ int main (int argc, char *argv[])
   }
 
   if (p("v"))
-    cerr << "zm used " << (int) (timer.seconds() * 100) / 100. << " seconds to run.\n"; 
+    cerr << p.prog_name << " used " << (int) (timer.seconds() * 100) / 100. << " seconds to run.\n"; 
 }
