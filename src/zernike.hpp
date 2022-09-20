@@ -269,7 +269,6 @@ public:
   void reset_zm();
   void normalize(zm_norm new_norm);
   double operator()(const vec &v) const;
-  void chop(double epsilon);
   void finish();
   double distance(const zernike &z) const;
   zernike &operator +=(const zernike &z);

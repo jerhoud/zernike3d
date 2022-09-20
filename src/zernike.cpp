@@ -499,14 +499,6 @@ double zernike::operator()(const vec &v) const
   return sum;
 }
 
-/** Remove moments smaller than espilon in absolute value. */
-void zernike::chop(double epsilon)
-{
-  for (auto &i: zm)
-    if (fabs(i) <= epsilon)
-      i = 0;
-}
-
 /** Call this after the moments have been computed and before using them.
  \a normalize do it for you.
  It is ok but useless to do it more than once.
