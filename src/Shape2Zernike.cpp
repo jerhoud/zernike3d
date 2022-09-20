@@ -17,21 +17,21 @@ string sh =
   "Computes Zernike moments or invariants derived from them.\n"
   "Input should be in OFF or ZM format.";
 string eh = "Currently works up to N = " + n_exact
-            + " for the exact computation of the moments.\n";
+            + " for the exact computation of the moments.\n\n"
+            "Examples:\n"
+            "Shape2Zernike 50 shape.off : Computes the Zernike moments of shape.off up to order 50.\n"
+            "Shape2Zernike -a 8 -o result.zm 50 shape.off : The same using the approximate algorithm with 8 digit precision and writing the output to file result.zm.\n"
+            "Shape2Zernike -v -t 4 50 shape.off : Still the same running on four threads and with progression bar.";
 string v_help = "outputs more informations, including progression bars";
 string o_help = "Save output to the given file instead of standard output";
 string t_help = "number of threads to use in parallel, use 0 to adapt to the machine";
 string tests_help = "runs internal sanity checks and exits";
-string m_help = "Computes Zernike moments";
 string i_help = "Computes Zernike rotational invariants";
 string s_help = "Computes signature invariants";
 string n_help = "Alternative normalization (first polynomial is 1): moments * sqrt(3/4pi)";
 string a_help = "Computes the moments using approximate methods to get the required correct DIGITS";
-string c_help = "The Zernike moments are output in complex form";
+string r_help = "The Zernike moments are output in real form instead of complex";
 string p_help = "Multiplies the moments by the phase factor (-1)^m";
-string chop_help = "Chops to 0 very small Zenike moments";
-string raw_help = "Divides Zernike moments by sqrt(2n+3)";
-string dual_help = "Multiplies Zernike moments by sqrt(2n+3)";
 string d_help = "Reads Zernike moments in ZM format and substract them from the computed moments";
 string f_help = "Numerical precision in fixed notation";
 string e_help = "Numerical precision in scientific notation";
@@ -66,25 +66,20 @@ int main (int argc, char *argv[])
   p.flag("v", "verbose", v_help);
   p.option("o", "output", "FILE", output, o_help);
   p.option("t", "threads", "N_THREAD", nt, t_help);
+  p.option("a", "approximate", "DIGITS", approx, a_help);
   p.flag("", "tests", tests_help);
-  p.flag("m", "moments", m_help);
   p.flag("i", "invariants", i_help);
   p.flag("s", "signatures", s_help);
   p.flag("n", "normalize", n_help);
-  p.flag("", "chop", chop_help);
-  p.flag("", "raw", raw_help);
-  p.flag("", "dual", dual_help);
-  p.flag("c", "complex", c_help);
+  p.flag("r", "real", r_help);
   p.flag("p", "phase", p_help);
-  p.option("a", "approximate", "DIGITS", approx, a_help);
   p.option("d", "diff", "ZMFILE", zm_filename, d_help);
   p.option("f", "", "DIGITS", digit, f_help);
   p.option("e", "", "DIGITS", digit, e_help);
   p.arg("N", N, N_help);
   p.opt_arg("FILE", filename, FILE_help);
 
-  p.selection({"tests", "m", "i", "s"});
-  p.exclusion({"raw", "dual"});
+  p.exclusion({"tests", "i", "s"});
 
   // Parse command line
 
@@ -198,12 +193,10 @@ int main (int argc, char *argv[])
   else
     p.die(die_unknown_format + is.name);
   
-  // Select normalization and apply output options -c -p --chop
+  // Select normalization and apply output options -c -p
 
-  zm.normalize(make_norm(p("raw"), p("dual"), p("n")));
-  zm.output = make_output(p("c"), p("p"));
-  if (p("chop"))
-    zm.chop(zm.error / 10);
+  zm.normalize(make_norm(false, false, p("n")));
+  zm.output = make_output(!p("r"), p("p"));
 
   // option -d read a secondary zm file
 
