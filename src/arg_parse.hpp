@@ -34,6 +34,8 @@ const string options_msg = "Options";
 const string arguments_msg = "Arguments";
 const string std_help_msg = "shows this help message and exits";
 const string std_version_msg = "shows version information and exits";
+const string std_hidden_msg = "shows hidden options in the help message";
+const string hidden_hint_msg = " (use -h --hidden to show hidden options)";
 const string missing_opt_name_msg = "Missing option name for argument ";
 const string unknown_opt_msg = "Unknown option ";
 const string unwanted_opt_arg_msg = "Unwanted argument for option ";
@@ -145,7 +147,7 @@ public:
   const string short_name;
   const string long_name;
   const bool want_arg;
-  const string help;
+  string help;
   string short_usage, short_print, long_print;
   bool used;
 
@@ -333,11 +335,14 @@ class parser
 public:
   const string start_help, end_help, example_help, version_text;
   string prog_name, missing_arg;
+  bool hide, hidden_visible;
   vector<token> toks;
   vector<option_desc_base *> opts;
   vector<arg_desc_base *> args;
   vector<vector<string> > exclusions;
   vector<vector<string> > selections;
+  vector<string> group_names;
+  vector<int> group_pos;
 
   /** The constructor
     
@@ -346,7 +351,7 @@ public:
     @param v The version string (for opt --version) default is macro VERSION
    */
   parser(const string &sh, const string &eh, const string &ex="", const string &v=stringify(VERSION)):
-  start_help(sh), end_help(eh), example_help(ex), version_text(v)
+  start_help(sh), end_help(eh), example_help(ex), version_text(v), hide(false)
   {
     flag("h", "help", std_help_msg);
     flag("", "version", std_version_msg);
@@ -382,6 +387,27 @@ public:
   /** prints version informations.*/
   void show_version(ostream &os) const
   { os << prog_name << " " << version_text << endl; }
+
+  void group(const string &s)
+  {
+    if (hide) return;
+    group_names.push_back(s);
+    group_pos.push_back((group_pos.empty()) ? 0 : opts.size());
+  }
+
+  void hidden(bool visible=false)
+  {
+    if (hide) return;
+    if (group_names.empty())
+      group("Options");
+    group("Hidden");
+    hide = true;
+    hidden_visible = visible;
+    if (visible) {
+      flag("", "hidden", std_hidden_msg);
+      opts[0]->help += hidden_hint_msg;
+    }
+  }
 
   /** adds a yes / no option to the parser.*/
   void flag(const string &s, const string &l, const string &h)
@@ -510,12 +536,19 @@ void parser::show_help(ostream &os) const
     os << arguments_msg << ":" << endl;
     for (auto &arg: args)
       arg->show(os, w_arg);
-    os << endl;
   }
   if (!opts.empty()) {
-    os << options_msg << ":" << endl;
-    for (auto &opt: opts)
-      opt->show(os, w_short, w_long);
+    int grp_idx = 0;
+    size_t grp = group_pos[grp_idx];
+    for (size_t i = 0 ; i < opts.size() ; i++) {
+      if (i == grp) {
+        if (group_names[grp_idx] == "Hidden" && (!hidden_visible || !operator()("hidden")))
+          break;
+        os << endl << group_names[grp_idx] << ":" << endl;
+        grp = group_pos[++grp_idx];
+      }
+      opts[i]->show(os, w_short, w_long);
+    }
     os << endl;
   }
   if (!end_help.empty())
@@ -536,6 +569,9 @@ void parser::parse(int argc, const char *const argv[])
 {
   if (prog_name.empty())
     prog_name = argv[0];
+  if (group_names.empty())
+    group(options_msg);
+  group("");
   parse_tokens(argc - 1, argv + 1, toks);
 }
 
