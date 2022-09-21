@@ -163,7 +163,7 @@ public:
       if (want_arg)
         long_print += " " + arg_name;
       if (!short_name.empty())
-        short_print += ",";
+        short_print += " ";
     }
   }
 
