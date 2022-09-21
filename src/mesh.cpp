@@ -701,14 +701,15 @@ mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord 
       const vec pos = pos_vertex(sx, sy, sz, idx);
       double v = f(pos) - thresh;
       if (v > 0 && (pos.x < sx.min || pos.x > sx.max
-                 || pos.y < sy.min || pos.y > sy.min
-                 || pos.z < sz.min || pos.z > sz.min))
-        v = -1;
-      if (v > 0)
-        in_node.push_back(idx);
+                 || pos.y < sy.min || pos.y > sy.max
+                 || pos.z < sz.min || pos.z > sz.max))
+        v = 0;
       return v;
     }, verbose);
   }
+  for (size_t idx = 0 ; idx < val.size() ; idx++)
+    if (val[idx] > 0)
+      in_node.push_back(idx);
 
   if (in_node.empty())
     return mesh();
