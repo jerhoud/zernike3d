@@ -13,9 +13,8 @@ string sh =
   "Creates or modifies shapes in OFF format.\n"
   "Outputs it on standard output in OFF format.";
 string eh =
-  "Operations are executed in the order of the command line.\n"
-  "One can read or create multiple shapes into one.\n"
-  "The shapes created by MakeShape have originally a radius equal to one.";
+  "Operations (except global options) are executed in the order of the command line.\n"
+  "One can read or create multiple shapes into one.";
 string ex =
   "MakeShape --cube                        Creates a cube.\n"
   "MakeShape --sphere -s5 -o sphere.off    Creates a sphere with 20480 facets (20 * 4^5) and saves it to file.\n"
@@ -29,26 +28,24 @@ string r_help = "rescales the shape to set its outer radius to R";
 string s_help = "multiplies the number of facets by four N times,\n"
                 "projects the new points for the sphere and the torus";
 string t_help =
-  "translates the shape along the given vector (3 numbers inside a quote)";
+  "translates the shape along the given vector: -t \"dx dy zy\"";
 string a_help =
-  "rotates the shape with the given angle in degrees and axis,\n"
-  "4 numbers inside a quote (\"x y z angle\")\n";
+  "rotates the shape with the given angle in degrees and axis: -a \"x y z angle\"";
 string e_help =
-  "applies a diagonal matrix (i.e. expands along the axis)\n"
-  "the three expansion factors are given inside a quote";
-string d_help = "Number of significant digits printed in the output (default is 6)";
+  "applies a diagonal matrix (i.e. expands along the axis): -e \"fx fy fz\"";
+string d_help = "number of significant digits printed in the output (default is 6)";
 string i_help = "shows informations about the shape and stops";
-string cub_help = "creates a cube with 12 facets";
-string ico_help = "creates a regular icosahedron with 20 facets";
-string oct_help = "creates a regular octahedron with 8 facets";
-string tet_help = "creates a regular tetrhedron with 4 facets";
-string dod_help = "creates a regular dodecahedron with 60 facets";
-string sph_help = "creates a sphere with 24 facets";
-string tor_help = "creates a torus with the given inner radius\n"
+string cub_help = "adds a cube with 12 facets";
+string ico_help = "adds a regular icosahedron with 20 facets";
+string oct_help = "adds a regular octahedron with 8 facets";
+string tet_help = "adds a regular tetrhedron with 4 facets";
+string dod_help = "adds a regular dodecahedron with 60 facets";
+string sph_help = "adds a sphere with 20 facets";
+string tor_help = "adds a torus with the given inner radius\n"
                   "the number of facets increases with the inner radius starting at 123";
-string mem_help = "Memorizes the current shape under the given NAME";
-string rec_help = "Adds the shape memorized under NAME to the current shape";
-string clear_help = "Starts with a fresh empty shape\n";
+string mem_help = "memorizes the current shape under the given NAME";
+string rec_help = "adds the shape memorized under NAME to the current shape";
+string clear_help = "starts with a fresh empty shape";
 string bad_output_msg = "Cannot open output file: ";
 
 int main (int argc, char *argv[])
@@ -64,8 +61,18 @@ int main (int argc, char *argv[])
 
   parser p(sh, eh, ex);
   p.prog_name = "MakeShape";
-  p.rec_list_option("l", "load", "FILE", string_dat, rec, l_help);
+
+  p.group("Global options");
+  p.option("d", "digits", "DIGITS", digit, d_help);
+
+  p.group("Load / save options");
   p.rec_list_option("o", "save", "FILE", string_dat, rec, o_help);
+  p.rec_list_option("l", "load", "FILE", string_dat, rec, l_help);
+  p.rec_list_option("", "memorize", "NAME", string_dat, rec, mem_help);
+  p.rec_list_option("", "recall", "NAME", string_dat, rec, rec_help);
+  p.rec_flag("", "clear", rec, clear_help);
+
+  p.group("Shape options (shapes are created with radius 1)");
   p.rec_flag("", "cube", rec, cub_help);
   p.rec_flag("", "icosahedron", rec, ico_help);
   p.rec_flag("", "octahedron", rec, oct_help);
@@ -73,16 +80,16 @@ int main (int argc, char *argv[])
   p.rec_flag("", "dodecahedron", rec, dod_help);
   p.rec_flag("", "sphere", rec, sph_help);
   p.rec_list_option("", "torus", "RADIUS", double_dat, rec, tor_help);
+
+  p.group("Transformation options");
   p.rec_list_option("s", "", "N", int_dat, rec, s_help);
   p.rec_flag("c", "", rec, c_help);
   p.rec_list_option("r", "", "R", double_dat, rec, r_help);
   p.rec_list_option("e", "expand", "FACTORS", vec_dat, rec, e_help);
   p.rec_list_option("t", "", "VEC", vec_dat, rec, t_help);
   p.rec_list_option("a", "", "VEC_ANGLE", wvec_dat, rec, a_help);
-  p.rec_list_option("", "memorize", "NAME", string_dat, rec, mem_help);
-  p.rec_list_option("", "recall", "NAME", string_dat, rec, rec_help);
-  p.rec_flag("", "clear", rec, clear_help);
-  p.option("d", "digits", "DIGITS", digit, d_help);
+
+  p.group("Miscellaneous");
   p.flag("i", "", i_help);
 
   p.run(argc, argv);
