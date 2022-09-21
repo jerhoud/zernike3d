@@ -56,17 +56,16 @@ int main (int argc, char *argv[])
 
   p.run(argc, argv);
 
+  if (N < 0)
+    p.die(die_N_msg);
+
   smart_output out(output);
   if (!out)
     p.die(bad_output_msg + output + " (" + strerror(errno) + ")");
 
-  if (N < 0)
-    p.die(die_N_msg);
-
   if (digit <= 0)
     digit = 1;
-  if (p("d"))
-    out << setprecision(digit);
+  out << setprecision(digit);
 
   // number of threads
   if (nt < 0)
