@@ -46,7 +46,7 @@ int main (int argc, char *argv[])
   parser p(sh, eh, ex);
   p.prog_name = "Zernike2Shape";
   p.flag("v", "verbose", v_help);
-  p.option("t", "threads", "N_THREAD", nt, t_help);
+  p.option("t", "threads", "THREAD", nt, t_help);
   p.option("o", "output", "FILE", output, o_help);
   p.option("d", "digits", "DIGITS", digit, d_help);
   p.option("", "threshold", "THRESH", thresh, thresh_help);
