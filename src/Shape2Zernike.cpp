@@ -14,35 +14,32 @@ const int N_exact = triquad_schemes.max_order();
 const string n_exact = to_string(N_exact);
 
 string sh =
-  "Computes Zernike moments or invariants derived from them.\n"
-  "Input should be in OFF or ZM format.";
+  "Computes Zernike moments, input should be in OFF format.";
 string eh = "Currently works up to N = " + n_exact
-            + " for the exact computation of the moments.\n\n"
-            "Examples:\n"
-            "Shape2Zernike 50 shape.off : Computes the Zernike moments of shape.off up to order 50.\n"
-            "Shape2Zernike -a 8 -o result.zm 50 shape.off : The same using the approximate algorithm with 8 digit precision and writing the output to file result.zm.\n"
-            "Shape2Zernike -v -t 4 50 shape.off : Still the same running on four threads and with progression bar.";
+            + " for the exact computation of the moments.\n"
+            "No limit for N when using -a.\n";
+string ex = "Shape2Zernike 50 shape.off                     Computes the Zernike moments of shape.off up to order 50.\n"
+            "Shape2Zernike -a 8 -o result.zm 50 shape.off   Same using approximate algorithm with 8 digit precision and results written to file.\n"
+            "Shape2Zernike -vt 4 50 shape.off               Same running on four threads, with progression bar.";
 string v_help = "outputs more informations, including progression bars";
 string o_help = "Save output to the given file instead of standard output";
 string t_help = "number of threads to use in parallel, use 0 to adapt to the machine";
 string tests_help = "runs internal sanity checks and exits";
-string i_help = "Computes Zernike rotational invariants";
-string s_help = "Computes signature invariants";
+string i_help = "Computes Zernike rotational invariants instead of moments";
+string s_help = "Computes signature invariants instead of moments";
 string n_help = "Alternative normalization (first polynomial is 1): moments * sqrt(3/4pi)";
 string a_help = "Computes the moments using approximate methods to get the required correct DIGITS";
 string r_help = "The Zernike moments are output in real form instead of complex";
 string p_help = "Multiplies the moments by the phase factor (-1)^m";
-string d_help = "Reads Zernike moments in ZM format and substract them from the computed moments";
-string f_help = "Numerical precision in fixed notation";
-string e_help = "Numerical precision in scientific notation";
+string diff_help = "Reads Zernike moments in ZM format and substract them from the computed moments";
+string d_help = "Number of significant digits printed in the output";
 
 string FILE_help = "Reads FILE in OFF or ZM format (default is standard input)";
 string N_help = "The maximum order of Zernike moments computed";
 string die_N_msg ="N must be positive and no more than "
-                       + n_exact + " for exact compututation of the moments.";
+                       + n_exact + " for exact computation of the moments.";
 string radius_warning =
   "Warning: shape radius is larger than one. Risks of imprecisions.";
-string die_approx_msg = "-a option: ERROR must be positive";
 string approx_warning = "Warning; requested precision is very small, program may not halt. Allowed error by facet: ";
 string die_unknown_format = "Unknown file format (should be OFF or ZM): ";
 string bad_output_msg = "Cannot open output file: ";
@@ -50,32 +47,32 @@ string bad_output_msg = "Cannot open output file: ";
 int main (int argc, char *argv[])
 {
   elapsed timer;
-  parser p(sh, eh);
   int N = 0;
-  int digit = 6;
+  int digit = 8;
   int approx = 13;
   int nt = 1;
 
   string filename = "-";
   string output = "-";
   string zm_filename;
-  p.prog_name = "Shape2Zernike";
 
   // Set command line options 
+
+  parser p(sh, eh, ex);
+  p.prog_name = "Shape2Zernike";
 
   p.flag("v", "verbose", v_help);
   p.option("o", "output", "FILE", output, o_help);
   p.option("t", "threads", "N_THREAD", nt, t_help);
   p.option("a", "approximate", "DIGITS", approx, a_help);
-  p.flag("", "tests", tests_help);
+  p.option("d", "digits", "DIGITS", digit, d_help);
   p.flag("i", "invariants", i_help);
   p.flag("s", "signatures", s_help);
   p.flag("n", "normalize", n_help);
   p.flag("r", "real", r_help);
   p.flag("p", "phase", p_help);
-  p.option("d", "diff", "ZMFILE", zm_filename, d_help);
-  p.option("f", "", "DIGITS", digit, f_help);
-  p.option("e", "", "DIGITS", digit, e_help);
+  p.option("", "diff", "ZMFILE", zm_filename, diff_help);
+  p.flag("", "tests", tests_help);
   p.arg("N", N, N_help);
   p.opt_arg("FILE", filename, FILE_help);
 
@@ -92,14 +89,10 @@ int main (int argc, char *argv[])
 // Apply options -e and -f
 
   const double approx_err = pow(0.1, approx);
-  if (p("a") && !p("e") && !p("f"))
+  if (p("a") && !p("d"))
     digit = approx + 1;
-  if (digit < 0)
-    digit = 6;
-  if (p("f"))
-    out << fixed;
-  else if (p("e"))
-    out << scientific;
+  if (digit <= 0)
+    digit = 1;
   out << setprecision(digit);
 
   // Option --tests auto tests and exits
@@ -174,8 +167,6 @@ int main (int argc, char *argv[])
 
     // compute moments
     if (p("a")) {
-      if (approx_err <= 0)
-        p.die(die_approx_msg);
       const double facet_error = approx_err / m.triangles.size();
       if (facet_error < 1e-13) {
         ostringstream out;
@@ -201,7 +192,7 @@ int main (int argc, char *argv[])
   // option -d read a secondary zm file
 
   zernike zm2;
-  if (p("d")) {
+  if (p("diff")) {
     string err = read_file(zm_filename, zm2, p("v"));
     if (!err.empty())
       p.die(err);
@@ -211,14 +202,14 @@ int main (int argc, char *argv[])
 
   // command -m output moments
   if (p("m")) {
-    if (p("d"))
+    if (p("diff"))
       zm = zm - zm2;
     out << zm;
   }
   // command -i output rotational invariants
   else if (p("i")) {
     rotational_invariants ri(zm);
-    if (p("d")) {
+    if (p("diff")) {
       rotational_invariants ri2(zm2);
       ri = ri - ri2;
     }
@@ -227,7 +218,7 @@ int main (int argc, char *argv[])
   // command -s output signature
   else if (p("s")) {
     signature_invariants si(zm);
-    if (p("d")) {
+    if (p("diff")) {
       signature_invariants si2(zm2);
       si = si - si2;
     }
