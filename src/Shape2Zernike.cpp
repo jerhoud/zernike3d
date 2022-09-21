@@ -18,9 +18,9 @@ string sh =
 string eh = "Currently works up to N = " + n_exact
             + " for the exact computation of the moments.\n"
             "No limit for N when using -a.\n";
-string ex = "Shape2Zernike 50 shape.off                     Computes the Zernike moments of shape.off up to order 50.\n"
-            "Shape2Zernike -a 8 -o result.zm 50 shape.off   Same using approximate algorithm with 8 digit precision and results written to file.\n"
-            "Shape2Zernike -vt 4 50 shape.off               Same running on four threads, with progression bar.";
+string ex = "Shape2Zernike 50 shape.off                     Computes the Zernike moments of shape.off up to order 50\n"
+            "Shape2Zernike -a 8 -o result.zm 50 shape.off   Same using approximate algorithm with 8 digit precision and results written to file\n"
+            "Shape2Zernike -vt 4 50 shape.off               Same running on four threads, with progression bar";
 string v_help = "outputs more informations, including progression bars";
 string o_help = "Save output to the given file instead of standard output";
 string t_help = "number of threads to use in parallel, use 0 to adapt to the machine";
@@ -32,7 +32,7 @@ string a_help = "Computes the moments using approximate methods to get the requi
 string r_help = "The Zernike moments are output in real form instead of complex";
 string p_help = "Multiplies the moments by the phase factor (-1)^m";
 string diff_help = "Reads Zernike moments in ZM format and substract them from the computed moments";
-string d_help = "Number of significant digits printed in the output";
+string d_help = "Number of significant digits printed in the output (default is 8)";
 
 string FILE_help = "Reads FILE in OFF or ZM format (default is standard input)";
 string N_help = "The maximum order of Zernike moments computed";
