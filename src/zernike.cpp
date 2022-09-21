@@ -367,7 +367,7 @@ bool real_out(zm_output output)
   @param n Maximum order needed. Should be positive.
 */
 zernike::zernike(int n):
-error(0), output(zm_output::real),
+variance(0), output(zm_output::real),
 N(n), norm(zm_norm::raw), odd_clean(false),
 zm(2 * (n / 2 + 1) * (n / 2 + 2) * (2 * (n / 2) + 3) / 3, 0)
 {}
@@ -377,7 +377,7 @@ zm(2 * (n / 2 + 1) * (n / 2 + 2) * (2 * (n / 2) + 3) / 3, 0)
   @param source Moments to copy from (truncated at N = n.).
 */
 zernike::zernike(int n, const zernike &source):
-error(0), output(source.output),
+variance(0), output(source.output),
 N(n), norm(source.norm), odd_clean(false),
 zm(2 * (n / 2 + 1) * (n / 2 + 2) * (2 * (n / 2) + 3) / 3, 0)
 {
@@ -539,7 +539,7 @@ zernike &zernike::operator +=(const zernike &z)
   const size_t n = std::min(zm.size(), z2.size());
   for (size_t i = 0 ; i != n ; i++)
     zm[i] += z2[i];
-  error += z.get_error();
+  variance += z.variance;
   return *this;
 }
 

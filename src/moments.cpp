@@ -13,10 +13,12 @@ public:
   cloud_sumer(int n): zernike_m_r(n) {}
   std::string collect(const vec &v) {
     add({1, v});
+    variance += 1e-30;
     return "";
   }
   std::string collect(const w_vec &v) {
     add(v);
+    variance += 1e-30;
     return "";
   }
   void collect(const cloud_sumer &cs) {
@@ -58,6 +60,7 @@ public:
   {
     const triangle t = i.get_triangle(msh);
     sch.integrate(t, *this, 3 * t.volume());
+    variance += 1e-28;
     return "";
   }
   void collect(const mesh_exact_sumer &ms)
@@ -75,9 +78,7 @@ zernike mesh_exact_integrate(const mesh &m, int n, const triquad_selector &ts, i
     return zernike();
   
   mesh_exact_sumer sumer(n, m, ts.get_scheme(n));
-  mesh_exact_sumer result = parallel_collect(nt, m.triangles, sumer, verbose);
-  result.error = 1e-13;
-  return result;
+  return parallel_collect(nt, m.triangles, sumer, verbose);
 }
 
 int facet_approx_integrate(const triangle &t, double error, const triquad_selector &ts, zernike_m_int *&za, zernike_m_int *&zb)
@@ -92,11 +93,11 @@ int facet_approx_integrate(const triangle &t, double error, const triquad_select
     err = za->distance(*zb);
     std::swap(za, zb);
     if (za->order() <= s.order) {
-      za->error = 1e-14;
+      za->variance = 1e-28;
       return s.order;
     }
     else if (err < error) {
-      za->error = err;
+      za->variance = err * err;
       return s.order;
     }
   }
@@ -109,7 +110,7 @@ int facet_approx_integrate(const triangle &t, double error, const triquad_select
     err = za->distance(*zb);
     std::swap(za, zb);
     if (err < error) {
-      za->error = err;
+      za->variance = err * err;
       return -n;
     }
   }

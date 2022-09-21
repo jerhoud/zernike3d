@@ -264,7 +264,7 @@ public:
 
   /** An estimation of the error made during evaluation.*/
   double get_error() const
-  { return error; }
+  { return sqrt(variance); }
 
   void reset_zm();
   void normalize(zm_norm new_norm);
@@ -276,7 +276,7 @@ public:
   friend smart_input &operator >>(smart_input &, zernike &);
   friend zernike operator -(const zernike &z1, const zernike &z2);
  
-  double error;
+  double variance;
   zm_output output;
 protected:
   int N;

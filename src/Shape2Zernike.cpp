@@ -171,17 +171,18 @@ int main (int argc, char *argv[])
 
     // compute moments
     if (p("a")) {
-      const double facet_error = approx_err / m.triangles.size();
+      const double facet_error = approx_err / sqrt(m.triangles.size());
       if (facet_error < 1e-13) {
         ostringstream out;
         out << scientific << facet_error;
         p.warn(approx_warning + out.str());
       }
       zm = mesh_approx_integrate(m, N, approx_err, triquad_schemes, nt, p("v"));
-      out << "# approximation error estimate: " << zm.error << "\n";
+      out << "# approximation error estimate: " << zm.get_error() << "\n";
     }
     else {
       zm = mesh_exact_integrate(m, N, triquad_schemes, nt, p("v"));
+      out << "# error estimate: " << zm.get_error() << "\n";
     }
 
   }
