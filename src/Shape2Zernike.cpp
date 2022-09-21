@@ -17,7 +17,8 @@ string sh =
   "Computes Zernike moments, input should be in OFF format.";
 string eh = "Currently works up to N = " + n_exact
             + " for the exact computation of the moments.\n"
-            "No limit for N when using -a.\n";
+            "No limit for N when using -a.\n"
+            "The shape must fit into the unit ball (no implicit centering or rescaling, use MakeShape to do this).";
 string ex = "Shape2Zernike 50 shape.off                     Computes the Zernike moments of shape.off up to order 50\n"
             "Shape2Zernike -a 8 -o result.zm 50 shape.off   Same using approximate algorithm with 8 digit precision and results written to file\n"
             "Shape2Zernike -vt 4 50 shape.off               Same running on four threads, with progression bar";
@@ -25,17 +26,17 @@ string v_help = "outputs more informations, including progression bars";
 string o_help = "Save output to the given file instead of standard output";
 string t_help = "number of threads to use in parallel, use 0 to adapt to the machine";
 string tests_help = "runs internal sanity checks and exits";
-string i_help = "Computes Zernike rotational invariants instead of moments";
-string s_help = "Computes signature invariants instead of moments";
-string n_help = "Alternative normalization (first polynomial is 1): moments * sqrt(3/4pi)";
-string a_help = "Computes the moments using approximate methods to get the required correct DIGITS";
-string r_help = "The Zernike moments are output in real form instead of complex";
-string p_help = "Multiplies the moments by the phase factor (-1)^m";
-string diff_help = "Reads Zernike moments in ZM format and substract them from the computed moments";
-string d_help = "Number of significant digits printed in the output (default is 8)";
+string i_help = "computes Zernike rotational invariants instead of moments";
+string s_help = "computes signature invariants instead of moments";
+string n_help = "multiplies the moments by sqrt(3/4pi)";
+string a_help = "computes the moments using approximate methods to get the required correct DIGITS";
+string r_help = "the Zernike moments are output in real form instead of complex";
+string p_help = "multiplies the moments by the phase factor (-1)^m";
+string diff_help = "reads Zernike moments in ZM format and substract them from the computed moments";
+string d_help = "number of significant digits printed in the output (default is 8)";
 
-string FILE_help = "Reads FILE in OFF or ZM format (default is standard input)";
-string N_help = "The maximum order of Zernike moments computed";
+string FILE_help = "reads FILE in OFF or ZM format (default is standard input)";
+string N_help = "the maximum order of Zernike moments computed";
 string die_N_msg ="N must be positive and no more than "
                        + n_exact + " for exact computation of the moments.";
 string radius_warning =
@@ -63,16 +64,19 @@ int main (int argc, char *argv[])
 
   p.flag("v", "verbose", v_help);
   p.option("o", "output", "FILE", output, o_help);
-  p.option("t", "threads", "N_THREAD", nt, t_help);
+  p.option("t", "threads", "THREAD", nt, t_help);
   p.option("a", "approximate", "DIGITS", approx, a_help);
   p.option("d", "digits", "DIGITS", digit, d_help);
+
+  p.hidden(true);
   p.flag("i", "invariants", i_help);
   p.flag("s", "signatures", s_help);
-  p.flag("n", "normalize", n_help);
   p.flag("r", "real", r_help);
+  p.flag("n", "normalize", n_help);
   p.flag("p", "phase", p_help);
   p.option("", "diff", "ZMFILE", zm_filename, diff_help);
   p.flag("", "tests", tests_help);
+
   p.arg("N", N, N_help);
   p.opt_arg("FILE", filename, FILE_help);
 
@@ -201,7 +205,7 @@ int main (int argc, char *argv[])
   }
 
   // command -m output moments
-  if (p("m")) {
+  if (p.none({"i", "s", "tests"})) {
     if (p("diff"))
       zm = zm - zm2;
     out << zm;
