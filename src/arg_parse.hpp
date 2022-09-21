@@ -29,6 +29,7 @@ const string color_blue = "\033[0;34m";
 const string color_reset = "\033[0m";
 
 const string usage_msg = "Usage: ";
+const string example_msg = "Examples:";
 const string options_msg = "Options";
 const string arguments_msg = "Arguments";
 const string std_help_msg = "shows this help message and exits";
@@ -174,9 +175,9 @@ public:
   /** help output of the option.*/ 
   void show(ostream &os, int w_short, int w_long)
   {
-    os << "  " << left << setw(w_short) << short_print
+    os << " " << left << setw(w_short) << short_print
        << setw(w_long) << long_print << "  ";
-    show_paragraph(os, w_short + w_long + 4, help);
+    show_paragraph(os, w_short + w_long + 3, help);
   }
 };
 
@@ -293,7 +294,7 @@ public:
   /** help output for the argument.*/
   void show(ostream &os, int w)
   {
-    os << "  " << left << setw(w) << arg_name << "   ";
+    os << " " << left << setw(w) << arg_name << "   ";
     show_paragraph(os, w + 5, help);
   }
 };
@@ -330,7 +331,7 @@ public:
 class parser
 {
 public:
-  const string start_help, end_help, version_text;
+  const string start_help, end_help, example_help, version_text;
   string prog_name, missing_arg;
   vector<token> toks;
   vector<option_desc_base *> opts;
@@ -344,8 +345,8 @@ public:
     @param eh The help string written after the arg / opt descriptions
     @param v The version string (for opt --version) default is macro VERSION
    */
-  parser(const string &sh, const string &eh, const string &v=stringify(VERSION)):
-  start_help(sh), end_help(eh), version_text(v)
+  parser(const string &sh, const string &eh, const string &ex="", const string &v=stringify(VERSION)):
+  start_help(sh), end_help(eh), example_help(ex), version_text(v)
   {
     flag("h", "help", std_help_msg);
     flag("", "version", std_version_msg);
@@ -480,7 +481,12 @@ void parser::show_usage(ostream &os) const
     os << " [" << opt_str << "]";
   if (!arg_str.empty())
     os << " " << arg_str;
-  os << endl;
+  os << endl << endl;
+  if (example_help != "") {
+    os << example_msg << endl << " ";
+    show_paragraph(os, 1, example_help);
+    os << endl;
+  }
 }
 
 /** prints the help message triggered by --help.*/
@@ -498,8 +504,8 @@ void parser::show_help(ostream &os) const
   for (auto &arg: args)
     w_arg = max(w_arg, (int)arg->arg_name.length());
 
+  os << start_help << endl << endl;
   show_usage(os);
-  os << endl << start_help << endl << endl;
   if (!args.empty()) {
     os << arguments_msg << ":" << endl;
     for (auto &arg: args)
