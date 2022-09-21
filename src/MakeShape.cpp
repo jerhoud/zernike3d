@@ -15,17 +15,17 @@ string sh =
 string eh =
   "Operations are executed in the order of the command line.\n"
   "One can read or create multiple shapes into one.\n"
-  "The shapes created by MakeShape have originally a radius equal to one.\n\n"
-  "Examples:\n"
-  "MakeShape --cube: creates a cube.\n"
-  "MakeShape -l file -cr 1 : reads shape from file, centers it and fixes its radius to 1.\n"
-  "MakeShape -l file -t \"1 0 0\": translates the given form with the given vector.\n"
-  "MakeShape -l file1 -l file2 -l file3: creates a form containing the 3 forms given in files.\n"
-  "MakeShape --sphere -s4: creates a sphere with 5120 facets.\n";
-string l_help = "adds file FILE in OFF format to the current shape\n";
-string o_help = "save current shape in OFF format to file FILE\n";
+  "The shapes created by MakeShape have originally a radius equal to one.";
+string ex =
+  "MakeShape --cube                        Creates a cube.\n"
+  "MakeShape --sphere -s5 -o sphere.off    Creates a sphere with 20480 facets (20 * 4^5) and saves it to file.\n"
+  "MakeShape -l shape.off -cr 1            Reads file shape.off, centers it and sets its outer radius to 1.\n"
+  "MakeShape -l shape1.off -l shape2.off   Combines the two given shape into one.\n"
+  "MakeShape -l shape.off -i               Gives information on shape.off";
+string l_help = "adds file FILE in OFF format to the current shape";
+string o_help = "save current shape in OFF format to file FILE";
 string c_help = "centers the shape around the center of mass";
-string r_help = "rescales the shape to fix the radius to R";
+string r_help = "rescales the shape to set its outer radius to R";
 string s_help = "multiplies the number of facets by four N times,\n"
                 "projects the new points for the sphere and the torus";
 string t_help =
@@ -33,11 +33,10 @@ string t_help =
 string a_help =
   "rotates the shape with the given angle in degrees and axis,\n"
   "4 numbers inside a quote (\"x y z angle\")\n";
-string d_help =
+string e_help =
   "applies a diagonal matrix (i.e. expands along the axis)\n"
   "the three expansion factors are given inside a quote";
-string f_help = "numerical precision in fixed notation";
-string e_help = "numerical precision in scientific notation";
+string d_help = "Number of significant digits printed in the output (default is 6)";
 string i_help = "shows informations about the shape and stops";
 string cub_help = "creates a cube with 12 facets";
 string ico_help = "creates a regular icosahedron with 20 facets";
@@ -46,7 +45,7 @@ string tet_help = "creates a regular tetrhedron with 4 facets";
 string dod_help = "creates a regular dodecahedron with 60 facets";
 string sph_help = "creates a sphere with 24 facets";
 string tor_help = "creates a torus with the given inner radius\n"
-                  "the number of facets increases with radius starting at 123\n";
+                  "the number of facets increases with the inner radius starting at 123";
 string mem_help = "Memorizes the current shape under the given NAME";
 string rec_help = "Adds the shape memorized under NAME to the current shape";
 string clear_help = "Starts with a fresh empty shape\n";
@@ -63,7 +62,7 @@ int main (int argc, char *argv[])
   double project = 0;
   vector<opt_recorder> rec;
 
-  parser p(sh, eh);
+  parser p(sh, eh, ex);
   p.prog_name = "MakeShape";
   p.rec_list_option("l", "load", "FILE", string_dat, rec, l_help);
   p.rec_list_option("o", "save", "FILE", string_dat, rec, o_help);
@@ -77,18 +76,19 @@ int main (int argc, char *argv[])
   p.rec_list_option("s", "", "N", int_dat, rec, s_help);
   p.rec_flag("c", "", rec, c_help);
   p.rec_list_option("r", "", "R", double_dat, rec, r_help);
-  p.rec_list_option("d", "", "FACTORS", vec_dat, rec, d_help);
+  p.rec_list_option("e", "expand", "FACTORS", vec_dat, rec, e_help);
   p.rec_list_option("t", "", "VEC", vec_dat, rec, t_help);
   p.rec_list_option("a", "", "VEC_ANGLE", wvec_dat, rec, a_help);
   p.rec_list_option("", "memorize", "NAME", string_dat, rec, mem_help);
   p.rec_list_option("", "recall", "NAME", string_dat, rec, rec_help);
   p.rec_flag("", "clear", rec, clear_help);
-  p.option("f", "", "DIGITS", digit, f_help);
-  p.option("e", "", "DIGITS", digit, e_help);
+  p.option("d", "digits", "DIGITS", digit, d_help);
   p.flag("i", "", i_help);
 
   p.run(argc, argv);
 
+  if (digit <= 0)
+    digit = 1;
 
   map<string, mesh> memo;
   mesh m;
@@ -113,11 +113,7 @@ int main (int argc, char *argv[])
       smart_output out(string_dat[opt.pos]);
       if (!out)
         p.die(bad_output_msg + n + " (" + strerror(errno) + ")");
-      if (p("f"))
-        out << fixed << setprecision(digit);
-      else if (p("e"))
-        out << scientific << setprecision(digit);
-      out << m;
+      out << setprecision(digit) << m;
     }
     else if (n == "sphere") {
       project = (m.empty()) ? -1 : -2;
@@ -155,7 +151,7 @@ int main (int argc, char *argv[])
       m -= m.mass_center();
     else if (n == "r")
       m *= double_dat[opt.pos] / m.radius();
-    else if (n == "d")
+    else if (n == "e")
       m.apply(diag_mat(vec_dat[opt.pos]));
     else if (n == "a")
       m.apply(rotation_mat(wvec_dat[opt.pos].v.normalize(),
@@ -169,27 +165,28 @@ int main (int argc, char *argv[])
       m.add(memo[string_dat[opt.pos]]);
     else if (n == "clear")
       m = mesh();
-  }
-
-  if (p("i")) {
-    vec mc = m.mass_center();
-    m -= mc;
-    edge_report r = m.edges();
-    cout << "Number of vertices: " << m.points.size() << endl;
-    cout << "Number of facets: " << m.triangles.size() << endl;
-    cout << "Number of edges: " << r.count << endl;
-    cout << "V - E + F = "
-         << int(m.points.size() - r.count + m.triangles.size()) << endl;
-    if (r.border != 0)
-      cout << "There are " << r.border << " border edges." << endl;
-    if (r.bad_orient != 0)
-      cout << "There are " << r.bad_orient << " ill oriented edges." << endl;
-    if (r.strange != 0)
-      cout << "There are " << r.strange << " edges connected to more than 2 facets." << endl;
-    cout << endl;
-    cout << "Center of mass: " << mc << endl;
-    cout << "Radius from center of mass: " << m.radius() << endl;
-    cout << "Area: " << m.area() << endl;
-    cout << "Volume: " << m.volume() << endl;
+    else if (p("i")) {
+      vec mc = m.mass_center();
+      m -= mc;
+      edge_report r = m.edges();
+      cout << setprecision(digit);
+      cout << "Number of vertices: " << m.points.size() << endl;
+      cout << "Number of facets: " << m.triangles.size() << endl;
+      cout << "Number of edges: " << r.count << endl;
+      cout << "V - E + F = "
+          << int(m.points.size() - r.count + m.triangles.size()) << endl;
+      if (r.border != 0)
+        cout << "There are " << r.border << " border edges." << endl;
+      if (r.bad_orient != 0)
+        cout << "There are " << r.bad_orient << " ill oriented edges." << endl;
+      if (r.strange != 0)
+        cout << "There are " << r.strange << " edges connected to more than 2 facets." << endl;
+      cout << endl;
+      cout << "Center of mass: " << mc << endl;
+      cout << "Radius from center of mass: " << m.radius() << endl;
+      cout << "Area: " << m.area() << endl;
+      cout << "Volume: " << m.volume() << endl;
+      exit(0);
+    }
   }
 }
