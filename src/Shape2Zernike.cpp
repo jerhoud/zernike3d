@@ -2,6 +2,7 @@
   A standalone program to compute zernike moments from an OFF file.
   It can also computes rotational invariants.
 */
+#include "version.hpp"
 #include "arg_parse.hpp"
 #include "parallel.hpp"
 #include "moments.hpp"

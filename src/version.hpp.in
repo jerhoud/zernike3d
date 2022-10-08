@@ -1,0 +1,4 @@
+/** \file version.hpp
+  \author J. Houdayer
+*/
+#define VERSION @version@

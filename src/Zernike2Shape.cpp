@@ -5,6 +5,7 @@
   and build a mesh (in OFF format) using marching tetrahedra.
 */
 
+#include "version.hpp"
 #include "parallel.hpp"
 #include "arg_parse.hpp"
 #include "mesh.hpp"

@@ -2,8 +2,8 @@
   A standalone program to create simple shapes in OFF format.
 */
 #include <map>
+#include "version.hpp"
 #include "arg_parse.hpp"
-#include "iotools.hpp"
 #include "mesh.hpp"
 
 using namespace std;
