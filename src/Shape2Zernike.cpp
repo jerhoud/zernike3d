@@ -116,7 +116,7 @@ int main (int argc, char *argv[])
   if (nt < 0)
     nt = 1;
   if (nt == 0) {
-    nt = thread::hardware_concurrency();
+    nt = max_threads();
     if (nt == 0)
       nt = 1;
     if (p("v"))
