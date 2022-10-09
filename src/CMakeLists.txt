@@ -61,12 +61,17 @@ endif()
 add_subdirectory(tools)
 link_libraries(tools)
 
+add_subdirectory(geom)
+link_libraries(geom)
+
 add_subdirectory(zernike)
-link_libraries(zernike)
 
 
 # Add executables
 
+add_executable(MakeShape MakeShape.cpp)
+
+link_libraries(zernike)
+
 add_executable(Zernike2Shape Zernike2Shape.cpp)
 add_executable(Shape2Zernike Shape2Zernike.cpp)
-add_executable(MakeShape MakeShape.cpp)
