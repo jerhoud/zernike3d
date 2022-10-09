@@ -3,13 +3,19 @@ cmake_minimum_required(VERSION 3.1)
 project(Shapes)
 
 
-# Global settings
+# Compilation settings
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_library(compiler_flags INTERFACE)
+target_compile_features(compiler_flags INTERFACE cxx_std_11)
 
-add_compile_options(-Wall -Wextra -Wfatal-errors -pedantic -O3)
+set(gcc_cxx "$<CXX_COMPILER_ID:ARMClang,AppleClang,Clang,GNU,LCC>")
+set(msvc_cxx "$<CXX_COMPILER_ID:MSVC>")
+target_compile_options(compiler_flags INTERFACE
+  "$<${gcc_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wfatal-errors;-pedantic;-Wunused>>"
+  "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
+)
+
+link_libraries(compiler_flags)
 
 
 # Threads
