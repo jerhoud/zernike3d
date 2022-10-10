@@ -20,14 +20,19 @@ To install the programs you need the git program to clone the project (or some o
 To install execute the following commands in the directory where you want to place your copy of the project
 
 1. To get your local copy of the project
+
     git clone https://github.com/jerhoud/zernike3d.git
 2. To set the current directory in the project
+
     cd zernike3d
 3. To prepare the installation
+
     cmake -S src -B build
 4. To build the project
+
     cmake --build build
 5. To install the executables in directory myinstallpath (on linux you typically use $HOME or /usr/local as myinstallpath so the executables are in $HOME/bin or /usr/local/bin)
+
     cmake --install build --prefix myinstallpath
 
 If you need to restart the installation simply remove the build directory and restart from step 3
