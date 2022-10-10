@@ -58,12 +58,13 @@ if (GIT_FOUND)
         PROPERTY CMAKE_CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/../.git/index"
         )
-
-    configure_file(version.hpp.in version.hpp)
-    include_directories("${PROJECT_BINARY_DIR}")
 else()
+    set(version "version unknown")
     message("You need git installed to produce version numbers")
 endif()
+        
+include_directories("${PROJECT_BINARY_DIR}")
+configure_file(version.hpp.in version.hpp)
 
 # Documentation (using Doxygen)
 
