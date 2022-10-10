@@ -69,6 +69,10 @@ int main (int argc, char *argv[])
   out << setprecision(digit);
 
   // number of threads
+  #ifdef NO_THREADS
+    if (nt != 1)
+      p.warn("Threads are not available in this build, running on one thread");
+  #else
   if (nt < 0)
     nt = 1;
   if (nt == 0) {
@@ -78,6 +82,7 @@ int main (int argc, char *argv[])
     if (p("v"))
       cerr << "Choosing to run on " << nt << " threads" << endl;
   }
+  #endif
 
   zernike zm;
   string err = read_file(filename, zm, p("v"));

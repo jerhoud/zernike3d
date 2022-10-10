@@ -7,8 +7,6 @@
 #include <functional>
 #include "iotools.hpp"
 
-#define NO_THREADS
-
 #ifdef NO_THREADS
 #define NOTHREADS true
 #else
@@ -94,10 +92,10 @@ const C parallel_collect(int nt, const std::vector<T> &v, const C &collector, bo
 
 inline int max_threads()
 {
-#ifdef NOTHREADS
+#ifdef NO_THREADS
   return 1;
 #else
-  return thread::hardware_concurrency();
+  return std::thread::hardware_concurrency();
 #endif
 }
 

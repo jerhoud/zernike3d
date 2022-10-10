@@ -1,6 +1,15 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.0)
 
 project(Shapes)
+
+# Making Release build type the default to get optimization
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE "Release" CACHE
+        STRING "Choose the type of build" FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+        "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
 
 
 # Compilation settings
@@ -11,8 +20,8 @@ target_compile_features(compiler_flags INTERFACE cxx_std_11)
 set(gcc_cxx "$<CXX_COMPILER_ID:ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<CXX_COMPILER_ID:MSVC>")
 target_compile_options(compiler_flags INTERFACE
-  "$<${gcc_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wfatal-errors;-pedantic;-Wunused;$<$<CONFIG:Debug>:-ggdb>>>"
-  "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
+    "$<${gcc_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wfatal-errors;-pedantic;-Wunused;$<$<CONFIG:Debug>:-ggdb>>>"
+    "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
 )
 
 link_libraries(compiler_flags)
@@ -23,6 +32,14 @@ link_libraries(compiler_flags)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads)
+
+if (Threads_FOUND)
+    option(USE_THREADS "Compile with threads" ON)
+endif()
+
+if (NOT USE_THREADS)
+    add_definitions(-DNO_THREADS)
+endif()
 
 
 # Compute version number (from "git describe")
