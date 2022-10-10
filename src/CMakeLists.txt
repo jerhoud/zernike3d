@@ -98,3 +98,8 @@ link_libraries(zernike)
 
 add_executable(Zernike2Shape Zernike2Shape.cpp)
 add_executable(Shape2Zernike Shape2Zernike.cpp)
+
+
+# install executables
+
+install(TARGETS MakeShape Zernike2Shape Shape2Zernike DESTINATION bin)
