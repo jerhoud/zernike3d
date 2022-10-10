@@ -339,7 +339,8 @@ mesh mesh::split() const
 /** a class to gather data about an edge in a mesh.*/
 class edge_info {
 public:
-  size_t count, order;
+  size_t count;
+  long order;
 };
 
 typedef std::unordered_map<edge, edge_info, hash_edge> edge_map;
