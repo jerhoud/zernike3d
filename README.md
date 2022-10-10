@@ -15,11 +15,19 @@ Zernike2Shape takes a set of 3D Zernike moments as computed by Shape2Zernike and
 MakeShape is a little tool to build shapes in OFF format.
 
 ## Installation
-This is made for linux, it seems to work on MacOS. It may or may not work on other operating systems including Windows.
-It is written in standard c++-11 and uses std::threads for parallelization.
+To install the programs you need the git program to clone the project (or some other mean to get a copy) and the cmake tool and a c++-11 compliant compiler to build it. If found it will use the c++ thread library for parallelization.
 
-1. Clone the repository.
-2. Call `make` in the root directory. The Makefile assumes a g++ compiler change the first lines of Makefile to adapt. You need a c++11 compiler for this.
-3. You can also use `make clean` to start anew.
-4. You can use `make doc` to build the documentation (to be found in refman.pdf and index.html). You need to have doxygen installed for this. 
-5. You can finally use `make bin` to build and copy the binaries to your ~/bin directory.
+To install execute the following commands in the directory where you want to place your copy of the project
+
+1. To get your local copy of the project
+git clone https://github.com/jerhoud/zernike3d.git
+2. To set the current directory in the project
+cd zernike3d
+3. To prepare the installation
+cmake -S src -B build
+4. To build the project
+cmake --build build
+5. To install the executables in directory myinstallpath (on linux you typically use $HOME or /usr/local as myinstallpath so the executables are in $HOME/bin or /usr/local/bin)
+cmake --install build --prefix myinstallpath
+
+If you need to restart the installation simply remove the build directory and restart from step 3
