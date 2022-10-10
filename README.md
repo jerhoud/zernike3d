@@ -17,7 +17,7 @@ MakeShape is a little tool to build shapes in OFF format.
 ## Installation
 To install the programs you need the cmake tool (see cmake.org) and a c++-11 compliant compiler to build it. If found it will use the c++ thread library for parallelization.
 
-To install, first dowload the project and go to its root directory then execute the following commands:
+To install, first download the project and go to its root directory then execute the following commands:
 
 1. To prepare the installation
 
