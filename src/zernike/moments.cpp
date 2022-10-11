@@ -1,5 +1,6 @@
 /** \file moments.cpp
   Implementation of moments.hpp
+  \author J. Houdayer
 */
 
 #include "moments.hpp"

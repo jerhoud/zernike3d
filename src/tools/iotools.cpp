@@ -1,3 +1,8 @@
+/** \file iotools.cpp
+  Implementation of iotools.hpp
+  \author J. Houdayer
+*/
+
 #include "iotools.hpp"
 
 const std::string cannot_open_msg = "Cannot open file ";

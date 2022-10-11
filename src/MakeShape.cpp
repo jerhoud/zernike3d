@@ -1,6 +1,8 @@
 /** \file MakeShape.cpp
   A standalone program to create simple shapes in OFF format.
+  \author J. Houdayer
 */
+
 #include <map>
 #include "version.hpp"
 #include "arg_parse.hpp"

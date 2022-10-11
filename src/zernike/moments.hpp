@@ -1,6 +1,8 @@
 /** \file moments.hpp
   Functions to integrate Zernike polynomials on clouds and meshes.
+  \author J. Houdayer
 */
+
 #ifndef MOMENTS_HPP
 #define MOMENTS_HPP
 

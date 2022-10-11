@@ -2,6 +2,7 @@
   Implementation of zernike.hpp.
   \author J. Houdayer
 */
+
 #include "zernike.hpp"
 #include <sstream>
 #include <iomanip>

@@ -3,6 +3,7 @@
 
   It reads Zernike moments from a ZM file (as produced by Shape2Zernike)
   and build a mesh (in OFF format) using marching tetrahedra.
+  \author J. Houdayer
 */
 
 #include "version.hpp"
