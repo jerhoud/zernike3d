@@ -13,6 +13,10 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
         "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
+#let cmake know about the cmake directory
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 
 # Compilation settings
 
@@ -82,6 +86,11 @@ if (DOXYGEN_FOUND)
 else()
     message("You need Doxygen installed to produce documentation")
 endif()
+
+# GMP
+
+find_package(GMP)
+
 
 # Add libraries
 
