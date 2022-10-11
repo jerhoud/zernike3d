@@ -704,7 +704,7 @@ ri((N / 2 + 1) * (N  / 2 + 2) * (N / 2 + 3) / 3, 0)
  @param zm The moments to use to compute the rotational invariants.
  You can normalize it first if needed.
 */
-void rotational_invariants::eval(const zernike &zm)
+void rotational_invariants::eval_ri(const zernike &zm)
 {
   norm = zm.get_norm();
   const std::vector<double> &z = zm.get_zm();
@@ -789,10 +789,10 @@ N(n), norm(zm_norm::raw), si(n + 1, 0)
  @param zm The moments to use to compute the signature invariants.
  You can normalize it first if needed.
 */
-void signature_invariants::eval(const zernike &zm)
+void signature_invariants::eval_si(const zernike &zm)
 {
   rotational_invariants ri(N);
-  ri.eval(zm);
+  ri.eval_ri(zm);
   norm = ri.get_norm();
   for (int n = 0 ; n <= N ; n++) {
     double sum = 0;

@@ -344,7 +344,7 @@ class rotational_invariants
 public:
   rotational_invariants(int n = 0);
 
-  void eval(const zernike &z);
+  void eval_ri(const zernike &z);
 
   /** Maximum order available .*/
   int order() const
@@ -399,7 +399,7 @@ class signature_invariants
 public:
   signature_invariants(int n = 0);
 
-  void eval(const zernike &z);
+  void eval_si(const zernike &z);
 
    /** Maximum order available .*/
   int order() const
