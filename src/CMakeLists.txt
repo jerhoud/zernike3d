@@ -98,6 +98,10 @@ add_subdirectory(tools)
 add_subdirectory(geom)
 add_subdirectory(zernike)
 
+if (GMP_FOUND)
+    add_subdirectory(invariants)
+endif()
+
 # Add executables
 
 add_executable(MakeShape MakeShape.cpp)

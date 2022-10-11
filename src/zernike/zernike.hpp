@@ -205,7 +205,7 @@ private:
 enum class zm_norm {raw, ortho, dual, raw_n, ortho_n, dual_n};
 
 /** Creates zm_norm object. 
- By defaut (all args false) it gives ortho, the args sets the different possibilities.
+ By default (all args false) it gives ortho, the args sets the different possibilities.
 */
 zm_norm make_norm(bool raw, bool dual, bool norm);
 
@@ -335,101 +335,5 @@ public:
   void add(const w_vec &p);
 };
 
-/** Class for computing rotational invariants from Zernike moments.
-  The normalization of the result corresponds to the one of the z given.
-  First use z.orthonormalize() if needed.
-*/
-class rotational_invariants
-{
-public:
-  rotational_invariants(int n = 0);
-
-  void eval_ri(const zernike &z);
-
-  /** Maximum order available .*/
-  int order() const
-  { return N; }
-
-  /** The current norm used. */
-  zm_norm get_norm() const
-  { return norm; }
-
-  /** Index of a given invariant in the storage.
-    @param n1 Should be positive.
-    @param n2 Should be positive, not larger than n1 and with the same parity.
-    @param l Should be between 0 and n2 and with the same parity.
-    @return The index of invariant n1, n2, l in ri.
-  */
-  int index(int n1, int n2, int l) const
-  {
-    const int n1_2 = n1 / 2;
-    const int n2_2 = n2 / 2;
-    return l + n2_2 * (n2_2 + 1) + n1_2 * (n1_2 + 1) * (n1_2 + 2) / 3;
-  }
-
-  /** Value of a given invariant.
-    @param n1 Should be positive and no larger than maximum order.
-    @param n2 Should be positive, not larger than n1 and with the same parity.
-    @param l Should be between 0 and n2 and with the same parity.
-    @return The value of invariant n1, n2, l in ri.
-  */
-  double get(int n1, int n2, int l) const
-  { return ri[index(n1, n2, l)]; }
-
-  /** Direct access to data. */
-  const std::vector<double> &get_ri() const
-  { return ri; }
-
-  friend smart_input &operator >>(smart_input&, rotational_invariants &);
-  friend rotational_invariants operator -(const rotational_invariants &, const rotational_invariants &);
-
-private:
-  int N;
-  zm_norm norm;
-  std::vector<double> ri; /**< The storage for the result. */
-};
-
-rotational_invariants operator -(const rotational_invariants &r1, const rotational_invariants &r2);
-
-std::ostream &operator <<(std::ostream &, const rotational_invariants &);
-smart_input &operator >>(smart_input &, rotational_invariants &);
-
-class signature_invariants
-{
-public:
-  signature_invariants(int n = 0);
-
-  void eval_si(const zernike &z);
-
-   /** Maximum order available .*/
-  int order() const
-  { return N; }
-
-  /** The current norm used. */
-  zm_norm get_norm() const
-  { return norm; }
-
-  /** Value of a given invariant.
-    @param n Should be positive and no larger than maximum order.
-    @return The value of invariant n.
-  */
-  double get(int n) const
-  { return si[n]; }
-
-  /** Direct access to data. */
-  const std::vector<double> &get_si() const
-  { return si; }
-
-  friend smart_input &operator >>(smart_input &, signature_invariants &);
-  friend signature_invariants operator -(const signature_invariants &s1, const signature_invariants &s2);
-private:
-  int N;
-  zm_norm norm;
-  std::vector<double> si; /**< The storage for the result. */
-};
-
-signature_invariants operator -(const signature_invariants &s1, const signature_invariants &s2);
-std::ostream &operator <<(std::ostream &, const signature_invariants &);
-smart_input &operator >>(smart_input &, signature_invariants &);
 
 #endif
