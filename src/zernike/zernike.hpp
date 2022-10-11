@@ -343,7 +343,8 @@ class rotational_invariants
 {
 public:
   rotational_invariants(int n = 0);
-  rotational_invariants(const zernike &z);
+
+  void eval(const zernike &z);
 
   /** Maximum order available .*/
   int order() const
@@ -397,7 +398,8 @@ class signature_invariants
 {
 public:
   signature_invariants(int n = 0);
-  signature_invariants(const zernike &z);
+
+  void eval(const zernike &z);
 
    /** Maximum order available .*/
   int order() const

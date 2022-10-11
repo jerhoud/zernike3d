@@ -221,18 +221,22 @@ int main (int argc, char *argv[])
   }
   // command -i output rotational invariants
   else if (p("i")) {
-    rotational_invariants ri(zm);
+    rotational_invariants ri(N);
+    ri.eval(zm);
     if (p("diff")) {
-      rotational_invariants ri2(zm2);
+      rotational_invariants ri2(N);
+      ri2.eval(zm2);
       ri = ri - ri2;
     }
     out << ri;
   }
   // command -s output signature
   else if (p("s")) {
-    signature_invariants si(zm);
+    signature_invariants si(N);
+    si.eval(zm);
     if (p("diff")) {
-      signature_invariants si2(zm2);
+      signature_invariants si2(N);
+      si2.eval(zm2);
       si = si - si2;
     }
     out << si;
