@@ -44,7 +44,7 @@ endif()
 
 # Compute version number (from "git describe")
 
-find_package(Git QUIET)
+find_package(Git)
 if (GIT_FOUND)
     execute_process(
         COMMAND "${GIT_EXECUTABLE}" describe
@@ -66,9 +66,10 @@ endif()
 include_directories("${PROJECT_BINARY_DIR}")
 configure_file(version.hpp.in version.hpp)
 
+
 # Documentation (using Doxygen)
 
-find_package(Doxygen QUIET)
+find_package(Doxygen)
 if (DOXYGEN_FOUND)
     configure_file(Doxyfile.in Doxyfile @ONLY)
     add_custom_target(doc
@@ -83,23 +84,19 @@ endif()
 # Add libraries
 
 add_subdirectory(tools)
-link_libraries(tools)
-
 add_subdirectory(geom)
-link_libraries(geom)
-
 add_subdirectory(zernike)
-
 
 # Add executables
 
 add_executable(MakeShape MakeShape.cpp)
-
-link_libraries(zernike)
+target_link_libraries(MakeShape geom)
 
 add_executable(Zernike2Shape Zernike2Shape.cpp)
-add_executable(Shape2Zernike Shape2Zernike.cpp)
+target_link_libraries(Zernike2Shape zernike)
 
+add_executable(Shape2Zernike Shape2Zernike.cpp)
+target_link_libraries(Shape2Zernike zernike)
 
 # install executables
 
