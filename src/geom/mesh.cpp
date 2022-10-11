@@ -367,9 +367,9 @@ edge_report mesh::edges() const
   for (auto &i: m) {
     if (i.second.count > 2)
       r.strange++;
-    else if (abs(i.second.order) == 1)
+    else if (labs(i.second.order) == 1)
       r.border++;
-    else if (abs(i.second.order) == 2)
+    else if (labs(i.second.order) == 2)
       r.bad_orient++;
   }
   return r;
