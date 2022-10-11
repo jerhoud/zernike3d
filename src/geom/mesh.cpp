@@ -339,8 +339,7 @@ mesh mesh::split() const
 /** a class to gather data about an edge in a mesh.*/
 class edge_info {
 public:
-  size_t count;
-  long order;
+  int count, order;
 };
 
 typedef std::unordered_map<edge, edge_info, hash_edge> edge_map;
@@ -367,9 +366,9 @@ edge_report mesh::edges() const
   for (auto &i: m) {
     if (i.second.count > 2)
       r.strange++;
-    else if (labs(i.second.order) == 1)
+    else if (abs(i.second.order) == 1)
       r.border++;
-    else if (labs(i.second.order) == 2)
+    else if (abs(i.second.order) == 2)
       r.bad_orient++;
   }
   return r;
