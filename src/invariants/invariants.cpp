@@ -32,8 +32,11 @@ void rotational_invariants::eval_ri()
 }
 
 invariants_K::invariants_K(int n):
-rotational_invariants(2*n), fnk((n + 1) * (n + 2) / 2, 0)
-{}
+rotational_invariants(2*n), K0(n, 0),
+fnk((n + 1) * (n + 2) / 2, 0), coefs((n + 1) * (n + 2) * (n + 3) / 6, 0)
+{
+
+}
 
 void invariants_K::eval_fnk()
 {
@@ -50,29 +53,13 @@ void invariants_K::eval_fnk()
   }
 }
 
-// invariants_K::invariants_K(zernike &z):
-// rotational_invariants(z), k0(z.order() / 2 + 1, 0)
-// {
-//   // compute fnk
-//   const std::vector<double> &ri = get_ri();
-//   std::vector<double> fnk((z.order() / 2 + 1) * (z.order() / 2 + 2) / 2, 0);
-//   for (int n = 0, i = 0 ; n <= z.order() / 2 ; n++) {
-//     int sgn = 1, epsilon = 1;
-//     for (int k = 0 ; k <= n ; k++, i++, sgn = -sgn, epsilon = 2) {
-//       double sum = 0;
-//       int idx = rotational_invariants::index(n + k, n - k, 0);
-//       for (int l = (n - k) & 1 ; l <= n - k ; l += 2)
-//         sum += ri[idx + l];
-//       fnk[i] = sgn * epsilon * (2 * (n + k) + 3) * (2 * (n - k) + 3) * sum;
-//     }
-//   }
-
-//   // compute k0
-//   for (int l = 0, i = 0 ; l <= z.order() / 2 ; l++) {
-//     double sum = 0;
-//     for (int n = 0, j = 0 ; n <= l ; n++)
-//       for (int k = 0 ; k <= n ; k++, i++, j++)
-//         sum += fnk_omega[i] * fnk[j];
-//     k0[l] = sum;
-//   }
-// }
+void invariants_K::eval_K()
+{
+  eval_fnk();
+  for (int n = 0, idx = 0 ; n <= N / 2 ; n++) {
+    double sum = 0;
+    for (int k = 0 ; k < (n / 2 + 1) * (n / 2 + 2) / 2 ; k++, idx++)
+      sum += coefs[idx] * fnk[k];
+    K0[n] = sum;
+  }
+}

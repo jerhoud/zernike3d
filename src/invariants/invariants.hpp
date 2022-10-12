@@ -72,6 +72,7 @@ private:
 
   std::vector<double> K0;
   std::vector<double> fnk;
+  std::vector<double> coefs;
 };
 
 #endif
