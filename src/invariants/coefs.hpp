@@ -72,16 +72,34 @@ protected:
   std::vector<mpq_class> u;
 };
 
+// unl0 needs binomials up to 2n
 class unl0: public unl
 {
 public:
   unl0(int n, const binomials &);
 };
 
+// unl3 needs binomials up to 2n+1
 class unl3: public unl
 {
 public:
   unl3(int n, const binomials &);
+};
+
+// vnl0 needs factorials up to 2n+1
+class vnl0: public unl
+{
+public:
+  vnl0(int n, const factorials &f);
+};
+
+// vnl3 needs factorials up to n
+//            double_fac up to n+1
+//            binomials  up to 2n+3
+class vnl3: public unl
+{
+public:
+  vnl3(int n, const factorials &f, const double_factorials &df, const binomials &b);
 };
 
 class coefs
@@ -97,6 +115,15 @@ protected:
   std::vector<mpq_class> c;
 };
 
+class compose: public unl
+{
+public:
+  compose(const unl &u, const unl &v);
+};
+
+// theta needs factorials up to 2n+1
+//             double_fac up to 2n+1
+//             binomials  up to 2n+3
 class theta: public coefs
 {
 public:

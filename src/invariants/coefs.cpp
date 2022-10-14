@@ -52,6 +52,41 @@ unl(n)
                ((2 * n + 3) * (2 * l + 3) * (n + l + 2)) / 18_mpq;
 }
 
+vnl0::vnl0(int n, const factorials &f):
+unl(n)
+{
+  for (int n = 0, idx = 0 ; n <= N ; n++)
+    for (int l = 0 ; l <= n ; l++, idx++) {
+      u[idx] = mpq_class(((l & 1) ? -1 : 1) * f.get(n) * f.get(n) * (2 * l + 1),
+                         f.get(n - l) * f.get(n + l + 1));
+      u[idx].canonicalize();
+    }
+
+}
+
+vnl3::vnl3(int n, const factorials &f, const double_factorials &df, const binomials &b):
+unl(n)
+{
+  for (int n = 0, idx = 0 ; n <= N ; n++)
+    for (int l = 0 ; l <= n ; l++, idx++) {
+      u[idx] = mpq_class(((l & 1) ? -9 : 9) * f.get(n) * b.get(2 * n + 3, n - l),
+                          mul_2exp((2 * n + 3) * df.get(n + 1), n));
+      u[idx].canonicalize();
+    }
+}
+
+
+compose::compose(const unl &a, const unl &b):
+unl(a.N)
+{
+  for (int n = 0, idx = 0 ; n <= N ; n++)
+    for (int l = 0 ; l <= n ; l++, idx++) {
+      mpq_class sum = 0;
+      for (int i = l ; i <= n ; i++)
+        sum += a.get(n, i) * b.get(i, l);
+      u[idx] = sum;
+    }
+}
 
 theta::theta(int N, const factorials &f, const double_factorials &df, const binomials &b):
 coefs(N)
