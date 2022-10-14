@@ -92,7 +92,7 @@ int main (int argc, char *argv[])
   p.rec_list_option("a", "", "VEC_ANGLE", wvec_dat, rec, a_help);
 
   p.group("Miscellaneous");
-  p.flag("i", "", i_help);
+  p.rec_flag("i", "", rec, i_help);
 
   p.run(argc, argv);
 
@@ -174,8 +174,8 @@ int main (int argc, char *argv[])
       m.add(memo[string_dat[opt.pos]]);
     else if (n == "clear")
       m = mesh();
-    else if (p("i")) {
-      vec mc = m.mass_center();
+    else if (n == "i") {
+      const vec mc = m.mass_center();
       m -= mc;
       edge_report r = m.edges();
       cout << setprecision(digit);
