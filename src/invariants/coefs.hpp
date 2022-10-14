@@ -1,4 +1,4 @@
-/** \file largeint.hpp
+/** \file coefs.hpp
   Classes to compute sets of large integers using gmp
   \author J. Houdayer
 */
@@ -64,31 +64,56 @@ inline mpz_class binomial(int n, int l)
 class unl
 {
 public:
-  unl(int N, const factorials &, const binomials &);
-  const mpz_class &get(int n, int l) const
-  { return us[n * (n + 1) / 2 + l]; }
-private:
-  std::vector<mpz_class> us;
+  const int N;
+  unl(int n): N(n), u((N + 1) * (N + 2) / 2) {}
+  const mpq_class &get(int n, int l) const
+  { return u[n * (n + 1) / 2 + l]; }
+protected:
+  std::vector<mpq_class> u;
 };
 
-class theta
+class unl0: public unl
 {
 public:
-  theta(int N, const double_factorials &, const binomials &);
+  unl0(int n, const binomials &);
+};
+
+class unl3: public unl
+{
+public:
+  unl3(int n, const binomials &);
+};
+
+class coefs
+{
+public:
+  const int N;
+  coefs(int n): N(n), c((N + 1) * (N + 2) * (N + 3) / 6) {}
   const mpq_class &get(int l, int n, int k) const
-  { return th[l * (l + 1) * (l + 2) / 6 + n * (n + 1) / 2 + k]; }
-private:
-  std::vector<mpq_class> th;
+  { return c[l * (l + 1) * (l + 2) / 6 + n * (n + 1) / 2 + k]; }
+  std::vector<mpq_class> extract() const
+  { return c; }
+protected:
+  std::vector<mpq_class> c;
 };
 
-class omega
+class theta: public coefs
 {
 public:
-  omega(int N);
-  const mpq_class get(int m, int n, int l)
-  { return omg[m * (m + 1) * (m + 2) / 6 + n * (n + 1) / 2 + l]; }
-private:
-  std::vector<mpq_class> omg;
+  theta(int N, const factorials &, const double_factorials &, const binomials &);
+};
+
+class omega: public coefs
+{
+public:
+  omega(const unl &u, const coefs &th);
+};
+
+class HK_coefs
+{
+public:
+  HK_coefs(int n);
+  std::vector<mpq_class> h_coefs, k0_coefs, k3_coefs;
 };
 
 #endif
