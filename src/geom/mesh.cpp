@@ -62,7 +62,6 @@ vec cloud::mass_center() const
   for (auto &pt: points)
     r += pt;
   return r / points.size();
-
 }
 
 /** returns the radius of the cloud. */
@@ -228,6 +227,19 @@ double mesh::area() const
   for (auto &i: triangles)
     sum += i.get_triangle(*this).area();
   return sum;
+}
+
+vec mesh::mass_center() const
+{
+  vec sum;
+  double sum_v = 0;
+  for (auto &i: triangles) {
+    const triangle t = i.get_triangle(*this);
+    const double v = t.volume();
+    sum_v += v;
+    sum += v * (t.p1 + t.p2 + t.p3);
+  }
+  return sum / (4 * sum_v);
 }
 
 /** Reads one triangle and adds it to the mesh. */
