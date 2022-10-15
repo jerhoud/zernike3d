@@ -34,6 +34,7 @@ public:
   cloud &apply(const mat &m);
   vec mass_center() const;
   double radius() const;
+  double diameter() const;
   void sphere_project();
   void torus_project(double r);
 };

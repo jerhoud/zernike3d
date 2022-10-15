@@ -55,7 +55,7 @@ cloud &cloud::apply(const mat &m)
   return *this;
 }
 
-/** Returns the center of mass. */
+/** Returns the center of mass of the points. */
 vec cloud::mass_center() const
 {
   vec r;
@@ -64,7 +64,7 @@ vec cloud::mass_center() const
   return r / points.size();
 }
 
-/** returns the radius of the cloud. */
+/** returns the radius of the cloud (from the origin). */
 double cloud::radius() const
 {
   double max = 0;
@@ -72,6 +72,19 @@ double cloud::radius() const
     const double l2 = pt.length_square();
     if (max < l2)
       max = l2;
+  }
+  return sqrt(max);
+}
+
+/** returns the diameter of the cloud (i.e. largest distance between points)*/
+double cloud::diameter() const
+{
+  double max = 0;
+  for (auto &pt1: points)
+    for (auto &pt2: points) {
+      const double l2 = (pt2 - pt1).length_square();
+      if (max < l2)
+        max = l2;
   }
   return sqrt(max);
 }
@@ -229,6 +242,7 @@ double mesh::area() const
   return sum;
 }
 
+/** returns the center of mass of the volume. */
 vec mesh::mass_center() const
 {
   vec sum;

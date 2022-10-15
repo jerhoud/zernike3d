@@ -193,6 +193,7 @@ int main (int argc, char *argv[])
       cout << endl;
       cout << "Center of mass: " << mc << endl;
       cout << "Radius from center of mass: " << m.radius() << endl;
+      cout << "Diameter: " << m.diameter() << endl;
       cout << "Area: " << m.area() << endl;
       cout << "Volume: " << m.volume() << endl;
       exit(0);
