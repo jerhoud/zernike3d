@@ -19,8 +19,9 @@ public:
 private:
   std::vector<double> bsl;
 
-  void asccending(int lmin, int lmax, double ix);
-  void descending(std::vector<double> &b1, std::vector<double> &b2, int lmax, int lmin, double ix);
+  void asccending(double ix);
+  void descending(double ix);
+  void safe_descending(double ix);
 };
 
 #endif
