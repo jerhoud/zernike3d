@@ -2,6 +2,7 @@
   Classes for manipulating triangles and integration.
   \author J. Houdayer
 */
+
 #ifndef TRIANGLE_HPP
 #define TRIANGLE_HPP
 #include "vec.hpp"

@@ -3,10 +3,11 @@
   \author J. Houdayer
 */
 
-#include "zernike.hpp"
 
 #ifndef INVARIANTS_HPP
 #define INVARIANTS_HPP
+
+#include "zernike.hpp"
 
 /** Class for computing rotational invariants from Zernike moments.
   The normalization of the result corresponds to the one of the z given.
