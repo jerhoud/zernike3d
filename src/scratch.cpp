@@ -5,7 +5,6 @@
 
 int main()
 {
-  const int N = 20;
 
   // HK_coefs hk(N);
   // for (int m = 0, idx = 0 ; m <= N ; m++)
@@ -23,8 +22,9 @@ int main()
   //   for (int k = 0 ; k <= n ; k++)
   //     std::cout << n << ", " << k << " = " << id.get(n, k) << "\n";
 
+  const int N = 50;
   spherical_bessel sb(N);
-  sb.eval(99);
+  sb.eval(1e6);
   std::cout << std::setprecision(16);
   for (int i = 0 ; i <= N ; i++)
     std::cout << i << " -> " << sb.get_bsl()[i] << "\n";

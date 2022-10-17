@@ -4,6 +4,7 @@
 */
 
 #include <cmath>
+#include <iostream>
 #include "sphericalbessel.hpp"
 
 spherical_bessel::spherical_bessel(int n):
@@ -54,10 +55,10 @@ void spherical_bessel::eval(double x)
     return;
   
   const double ix = 1 / x;
-  if (x >= 100)
+  if (x >= N)
     asccending(ix);
   else
-    descending(ix);
+    descending(ix, N + 30);
 }
 
 void spherical_bessel::asccending(double ix)
@@ -72,81 +73,64 @@ void spherical_bessel::asccending(double ix)
   }
 }
 
-void spherical_bessel::descending(double ix)
+void spherical_bessel::descending(double ix, int lmax)
 {
-  const int iter = 50;
+  std::cout << "descending " << lmax << "\n";
   const double j0 = bsl[0];
   const double j1 = bsl[1];
 
-  
+  for(int l = 2 ; l <= N ; l++)
+    bsl[l] = 0;
+
+  if (lmax <= 1)
+    return;
+
   const double vs = 1e-290;
+  for (int l = lmax + 1 ; l <= N ; l++)
+    bsl[l] = 0;
+
   double jpp = 0;
   double jp = vs;
-  for (int l = N + iter ; l > N ; l--) {
+  int l = lmax;
+  for (; l > N ; l--) {
     double j = -jpp + (2 * l + 3) * ix * jp;
     jpp = jp;
     jp = j;
   }
 
-  for(int l = N ; l >= 0 ; l--) {
+  for(; l >= 0 ; l--) {
     double j = -jpp + (2 * l + 3) * ix * jp;
     jpp = jp;
     jp = j;
     bsl[l] = j;
   }
 
-  if (std::isinf(bsl[0]) || std::isnan(bsl[0]))
-    safe_descending(ix);
+  if (!std::isfinite(bsl[0])) {
+    int i = 1;
+    for (; i <= N ; i++)
+      if (std::isfinite(bsl[i]))
+        break;
+    bsl[0] = j0;
+    bsl[1] = j1;
+    return descending(ix, lmax - i - 5);
+  }
   
-  double c;
-  if (fabs(j0) >= fabs(j1))
+  double c, err;
+  if (fabs(j0) >= fabs(j1)) {
     c = j0 / bsl[0];
-  else
+    err = fabs(j1 - c * bsl[1]);
+  }
+  else {
     c = j1 / bsl[1];
-  
-  for (auto &b: bsl)
-    b *= c;
-}
-
-void spherical_bessel::safe_descending(double ix)
-{
-  const int iter = 50;
-  const double j0 = bsl[0];
-  const double j1 = bsl[1];
-  
-  const double vs = 1e-290;
-  const double threashold = 1e290;
-  double jpp = 0;
-  double jp = vs;
-  for (int l = N + iter ; l > N ; l--) {
-    double j = -jpp + (2 * l + 3) * ix * jp;
-    jpp = jp;
-    jp = j;
-    if (fabs(j) > threashold) {
-      jpp = jpp / j * vs;
-      jp = vs;
-    }
+    err = fabs(j0 - c * bsl[0]);
   }
 
-  for(int l = N ; l >= 0 ; l--) {
-    double j = -jpp + (2 * l + 3) * ix * jp;
-    jpp = jp;
-    jp = j;
-    bsl[l] = j;
-    if (fabs(j) > threashold) {
-      jpp = jpp / j * vs;
-      jp = vs;
-      for (int i = l ; i <= N ; i++)
-        bsl[i] = bsl[i] / j * vs;
-    }
-  }
+  bsl[0] = j0;
+  bsl[1] = j1;
 
-  double c;
-  if (fabs(j0) >= fabs(j1))
-    c = j0 / bsl[0];
-  else
-    c = j1 / bsl[1];
+  if (err > 1e-14)
+    return descending(ix, lmax + 50);
   
-  for (auto &b: bsl)
-    b *= c;
+  for (int l = 2 ; l<= N ; l++)
+    bsl[l] *= c;
 }
