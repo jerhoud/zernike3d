@@ -1,6 +1,5 @@
 /** \file Shape2Zernike.cpp
   A standalone program to compute zernike moments from an OFF file.
-  It can also computes rotational invariants.
   \author J. Houdayer
 */
 
@@ -78,8 +77,6 @@ int main (int argc, char *argv[])
 
   p.arg("N", N, N_help);
   p.opt_arg("FILE", filename, FILE_help);
-
-  p.exclusion({"tests", "i", "s"});
 
   // Parse command line
 
