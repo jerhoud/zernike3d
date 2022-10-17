@@ -80,12 +80,12 @@ double cloud::radius() const
 double cloud::diameter() const
 {
   double max = 0;
-  for (auto &pt1: points)
-    for (auto &pt2: points) {
-      const double l2 = (pt2 - pt1).length_square();
+  for (size_t i = 0 ; i < points.size() ; i++)
+    for (size_t j = i + 1 ; j < points.size() ; j++) {
+      const double l2 = (points[i] - points[j]).length_square();
       if (max < l2)
         max = l2;
-  }
+    }
   return sqrt(max);
 }
 
