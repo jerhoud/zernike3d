@@ -23,6 +23,7 @@ string ex = "Zernike2Shape 50 100 mom.zm                     Builds an OFF shape
             "Zernike2Shape -vt4 -o shape.off 50 100 mom.zm   Same running on 4 threads with progression bar and output saved to file";
 string eh = "";
 string v_help = "Outputs additional informations including progression bars";
+string q_help = "represses all warnings and error messages";
 string o_help = "Save output to the given file instead of standard output";
 string t_help = "number of threads to use in parallel, use 0 to adapt to the machine";
 string d_help = "Number of significant digits printed in the output (default is 6)";
@@ -48,6 +49,7 @@ int main (int argc, char *argv[])
   parser p(sh, eh, ex);
   p.prog_name = "Zernike2Shape";
   p.flag("v", "verbose", v_help);
+  p.flag("q", "quiet", q_help);
   p.option("t", "threads", "THREAD", nt, t_help);
   p.option("o", "output", "FILE", output, o_help);
   p.option("d", "digits", "DIGITS", digit, d_help);
@@ -56,6 +58,9 @@ int main (int argc, char *argv[])
   p.arg("RES", res, RES_help);
   p.opt_arg("FILE", filename, FILE_help);
 
+  p.quiet("q");
+  p.exclusion({"v", "q"});
+  
   p.run(argc, argv);
 
   if (N < 0)
