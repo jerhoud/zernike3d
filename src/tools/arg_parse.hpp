@@ -335,7 +335,7 @@ class parser
 public:
   const string start_help, end_help, example_help, version_text;
   string prog_name, missing_arg;
-  bool hide, hidden_visible;
+  bool chatty, hide, hidden_visible;
   vector<token> toks;
   vector<option_desc_base *> opts;
   vector<arg_desc_base *> args;
@@ -351,7 +351,7 @@ public:
     @param v The version string (for opt --version) default is macro VERSION
    */
   parser(const string &sh, const string &eh, const string &ex="", const string &v=stringify(VERSION)):
-  start_help(sh), end_help(eh), example_help(ex), version_text(v), hide(false)
+  start_help(sh), end_help(eh), example_help(ex), version_text(v), chatty(true), hide(false)
   {
     flag("h", "help", std_help_msg);
     flag("", "version", std_version_msg);
@@ -459,9 +459,16 @@ public:
   void selection(const vector<string> &s)
   { selections.push_back(s); }
 
+  /** prevents warnings and error messages. */
+  void quiet()
+  { chatty = false; }
+
   /** prints a warning.*/
   void warn(const string &w) const
-  { cerr << prog_name << ": " << color_blue << w << color_reset << endl; }
+  {
+    if (chatty)
+      cerr << prog_name << ": " << color_blue << w << color_reset << endl;
+  }
 
   [[ noreturn ]] void die(const string &err) const;
   [[ noreturn ]] void die(const string &err, const vector<string> &l) const;
@@ -669,10 +676,12 @@ bool parser::operator()(const string &s) const
 /** prints an error message and exits.*/
 void parser::die(const string &err) const
 {
-  cerr << prog_name << ": " << color_red << err << color_reset << endl;
-  show_usage(cerr);
-  if (!more_help_msg.empty())
-    cerr << more_help_msg << endl;
+  if (chatty) {
+    cerr << prog_name << ": " << color_red << err << color_reset << endl;
+    show_usage(cerr);
+    if (!more_help_msg.empty())
+      cerr << more_help_msg << endl;
+  }
   exit(-1);
 }
 
