@@ -29,8 +29,6 @@ string q_help = "represses all warnings and error messages";
 string o_help = "save output to the given file instead of standard output";
 string t_help = "number of threads to use in parallel, use 0 to adapt to the machine";
 string tests_help = "runs internal sanity checks and exits";
-string i_help = "computes Zernike rotational invariants instead of moments";
-string s_help = "computes signature invariants instead of moments";
 string n_help = "multiplies the moments by sqrt(3/4pi)";
 string a_help = "computes the moments using approximate methods to get the required correct DIGITS";
 string r_help = "the Zernike moments are output in real form instead of complex";
@@ -76,8 +74,6 @@ int main (int argc, char *argv[])
   p.option("d", "digits", "DIGITS", digit, d_help);
 
   p.hidden(true);
-  p.flag("i", "invariants", i_help);
-  p.flag("s", "signatures", s_help);
   p.flag("r", "real", r_help);
   p.flag("n", "normalize", n_help);
   p.flag("p", "phase", p_help);
