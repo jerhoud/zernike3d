@@ -1,6 +1,6 @@
 # Written by J. Houdayer
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.11)
 
 project(Shapes)
 
@@ -119,3 +119,50 @@ target_link_libraries(scratch invariants)
 # install executables
 
 install(TARGETS MakeShape Zernike2Shape Shape2Zernike DESTINATION bin)
+
+# testing
+
+enable_testing()
+
+# Testing MakeShape
+
+add_test(NAME RunMakeShape COMMAND MakeShape)
+
+add_test(NAME BlorkMakeShape COMMAND MakeShape -l ${CMAKE_SOURCE_DIR}/testdata/blork.off -i)
+set_tests_properties(BlorkMakeShape PROPERTIES
+    PASS_REGULAR_EXPRESSION "Center of mass: 0.2 0 0.225.*Radius from center of mass: 1.2412.*Area: 2.0061.*Volume: 0.106667"
+)
+
+add_test(NAME ManyMakeShape COMMAND MakeShape --sphere -s2 -r2 -t "1 2 3" -i)
+set_tests_properties(ManyMakeShape PROPERTIES
+    PASS_REGULAR_EXPRESSION "Center of mass: 1 2 3.*Radius from center of mass: 2.*Area: 49.31.*Volume: 32.37"
+)
+
+# Testing Shape2Zernike
+
+add_test(NAME RunShape2Zernike COMMAND Shape2Zernike 0 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
+
+add_test(NAME BlorkShape2Zernike COMMAND Shape2Zernike 5 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
+add_test(NAME BlorkApproxShape2Zernike COMMAND Shape2Zernike -a6 5 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
+set_tests_properties(BlorkShape2Zernike BlorkApproxShape2Zernike PROPERTIES
+    PASS_REGULAR_EXPRESSION "# Mesh: 4 vertices, 4 facets, radius: 1.*0 0 0 0.052117.*3 3 2 0.00313953.*0.000457147"
+)
+
+add_test(NAME CubeShape2Zernike COMMAND Shape2Zernike -t0 -rd12 20 ${CMAKE_SOURCE_DIR}/testdata/cube.off)
+add_test(NAME CubeApproxShape2Zernike COMMAND Shape2Zernike -t0 -rd12 -a10 20 ${CMAKE_SOURCE_DIR}/testdata/cube.off)
+set_tests_properties(CubeShape2Zernike CubeApproxShape2Zernike PROPERTIES
+    PASS_REGULAR_EXPRESSION "0 0 0 0.7522527780.*10 4 0 -0.0679492421.*20 16 12 0.0046415317"
+)
+
+add_test(NAME NanShape2Zernike COMMAND Shape2Zernike 10 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
+set_tests_properties(NanShape2Zernike PROPERTIES
+    FAIL_REGULAR_EXPRESSION "nan;NAN;Nan"
+)
+
+# Testing Zernike2Shape
+
+add_test(NAME RunZernike2Shape COMMAND Zernike2Shape -t0 10 30 ${CMAKE_SOURCE_DIR}/testdata/blork.zm)
+set_tests_properties(RunZernike2Shape PROPERTIES
+    PASS_REGULAR_EXPRESSION "OFF.*553 422 0"
+)
+
