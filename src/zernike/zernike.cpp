@@ -687,9 +687,11 @@ zernike_int2(n), spherical_harmonics(n), zernike(n)
 void zernike_m_int::add(const w_vec &p)
 {
   s_vec sp = p.v.spherical();
-  eval_zr(sp.r, 1 / (sp.r * sp.r * sp.r));
-  eval_sh(sp.theta, sp.phi);
-  add_core(zr, sh, p.weight);
+  if (sp.r != 0) {
+    eval_zr(sp.r, 1 / (sp.r * sp.r * sp.r));
+    eval_sh(sp.theta, sp.phi);
+    add_core(zr, sh, p.weight);
+  }
 }
 
 /** Dummy constructor for operator >>.
