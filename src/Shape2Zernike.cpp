@@ -25,9 +25,12 @@ string ex = "Shape2Zernike 50 shape.off                     Computes the Zernike
             "Shape2Zernike -a 8 -o result.zm 50 shape.off   Same using approximate algorithm with 8 digit precision and results written to file\n"
             "Shape2Zernike -vt 4 50 shape.off               Same running on four threads, with progression bar";
 string v_help = "outputs more informations, including progression bars";
+string q_help = "represses all warnings and error messages";
 string o_help = "save output to the given file instead of standard output";
 string t_help = "number of threads to use in parallel, use 0 to adapt to the machine";
 string tests_help = "runs internal sanity checks and exits";
+string i_help = "computes Zernike rotational invariants instead of moments";
+string s_help = "computes signature invariants instead of moments";
 string n_help = "multiplies the moments by sqrt(3/4pi)";
 string a_help = "computes the moments using approximate methods to get the required correct DIGITS";
 string r_help = "the Zernike moments are output in real form instead of complex";
@@ -66,6 +69,7 @@ int main (int argc, char *argv[])
   p.prog_name = "Shape2Zernike";
 
   p.flag("v", "verbose", v_help);
+  p.flag("q", "quiet", q_help);
   p.option("o", "output", "FILE", output, o_help);
   p.option("t", "threads", "THREAD", nt, t_help);
   p.option("a", "approximate", "DIGITS", approx, a_help);
@@ -81,6 +85,8 @@ int main (int argc, char *argv[])
   p.arg("N", N, N_help);
   p.opt_arg("FILE", filename, FILE_help);
 
+  p.quiet("q");
+  p.exclusion({"v", "q"});
 
   // Parse command line
 

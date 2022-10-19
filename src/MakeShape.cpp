@@ -23,6 +23,7 @@ string ex =
   "MakeShape -l shape.off -cr 1            Reads file shape.off, centers it and sets its outer radius to 1.\n"
   "MakeShape -l shape1.off -l shape2.off   Combines the two given shape into one.\n"
   "MakeShape -l shape.off -i               Gives information on shape.off";
+string q_help = "represses all warnings and error messages";
 string l_help = "adds file FILE in OFF format to the current shape";
 string o_help = "save current shape in OFF format to file FILE";
 string c_help = "centers the shape around the center of mass";
@@ -65,6 +66,7 @@ int main (int argc, char *argv[])
   p.prog_name = "MakeShape";
 
   p.group("Global options");
+  p.flag("q", "quiet", q_help);
   p.option("d", "digits", "DIGITS", digit, d_help);
 
   p.group("Load / save options");
@@ -94,6 +96,7 @@ int main (int argc, char *argv[])
   p.group("Miscellaneous");
   p.rec_flag("i", "", rec, i_help);
 
+  p.quiet("q");
   p.run(argc, argv);
 
   if (digit <= 0)

@@ -334,7 +334,7 @@ class parser
 {
 public:
   const string start_help, end_help, example_help, version_text;
-  string prog_name, missing_arg;
+  string prog_name, missing_arg, quiet_option;
   bool chatty, hide, hidden_visible;
   vector<token> toks;
   vector<option_desc_base *> opts;
@@ -460,8 +460,8 @@ public:
   { selections.push_back(s); }
 
   /** prevents warnings and error messages. */
-  void quiet()
-  { chatty = false; }
+  void quiet(const string &quiet_opt)
+  { quiet_option = quiet_opt; }
 
   /** prints a warning.*/
   void warn(const string &w) const
@@ -621,6 +621,8 @@ void parser::analysis()
     }
     if (!opt)
       die(unknown_opt_msg + tk.s);
+    if (quiet_option == opt->short_name || quiet_option == opt->long_name)
+      chatty = false;
     if (!opt->want_arg)
       opt->process();
     else {
