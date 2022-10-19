@@ -506,7 +506,7 @@ double zernike::operator()(const vec &v) const
 */
 void zernike::finish()
 {
-  if (odd_clean || (N & 1) == 1) return;
+  if (odd_clean || (N & 1) == 1 || N == 0) return;
   int n = N - 1;
   int idx = 2 * (n / 2 + 1) * (n / 2 + 2) * (2 * (n / 2) + 3) / 3;
     for (int l = 0 ; l <= N + 1 ; l++) {
