@@ -98,6 +98,7 @@ int main (int argc, char *argv[])
     p.warn(warn_N_msg);
     N = zm.order();
   }
+  zm = zernike(N, zm);
   zm.normalize(zm_norm::dual);
 
   mesh m = marching_tetrahedra({-1, 1, res}, {-1, 1, res}, {-1, 1, res}, zm, thresh, true, nt, p("v"));
