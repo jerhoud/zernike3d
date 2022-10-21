@@ -35,7 +35,7 @@ void help2::set_int0(int n, int l)
   @param n Maximum order N for the computation. Should be positive.
 */
 spherical_harmonics::spherical_harmonics(int n):
-N(n), sh((N + 1) * (N + 1), 0), help((N + 1) * (N + 2)  / 2, {0, 0})
+N(2 * (n / 2) + 1), sh((N + 1) * (N + 1), 0), help((N + 1) * (N + 2)  / 2, {0, 0})
 {
   for (int l = 1, i = 1 ; l <= N ; l++)
     for (int m = 0 ; m <= l ; m++, i++)
