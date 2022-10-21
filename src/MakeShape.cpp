@@ -50,6 +50,7 @@ string mem_help = "memorizes the current shape under the given NAME";
 string rec_help = "adds the shape memorized under NAME to the current shape";
 string clear_help = "starts with a fresh empty shape";
 string bad_output_msg = "Cannot open output file: ";
+string bad_recall_msg = "--recall: no such memory name: ";
 
 int main (int argc, char *argv[])
 {
@@ -173,8 +174,14 @@ int main (int argc, char *argv[])
     
     if (n == "memorize")
       memo[string_dat[opt.pos]] = m;
-    else if (n == "recall")
-      m.add(memo[string_dat[opt.pos]]);
+    else if (n == "recall") {
+      try {
+        m.add(memo.at(string_dat[opt.pos]));
+      }
+      catch (std::out_of_range &e) {
+        p.warn(bad_recall_msg + string_dat[opt.pos]);
+      }
+    }
     else if (n == "clear")
       m = mesh();
     else if (n == "i") {
