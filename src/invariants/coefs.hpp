@@ -65,11 +65,19 @@ class unl
 {
 public:
   const int N;
-  unl(int n): N(n), u((N + 1) * (N + 2) / 2) {}
+  unl(int n): N(n), u((N + 1) * (N + 2) / 2), ud(u.size()) {}
   const mpq_class &get(int n, int l) const
   { return u[n * (n + 1) / 2 + l]; }
+  const std::vector<mpq_class> &get_mpq() const
+  { return u; }
+  const std::vector<double> &get_d() const
+  { return ud; }
+  std::vector<mpq_class> apply(const std::vector<mpq_class> &v) const;
+  std::vector<double> apply(const std::vector<double> &v) const;
 protected:
   std::vector<mpq_class> u;
+  std::vector<double> ud;
+  void make_d();
 };
 
 // unl0 needs binomials up to 2n
@@ -106,19 +114,25 @@ class coefs
 {
 public:
   const int N;
-  coefs(int n): N(n), c((N + 1) * (N + 2) * (N + 3) / 6) {}
+  coefs(int n): N(n), c((N + 1) * (N + 2) * (N + 3) / 6), cd(c.size()) {}
   const mpq_class &get(int l, int n, int k) const
   { return c[l * (l + 1) * (l + 2) / 6 + n * (n + 1) / 2 + k]; }
-  std::vector<mpq_class> extract() const
+  const std::vector<mpq_class> &get_mpq() const
   { return c; }
+  const std::vector<double> &get_d() const
+  { return cd; }
+  std::vector<mpq_class> apply(const std::vector<mpq_class> &f) const;
+  std::vector<double> apply(const std::vector<double> &f) const;
 protected:
   std::vector<mpq_class> c;
+  std::vector<double> cd;
+  void make_d();
 };
 
-class compose: public unl
+class ucompose: public unl
 {
 public:
-  compose(const unl &u, const unl &v);
+  ucompose(const unl &u, const unl &v);
 };
 
 // theta needs factorials up to 2n+1
@@ -134,13 +148,6 @@ class omega: public coefs
 {
 public:
   omega(const unl &u, const coefs &th);
-};
-
-class HK_coefs
-{
-public:
-  HK_coefs(int n);
-  std::vector<mpq_class> h_coefs, k0_coefs, k3_coefs;
 };
 
 #endif

@@ -8,17 +8,20 @@
 #define INVARIANTS_HPP
 
 #include "zernike.hpp"
+#include "coefs.hpp"
 
 /** Class for computing rotational invariants from Zernike moments.
   The normalization of the result corresponds to the one of the z given.
   First use z.orthonormalize() if needed.
 */
-class rotational_invariants: public zernike
+class rotational_invariants
 {
 public:
+  const int N;
+
   rotational_invariants(int n = 0);
 
-  void eval_ri();
+  void eval(const zernike &zm);
 
   /** Index of a given invariant in the storage.
     @param n1 Should be positive.
@@ -51,29 +54,55 @@ protected:
 };
 
 
-/** A class for computing K rotational and translational invariants.
-*/
-class invariants_K: public rotational_invariants
+class fnk
 {
 public:
-  invariants_K(int n);
+  const int N;
+  fnk(int n = 0);
 
-  void eval_K();
+  void eval(const rotational_invariants &ri);
 
-/** The value of the l-th invariant.
-  @param l Must be between 0 and the maximum order / 2.
-*/
-  double get(int l) const
-  { return K0[l]; }
+  int index(int n, int k) const
+  { return n * (n + 1) / 2 + k; }
+  
+  double get(int n, int k) const
+  { return f[index(n, k)]; }
 
-  const std::vector<double> get_K0() const
-  { return K0; }
+  const std::vector<double> &get_f() const
+  { return f; }
+protected:
+  std::vector<double> f;
+};
+
+
+class invariants
+{
+public:
+  const int N;
+  invariants(int n);
+  std::vector<double> fk0(const fnk &f)
+  { return o0.apply(f.get_f()); }
+  std::vector<double> fk3(const fnk &f)
+  { return o3.apply(f.get_f()); }
+  std::vector<mpq_class> hk0(const std::vector<mpq_class> &h)
+  { return u0.apply(h); }
+  std::vector<mpq_class> hk3(const std::vector<mpq_class> &h)
+  { return u3.apply(h); }
+  std::vector<double> k0k3(const std::vector<double> &k0)
+  { return m03.apply(k0); }
+  std::vector<double> k3k0(const std::vector<double> &k3)
+  { return m30.apply(k3); }
 private:
-  void eval_fnk();
-
-  std::vector<double> K0;
-  std::vector<double> fnk;
-  std::vector<double> coefs;
+  factorials facs;
+  double_factorials dfacs;
+  binomials bins;
+  unl0 u0;
+  unl3 u3;
+  vnl0 v0;
+  vnl3 v3;
+  theta t;
+  ucompose m03, m30;
+  omega o0, o3;
 };
 
 #endif

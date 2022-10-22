@@ -35,12 +35,43 @@ bins((N / 2 + 1) * (N / 2 + 2), 1)
       bins[index(n, l)] = bins[(index(n - 1, l - 1))] + bins[(index(n - 1, l))];
 }
 
+void unl::make_d()
+{
+  for (size_t i = 0 ; i < u.size() ; i++)
+    ud[i] = u[i].get_d();
+}
+
+std::vector<mpq_class> unl::apply(const std::vector<mpq_class> &v) const
+{
+  std::vector<mpq_class> r(N);
+  for (int n = 0, idx = 0 ; n <= N ; n++) {
+    mpq_class sum = 0;
+    for (int l = 0 ; l <= n ; l++, idx++)
+      sum += u[idx] * v[l];
+    r[n] = sum;
+  }
+  return r;
+}
+
+std::vector<double> unl::apply(const std::vector<double> &v) const
+{
+  std::vector<double> r(N + 1);
+  for (int n = 0, idx = 0 ; n <= N ; n++) {
+    double sum = 0;
+    for (int l = 0 ; l <= n ; l++, idx++)
+      sum += ud[idx] * v[l];
+    r[n] = sum;
+  }
+  return r;
+}
+
 unl0::unl0(int N, const binomials &bins):
 unl(N)
 {
   for (int n = 0, idx = 0 ; n <= N ; n++)
     for (int l = 0 ; l <= n ; l++, idx++)
       u[idx] = ((l & 1) ? -1 : 1) * bins.get(n, l) * bins.get(n + l, l);
+  make_d();
 }
 
 unl3::unl3(int n, const binomials &bins):
@@ -50,6 +81,7 @@ unl(n)
     for (int l = 0 ; l <= n ; l++, idx++)
       u[idx] = ((l & 1) ? -1 : 1) * bins.get(n, l) * bins.get(n + l + 1, l + 1) *
                ((2 * n + 3) * (2 * l + 3) * (n + l + 2)) / 18_mpq;
+  make_d();
 }
 
 vnl0::vnl0(int n, const factorials &f):
@@ -61,7 +93,7 @@ unl(n)
                          f.get(n - l) * f.get(n + l + 1));
       u[idx].canonicalize();
     }
-
+  make_d();
 }
 
 vnl3::vnl3(int n, const factorials &f, const double_factorials &df, const binomials &b):
@@ -73,10 +105,11 @@ unl(n)
                           mul_2exp((2 * n + 3) * df.get(n + 1), n));
       u[idx].canonicalize();
     }
+  make_d();
 }
 
 
-compose::compose(const unl &a, const unl &b):
+ucompose::ucompose(const unl &a, const unl &b):
 unl(a.N)
 {
   for (int n = 0, idx = 0 ; n <= N ; n++)
@@ -86,6 +119,39 @@ unl(a.N)
         sum += a.get(n, i) * b.get(i, l);
       u[idx] = sum;
     }
+  make_d();
+}
+
+void coefs::make_d()
+{
+  for (size_t i = 0 ; i < c.size() ; i++)
+    cd[i] = c[i].get_d();
+}
+
+std::vector<mpq_class> coefs::apply(const std::vector<mpq_class> &f) const
+{
+  std::vector<mpq_class> r(N + 1);
+  for (int l = 0, idx = 0 ; l <= N ; l++) {
+    mpq_class sum = 0;
+    const int sz = (l + 1) * (l + 2) / 2;
+    for (int i = 0 ; i < sz ; i++, idx++)
+      sum += c[idx] * f[i];
+    r[l] = sum;
+  }
+  return r;
+}
+
+std::vector<double> coefs::apply(const std::vector<double> &f) const
+{
+  std::vector<double> r(N + 1);
+  for (int l = 0, idx = 0 ; l <= N ; l++) {
+    double sum = 0;
+    const int sz = (l + 1) * (l + 2) / 2;
+    for (int i = 0 ; i < sz ; i++, idx++)
+      sum += cd[idx] * f[i];
+    r[l] = sum;
+  }
+  return r;
 }
 
 theta::theta(int N, const factorials &f, const double_factorials &df, const binomials &b):
@@ -99,6 +165,7 @@ coefs(N)
         c[idx].canonicalize();
       }
   }
+  make_d();
 }
 
 omega::omega(const unl &u, const coefs &th):
@@ -112,21 +179,5 @@ coefs(u.N)
           sum += u.get(m, l) * th.get(l, n, k);
         c[idx] = sum;
       }
+  make_d();
 }
-
-HK_coefs::HK_coefs(int n)
-{
-  factorials f(2 * n + 1);
-  double_factorials df(2 * n + 2);
-  binomials b(2 * n + 3);
-  unl0 u0(n, b);
-  unl3 u3(n, b);
-  theta t(n, f, df, b);
-  omega o0(u0, t);
-  omega o3(u3, t);
-
-  h_coefs = t.extract();
-  k0_coefs = o0.extract();
-  k3_coefs = o3.extract();
-}
-

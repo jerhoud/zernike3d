@@ -113,8 +113,8 @@ target_link_libraries(Zernike2Shape zernike)
 add_executable(Shape2Zernike Shape2Zernike.cpp)
 target_link_libraries(Shape2Zernike zernike)
 
-add_executable(scratch scratch.cpp)
-target_link_libraries(scratch invariants)
+add_executable(Shape2Invariant Shape2Invariant.cpp)
+target_link_libraries(Shape2Invariant invariants)
 
 # install executables
 
