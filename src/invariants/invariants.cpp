@@ -38,7 +38,7 @@ N(n), f((n + 1) * (n + 2) / 2, 0)
 
 void fnk::eval(const rotational_invariants &ri)
 {
-  for (int n = 0, i = 0 ; n <= N / 2 ; n++) {
+  for (int n = 0, i = 0 ; n <= N ; n++) {
     int sgn = 1, epsilon = 1;
     for (int k = 0 ; k <= n ; k++, i++, sgn = -sgn, epsilon = 2) {
       double sum = 0;
@@ -50,8 +50,195 @@ void fnk::eval(const rotational_invariants &ri)
   }
 }
 
-invariants::invariants(int n):
-N(n), facs(2 * n + 1), dfacs(2 * n + 1), bins(2 * n + 3),
-u0(N, bins), u3(n, bins), v0(n, facs), v3(n, facs, dfacs, bins),
-t(n, facs, dfacs, bins), m03(u3, v0), m30(u3, v0), o0(u0, t), o3(u3, t)
-{}
+void inv::set(double sz, const std::vector<mpq_class> q)
+{
+  exact = true;
+  D = sz;
+  cq = q;
+  cd = std::vector<double>(cq.size());
+  for (size_t i = 0 ; i < q.size() ; i++)
+    cd[i] = cq[i].get_d();
+}
+
+void inv::set(double sz, const std::vector<double> d)
+{
+  exact = false;
+  D = sz;
+  cd = d;
+}
+
+void inv::normalize()
+{
+  if (exact) {
+    if (cq.size() == 0)
+      return;
+    const mpq_class d = cq[0];
+    if (d == 0)
+      return;
+    for (auto &c : cq)
+      c /= d;
+    double dd = d.get_d();
+    for (auto &c : cd)
+      c /= dd;
+  }
+  else {
+    if (cd.size() == 0)
+      return;
+    const double d = cd[0];
+    if (d == 0)
+      return;
+    for (auto &c : cd)
+      c /= d;
+  }
+}
+
+std::ostream &operator <<(std::ostream &os, const inv &i)
+{
+  if (i.isexact()) {
+    const std::vector<mpq_class> &v = i.get_q();
+    os << v.size() - 1 << " " << i.get_D() << "\n";
+    for (auto &x: v)
+      if (x.get_den()==1)
+        os << x << "/1\n";
+      else
+        os << x << "\n";
+  }
+  else {
+    const std::vector<double> &v = i.get_d();
+    os << v.size() - 1 << " " << i.get_D() << "\n";
+    for (auto &x: v)
+      os << x << "\n";
+  }
+  return os;
+}
+
+smart_input &operator >>(smart_input &is, inv &i)
+{
+  std::istringstream s;
+  if (!is.next_line(s)) //remove first line containing "H", "K0" or "K3"
+    return is.failed();
+  if (!is.next_line(s))
+    return is.failed();
+  int n0;
+  double sz;
+  s >> n0 >> sz;
+  if (!s || n0 < 0)
+    return is.failed();
+  is.peek_line(s);
+  std::string testslash;
+  s >> testslash;
+  if (!s)
+    return is.failed();
+  if (testslash.find('/')==std::string::npos) { // read reals
+    std::vector<mpq_class> qs(n0 + 1);
+    for (auto &q : qs) {
+      is.next_line(s);
+      s >> q;
+      if (!s)
+        return is.failed();
+    }
+    if (!is)
+      return is.failed();
+    i.set(sz, qs);
+  }
+  else { // read rationals
+    std::vector<double> ds(n0 + 1);
+    for (auto &d : ds) {
+      is.next_line(s);
+      s >> d;
+      if (!s)
+        return is.failed();
+    }
+    if (!is)
+      return is.failed();
+    i.set(sz, ds);
+  }
+  return is;
+}
+
+void inv_k0::eval(double sz, const fnk &f)
+{ set(sz, cfs.get_o0().apply(f.get_f())); }
+
+void inv_k0::eval(const inv_h &h)
+{
+  if (h.isexact())
+    set(h.get_D(), cfs.u0.apply(h.get_q()));
+}
+
+void inv_k0::eval(const inv_k3 &k3)
+{
+  if (k3.isexact())
+    set(k3.get_D(), cfs.m30.apply(k3.get_q()));
+  else
+    set(k3.get_D(), cfs.m30.apply(k3.get_d()));
+}
+
+void inv_k3::eval(double sz, const fnk &f)
+{ set(sz, cfs.get_o3().apply(f.get_f())); }
+
+void inv_k3::eval(const inv_h &h)
+{
+  if (h.isexact())
+    set(h.get_D(), cfs.u3.apply(h.get_q()));
+}
+
+void inv_k3::eval(const inv_k0 &k0)
+{
+  if (k0.isexact())
+    set(k0.get_D(), cfs.m03.apply(k0.get_q()));
+  else
+    set(k0.get_D(), cfs.m03.apply(k0.get_d()));
+}
+
+void inv_h::eval(double sz, const fnk &f)
+{ set(sz, cfs.get_t().apply(f.get_f())); }
+
+void inv_h::eval(const inv_k0 &k0)
+{
+  if (k0.isexact())
+    set(k0.get_D(), cfs.v0.apply(k0.get_q()));
+  else
+    set(k0.get_D(), cfs.v0.apply(k0.get_d()));
+}
+
+void inv_h::eval(const inv_k3 &k3)
+{
+  if (k3.isexact())
+    set(k3.get_D(), cfs.v3.apply(k3.get_q()));
+  else
+    set(k3.get_D(), cfs.v3.apply(k3.get_d()));
+}
+
+hball::hball(inv_coefs &ic, double sz):
+inv_h(ic)
+{
+  const int N = cfs.N;
+  std::vector<mpq_class> h(N + 1);
+  for (int n = 0 ; n <= N ; n++)
+    h[n] = 18_mpq / ((n + 2) * (n + 3) * (2 * n + 3));
+  set(sz, h);
+}
+
+hcube::hcube(inv_coefs &ic, double sz):
+inv_h(ic)
+{
+  const int N = cfs.N;
+  std::vector<mpq_class> h(N + 1);
+  mpz_class pow3n = 1;
+  for (int n = 0 ; n <= N ; n++, pow3n *= 3) {
+    mpq_class sum = 0;
+    for (int n1 = 0 ; n1 <= n ; n1++) {
+      const mpz_class t1 = (n1 + 1) * (2 * n1 + 1);
+      for (int n2 = 0 ; n2 <= n - n1 ; n2++) {
+        const mpz_class t2 = (n2 + 1) * (2 * n2 + 1) * t1;
+        const int n3 = n - n1 - n2;
+        mpq_class tmp = mpq_class(cfs.bins.get(n, n1) * cfs.bins.get(n - n1, n2),
+                                  (n3 + 1) * (2 * n3 + 1) * t2);
+        tmp.canonicalize();
+        sum += tmp;
+      }
+    }
+    h[n] = sum / pow3n;
+  }
+  set(sz, h);
+}

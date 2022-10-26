@@ -74,35 +74,83 @@ protected:
   std::vector<double> f;
 };
 
-
-class invariants
+class inv
 {
 public:
-  const int N;
-  invariants(int n);
-  std::vector<double> fk0(const fnk &f)
-  { return o0.apply(f.get_f()); }
-  std::vector<double> fk3(const fnk &f)
-  { return o3.apply(f.get_f()); }
-  std::vector<mpq_class> hk0(const std::vector<mpq_class> &h)
-  { return u0.apply(h); }
-  std::vector<mpq_class> hk3(const std::vector<mpq_class> &h)
-  { return u3.apply(h); }
-  std::vector<double> k0k3(const std::vector<double> &k0)
-  { return m03.apply(k0); }
-  std::vector<double> k3k0(const std::vector<double> &k3)
-  { return m30.apply(k3); }
-private:
-  factorials facs;
-  double_factorials dfacs;
-  binomials bins;
-  unl0 u0;
-  unl3 u3;
-  vnl0 v0;
-  vnl3 v3;
-  theta t;
-  ucompose m03, m30;
-  omega o0, o3;
+  inv(inv_coefs &ic): cfs(ic) {}
+  bool isexact() const
+  { return exact; }
+  const std::vector<mpq_class> & get_q() const
+  { return cq; }
+  const std::vector<double> & get_d() const
+  { return cd; }
+  double get_D() const
+  { return D; }
+  void set(double sz, const std::vector<mpq_class> q);
+  void set(double sz, const std::vector<double> d);
+  void noexact()
+  { exact = false; }
+  void normalize();
+protected:
+  inv_coefs &cfs;
+  bool exact;
+  double D;
+  std::vector<mpq_class> cq;
+  std::vector<double> cd;
+};
+
+std::ostream &operator <<(std::ostream &os, const inv &i);
+smart_input &operator >>(smart_input &is, inv &i);
+
+class inv_h;
+class inv_k3;
+
+class inv_k0: public inv
+{
+public:
+  inv_k0(inv_coefs &ic): inv(ic) {}
+  void eval(double sz, const fnk &f);
+  void eval(const inv_h &h);
+  void eval(const inv_k3 &k3);
+};
+
+inline std::ostream &operator <<(std::ostream &os, const inv_k0 &k0)
+{ return os << "K0\n" << static_cast<inv>(k0); }
+
+class inv_k3: public inv
+{
+public:
+  inv_k3(inv_coefs &ic): inv(ic) {}
+  void eval(double sz, const fnk &f);
+  void eval(const inv_h &h);
+  void eval(const inv_k0 &k0);
+};
+
+inline std::ostream &operator <<(std::ostream &os, const inv_k3 &k3)
+{ return os << "K3\n" << static_cast<inv>(k3); }
+
+class inv_h: public inv
+{
+public:
+  inv_h(inv_coefs &ic): inv(ic) {}
+  void eval(double sz, const fnk &f);
+  void eval(const inv_k0 &k0);
+  void eval(const inv_k3 &k3);
+};
+
+inline std::ostream &operator <<(std::ostream &os, const inv_h &h)
+{ return os << "H\n" << static_cast<inv>(h); }
+
+class hball: public inv_h
+{
+public:
+  hball(inv_coefs &ic, double sz);
+};
+
+class hcube: public inv_h
+{
+public:
+  hcube(inv_coefs &ic, double sz);
 };
 
 #endif

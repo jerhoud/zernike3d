@@ -113,7 +113,8 @@ public:
 class coefs
 {
 public:
-  const int N;
+  int N;
+  coefs(): N(0) {}
   coefs(int n): N(n), c((N + 1) * (N + 2) * (N + 3) / 6), cd(c.size()) {}
   const mpq_class &get(int l, int n, int k) const
   { return c[l * (l + 1) * (l + 2) / 6 + n * (n + 1) / 2 + k]; }
@@ -141,13 +142,52 @@ public:
 class theta: public coefs
 {
 public:
+  theta(): coefs() {};
   theta(int N, const factorials &, const double_factorials &, const binomials &);
 };
 
 class omega: public coefs
 {
 public:
+  omega(): coefs() {};
   omega(const unl &u, const coefs &th);
+};
+
+class inv_coefs
+{
+public:
+  const int N;
+  const factorials facs;
+  const double_factorials dfacs;
+  const binomials bins;
+  const unl0 u0;
+  const unl3 u3;
+  const vnl0 v0;
+  const vnl3 v3;
+  const ucompose m03, m30;
+  
+  inv_coefs(int n);
+  const coefs &get_t()
+  {
+    if (t.N == 0)
+      t = theta(N, facs, dfacs, bins);
+    return t;
+  }
+  const coefs &get_o0()
+  {
+    if (o0.N == 0)
+      o0 = omega(u0, get_t());
+    return o0;
+  }
+  const coefs &get_o3()
+  {
+    if (o3.N == 0)
+      o3 = omega(u3, get_t());
+    return o3;
+  }
+private:
+  theta t;
+  omega o0, o3;
 };
 
 #endif

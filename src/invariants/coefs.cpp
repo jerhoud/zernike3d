@@ -43,8 +43,9 @@ void unl::make_d()
 
 std::vector<mpq_class> unl::apply(const std::vector<mpq_class> &v) const
 {
-  std::vector<mpq_class> r(N);
-  for (int n = 0, idx = 0 ; n <= N ; n++) {
+  const int nmax = v.size() - 1;
+  std::vector<mpq_class> r(nmax + 1);
+  for (int n = 0, idx = 0 ; n <= nmax ; n++) {
     mpq_class sum = 0;
     for (int l = 0 ; l <= n ; l++, idx++)
       sum += u[idx] * v[l];
@@ -55,8 +56,9 @@ std::vector<mpq_class> unl::apply(const std::vector<mpq_class> &v) const
 
 std::vector<double> unl::apply(const std::vector<double> &v) const
 {
-  std::vector<double> r(N + 1);
-  for (int n = 0, idx = 0 ; n <= N ; n++) {
+  const int nmax = v.size() - 1;
+  std::vector<double> r(nmax + 1);
+  for (int n = 0, idx = 0 ; n <= nmax ; n++) {
     double sum = 0;
     for (int l = 0 ; l <= n ; l++, idx++)
       sum += ud[idx] * v[l];
@@ -132,9 +134,13 @@ std::vector<mpq_class> coefs::apply(const std::vector<mpq_class> &f) const
 {
   std::vector<mpq_class> r(N + 1);
   for (int l = 0, idx = 0 ; l <= N ; l++) {
+    const size_t sz = (l + 1) * (l + 2) / 2;
+    if (sz > f.size()) {
+      r.resize(l);
+      break;
+    }
     mpq_class sum = 0;
-    const int sz = (l + 1) * (l + 2) / 2;
-    for (int i = 0 ; i < sz ; i++, idx++)
+    for (size_t i = 0 ; i < sz ; i++, idx++)
       sum += c[idx] * f[i];
     r[l] = sum;
   }
@@ -145,9 +151,13 @@ std::vector<double> coefs::apply(const std::vector<double> &f) const
 {
   std::vector<double> r(N + 1);
   for (int l = 0, idx = 0 ; l <= N ; l++) {
+    const size_t sz = (l + 1) * (l + 2) / 2;
+    if (sz > f.size()) {
+      r.resize(l);
+      break;
+    }
     double sum = 0;
-    const int sz = (l + 1) * (l + 2) / 2;
-    for (int i = 0 ; i < sz ; i++, idx++)
+    for (size_t i = 0 ; i < sz ; i++, idx++)
       sum += cd[idx] * f[i];
     r[l] = sum;
   }
@@ -181,3 +191,9 @@ coefs(u.N)
       }
   make_d();
 }
+
+inv_coefs::inv_coefs(int n):
+N(n), facs(2 * n + 1), dfacs(2 * n + 1), bins(2 * n + 3),
+u0(N, bins), u3(n, bins), v0(n, facs), v3(n, facs, dfacs, bins),
+m03(u3, v0), m30(u0, v3), t(), o0(), o3()
+{}
