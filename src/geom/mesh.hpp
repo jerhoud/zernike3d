@@ -34,6 +34,7 @@ public:
   cloud &apply(const mat &m);
   vec mass_center() const;
   double radius() const;
+  double radius_from(const vec &v) const;
   double diameter() const;
   void sphere_project();
   void torus_project(double r);
@@ -60,6 +61,8 @@ public:
   w_cloud &apply(const mat &m);
   w_vec mass_center() const;
   double radius() const;
+  double radius_from(const vec &v) const;
+
 };
 
 /** A truple of ints to represent a triangle by indices.

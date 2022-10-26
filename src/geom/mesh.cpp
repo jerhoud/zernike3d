@@ -76,6 +76,17 @@ double cloud::radius() const
   return sqrt(max);
 }
 
+double cloud::radius_from(const vec &v) const
+{
+  double max = 0;
+  for (auto &pt: points) {
+    const double l2 = (pt - v).length_square();
+    if (max < l2)
+      max = l2;
+  }
+  return sqrt(max);
+}
+
 /** returns the diameter of the cloud (i.e. largest distance between points)*/
 double cloud::diameter() const
 {
@@ -202,6 +213,17 @@ double w_cloud::radius() const
   double max = 0;
   for (auto &pt: points) {
     const double l2 = pt.v.length_square();
+    if (max < l2)
+      max = l2;
+  }
+  return sqrt(max);
+}
+
+double w_cloud::radius_from(const vec &v) const
+{
+  double max = 0;
+  for (auto &pt: points) {
+    const double l2 = (pt.v - v).length_square();
     if (max < l2)
       max = l2;
   }
