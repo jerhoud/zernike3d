@@ -57,9 +57,9 @@ vec minimize(std::function<double(const vec &)> f, const vec &start, double scal
   vthresh *= vthresh;
   
   vecval va(start, f);
-  vecval vb(start + vec{scale, 0, 0}, f);
-  vecval vc(start + vec{0, scale, 0}, f);
-  vecval vd(start + vec{0, 0, scale}, f);
+  vecval vb(start + vec{2 * scale, 0, 0}, f);
+  vecval vc(start + vec{scale, scale, 2 * scale}, f);
+  vecval vd(start + vec{scale, -scale, 2 * scale}, f);
 
   vecval *v1 = &va, *v2 = &vb, *v3 = &vc, *v4 = &vd;
   sort4(v1, v2, v3, v4);
