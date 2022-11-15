@@ -7,6 +7,7 @@
 #include "version.hpp"
 #include "arg_parse.hpp"
 #include "mesh.hpp"
+#include "neldermead.hpp"
 
 using namespace std;
 using namespace argparse;
@@ -26,7 +27,8 @@ string ex =
 string q_help = "represses all warnings and error messages";
 string l_help = "adds file FILE in OFF format to the current shape";
 string o_help = "save current shape in OFF format to file FILE";
-string c_help = "centers the shape around the center of mass";
+string c_help = "centers the shape around its center of mass";
+string C_help = "centers the shape to minimize its radius";
 string r_help = "rescales the shape to set its outer radius to R";
 string s_help = "multiplies the number of facets by four N times,\n"
                 "projects the new points for the sphere and the torus";
@@ -89,6 +91,7 @@ int main (int argc, char *argv[])
   p.group("Transformation options");
   p.rec_list_option("s", "", "N", int_dat, rec, s_help);
   p.rec_flag("c", "", rec, c_help);
+  p.rec_flag("C", "", rec, C_help);
   p.rec_list_option("r", "", "R", double_dat, rec, r_help);
   p.rec_list_option("e", "expand", "FACTORS", vec_dat, rec, e_help);
   p.rec_list_option("t", "", "VEC", vec_dat, rec, t_help);
@@ -162,6 +165,15 @@ int main (int argc, char *argv[])
     
     if (n == "c")
       m -= m.mass_center();
+    else if (n == "C") {
+      vec start;
+      vec mc = m.mass_center();
+      if (m.radius() <= m.radius_from(mc))
+        start = {0, 0, 0};
+      else
+        start = mc;
+      m -= minimize(std::bind(&cloud::radius_from, m, std::placeholders::_1), start, 0.1, 1e-8, 1e-12, 1000);
+    }
     else if (n == "r")
       m *= double_dat[opt.pos] / m.radius();
     else if (n == "e")
@@ -185,6 +197,7 @@ int main (int argc, char *argv[])
     else if (n == "clear")
       m = mesh();
     else if (n == "i") {
+      const double rad = m.radius();
       const vec mc = m.mass_center();
       m -= mc;
       edge_report r = m.edges();
@@ -203,6 +216,7 @@ int main (int argc, char *argv[])
       cout << endl;
       cout << "Center of mass: " << mc << endl;
       cout << "Radius from center of mass: " << m.radius() << endl;
+      cout << "Radius from origin: " << rad << endl;
       cout << "Diameter: " << m.diameter() << endl;
       cout << "Area: " << m.area() << endl;
       cout << "Volume: " << m.volume() << endl;
