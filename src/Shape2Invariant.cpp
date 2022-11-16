@@ -126,12 +126,12 @@ int main(int argc, char *argv[])
     out << "# Produced by " << p.prog_name << " (" << p.version_text << ") for a " << name << "\n";
     out << "# Date: " << now() << "\n";
 
-    inv_k0 k0(ic);
-    k0.eval(*h);
+    inv_k3 k3(ic);
+    k3.eval(*h);
     delete h;
     if (!p("e"))
-      k0.noexact();
-    out << k0;
+      k3.noexact();
+    out << k3;
   }
   else { // shape from file
     // number of threads
@@ -219,11 +219,11 @@ int main(int argc, char *argv[])
     fnk f(N);
     f.eval(ri);
 
-    inv_k0 k0(ic);
-    k0.eval(1, f);
-    k0.normalize();
+    inv_k3 k3(ic);
+    k3.eval(1, f);
+    k3.normalize();
 
-    out << k0;
+    out << k3;
   }
 
   // ciao !
