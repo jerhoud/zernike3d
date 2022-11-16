@@ -80,25 +80,11 @@ protected:
   void make_d();
 };
 
-// unl0 needs binomials up to 2n
-class unl0: public unl
-{
-public:
-  unl0(int n, const binomials &);
-};
-
 // unl3 needs binomials up to 2n+1
 class unl3: public unl
 {
 public:
   unl3(int n, const binomials &);
-};
-
-// vnl0 needs factorials up to 2n+1
-class vnl0: public unl
-{
-public:
-  vnl0(int n, const factorials &f);
 };
 
 // vnl3 needs factorials up to n
@@ -160,11 +146,8 @@ public:
   const factorials facs;
   const double_factorials dfacs;
   const binomials bins;
-  const unl0 u0;
   const unl3 u3;
-  const vnl0 v0;
   const vnl3 v3;
-  const ucompose m03, m30;
   
   inv_coefs(int n);
   const coefs &get_t()
@@ -172,12 +155,6 @@ public:
     if (t.N == 0)
       t = theta(N, facs, dfacs, bins);
     return t;
-  }
-  const coefs &get_o0()
-  {
-    if (o0.N == 0)
-      o0 = omega(u0, get_t());
-    return o0;
   }
   const coefs &get_o3()
   {
@@ -187,7 +164,7 @@ public:
   }
 private:
   theta t;
-  omega o0, o3;
+  omega o3;
 };
 
 #endif

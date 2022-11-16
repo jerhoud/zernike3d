@@ -156,23 +156,6 @@ smart_input &operator >>(smart_input &is, inv &i)
   return is;
 }
 
-void inv_k0::eval(double sz, const fnk &f)
-{ set(sz, cfs.get_o0().apply(f.get_f())); }
-
-void inv_k0::eval(const inv_h &h)
-{
-  if (h.isexact())
-    set(h.get_D(), cfs.u0.apply(h.get_q()));
-}
-
-void inv_k0::eval(const inv_k3 &k3)
-{
-  if (k3.isexact())
-    set(k3.get_D(), cfs.m30.apply(k3.get_q()));
-  else
-    set(k3.get_D(), cfs.m30.apply(k3.get_d()));
-}
-
 void inv_k3::eval(double sz, const fnk &f)
 { set(sz, cfs.get_o3().apply(f.get_f())); }
 
@@ -182,24 +165,8 @@ void inv_k3::eval(const inv_h &h)
     set(h.get_D(), cfs.u3.apply(h.get_q()));
 }
 
-void inv_k3::eval(const inv_k0 &k0)
-{
-  if (k0.isexact())
-    set(k0.get_D(), cfs.m03.apply(k0.get_q()));
-  else
-    set(k0.get_D(), cfs.m03.apply(k0.get_d()));
-}
-
 void inv_h::eval(double sz, const fnk &f)
 { set(sz, cfs.get_t().apply(f.get_f())); }
-
-void inv_h::eval(const inv_k0 &k0)
-{
-  if (k0.isexact())
-    set(k0.get_D(), cfs.v0.apply(k0.get_q()));
-  else
-    set(k0.get_D(), cfs.v0.apply(k0.get_d()));
-}
 
 void inv_h::eval(const inv_k3 &k3)
 {

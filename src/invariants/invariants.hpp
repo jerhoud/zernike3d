@@ -103,19 +103,6 @@ std::ostream &operator <<(std::ostream &os, const inv &i);
 smart_input &operator >>(smart_input &is, inv &i);
 
 class inv_h;
-class inv_k3;
-
-class inv_k0: public inv
-{
-public:
-  inv_k0(inv_coefs &ic): inv(ic) {}
-  void eval(double sz, const fnk &f);
-  void eval(const inv_h &h);
-  void eval(const inv_k3 &k3);
-};
-
-inline std::ostream &operator <<(std::ostream &os, const inv_k0 &k0)
-{ return os << "K0\n" << static_cast<inv>(k0); }
 
 class inv_k3: public inv
 {
@@ -123,7 +110,6 @@ public:
   inv_k3(inv_coefs &ic): inv(ic) {}
   void eval(double sz, const fnk &f);
   void eval(const inv_h &h);
-  void eval(const inv_k0 &k0);
 };
 
 inline std::ostream &operator <<(std::ostream &os, const inv_k3 &k3)
@@ -134,7 +120,6 @@ class inv_h: public inv
 public:
   inv_h(inv_coefs &ic): inv(ic) {}
   void eval(double sz, const fnk &f);
-  void eval(const inv_k0 &k0);
   void eval(const inv_k3 &k3);
 };
 

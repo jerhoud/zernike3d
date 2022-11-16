@@ -67,15 +67,6 @@ std::vector<double> unl::apply(const std::vector<double> &v) const
   return r;
 }
 
-unl0::unl0(int N, const binomials &bins):
-unl(N)
-{
-  for (int n = 0, idx = 0 ; n <= N ; n++)
-    for (int l = 0 ; l <= n ; l++, idx++)
-      u[idx] = ((l & 1) ? -1 : 1) * bins.get(n, l) * bins.get(n + l, l);
-  make_d();
-}
-
 unl3::unl3(int n, const binomials &bins):
 unl(n)
 {
@@ -83,18 +74,6 @@ unl(n)
     for (int l = 0 ; l <= n ; l++, idx++)
       u[idx] = ((l & 1) ? -1 : 1) * bins.get(n, l) * bins.get(n + l + 1, l + 1) *
                ((2 * n + 3) * (2 * l + 3) * (n + l + 2)) / 18_mpq;
-  make_d();
-}
-
-vnl0::vnl0(int n, const factorials &f):
-unl(n)
-{
-  for (int n = 0, idx = 0 ; n <= N ; n++)
-    for (int l = 0 ; l <= n ; l++, idx++) {
-      u[idx] = mpq_class(((l & 1) ? -1 : 1) * f.get(n) * f.get(n) * (2 * l + 1),
-                         f.get(n - l) * f.get(n + l + 1));
-      u[idx].canonicalize();
-    }
   make_d();
 }
 
@@ -194,6 +173,5 @@ coefs(u.N)
 
 inv_coefs::inv_coefs(int n):
 N(n), facs(2 * n + 1), dfacs(2 * n + 1), bins(2 * n + 3),
-u0(N, bins), u3(n, bins), v0(n, facs), v3(n, facs, dfacs, bins),
-m03(u3, v0), m30(u0, v3), t(), o0(), o3()
+u3(n, bins), v3(n, facs, dfacs, bins), o3()
 {}
