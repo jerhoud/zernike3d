@@ -5,3 +5,5 @@ It archives the Mathematica program used to write the code in triangle.cpp
 build_c_rule.nb is the little Mathematica program used to convert the outputs
 of the polyquad program found in directory polyquad_results to the format
 expected by triquad_selector::triquad_selector() in triangle.cpp
+
+duild_s_data.nb is the little Mathematica program used to create s_root_data_50.cpp and s_root_data_100.cpp

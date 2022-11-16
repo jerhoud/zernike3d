@@ -4,6 +4,7 @@
 */
 
 #include "invariants.hpp"
+#include "s_root_data.hpp"
 
 
 /** Dummy constructor for operator >>.
@@ -163,6 +164,26 @@ void inv_k3::eval(const inv_h &h)
 {
   if (h.isexact())
     set(h.get_D(), cfs.u3.apply(h.get_q()));
+}
+
+void inv_k3::resize(double alpha)
+{
+  const double x = 1. / (alpha * alpha);
+  const int sz = cd.size() - 1;
+  std::vector<double> k(sz + 1);
+  int idx = 0;
+  for (int n = 0 ; n <= sz ; n++) {
+    double sum = 0;
+    double xl = 1;
+    for (int l = 0 ; l <= n ; l++, xl *= x) {
+      double a = xl * s_root_data[idx++];
+      for (int m = 0 ; m < n - l ; m++)
+        a *= x - s_root_data[idx++];
+      sum += a;
+    }
+    k[n] = sum;
+  }
+  set(D * alpha, k);
 }
 
 void inv_h::eval(double sz, const fnk &f)

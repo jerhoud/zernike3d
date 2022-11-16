@@ -88,6 +88,8 @@ public:
   { return D; }
   void set(double sz, const std::vector<mpq_class> q);
   void set(double sz, const std::vector<double> d);
+  void set_scale(double d)
+  { D = d; }
   void noexact()
   { exact = false; }
   void normalize();
@@ -110,6 +112,7 @@ public:
   inv_k3(inv_coefs &ic): inv(ic) {}
   void eval(double sz, const fnk &f);
   void eval(const inv_h &h);
+  void resize(double alpha);
 };
 
 inline std::ostream &operator <<(std::ostream &os, const inv_k3 &k3)
