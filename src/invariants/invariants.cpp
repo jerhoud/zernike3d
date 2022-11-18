@@ -166,13 +166,12 @@ void inv_k3::eval(const inv_h &h)
     set(h.get_D(), cfs.u3.apply(h.get_q()));
 }
 
-void inv_k3::resize(double alpha)
+std::vector<double> inv_k3::resized(int n0, double alpha) const
 {
   const double x = 1. / (alpha * alpha);
-  const int sz = cd.size() - 1;
-  std::vector<double> k(sz + 1);
+  std::vector<double> k(n0 + 1);
   int idx = 0;
-  for (int n = 0 ; n <= sz ; n++) {
+  for (int n = 0 ; n <= n0 ; n++) {
     double sum = 0;
     double xl = 1;
     for (int l = 0 ; l <= n ; l++, xl *= x) {
@@ -183,7 +182,7 @@ void inv_k3::resize(double alpha)
     }
     k[n] = sum;
   }
-  set(D * alpha, k);
+  return k;
 }
 
 void inv_h::eval(double sz, const fnk &f)

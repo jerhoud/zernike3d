@@ -7,6 +7,7 @@
 #ifndef INVARIANTS_HPP
 #define INVARIANTS_HPP
 
+#include <cmath>
 #include "zernike.hpp"
 #include "coefs.hpp"
 
@@ -112,7 +113,15 @@ public:
   inv_k3(inv_coefs &ic): inv(ic) {}
   void eval(double sz, const fnk &f);
   void eval(const inv_h &h);
-  void resize(double alpha);
+  void resize(double alpha)
+  {
+    set(D * alpha, resized(cd.size() - 1, alpha));
+  }
+  double relative_gyration_radius() const
+  {
+    return sqrt(3 * (1 - cd[1] / 5) / 5);
+  }
+  std::vector<double> resized(int n, double alpha) const;
 };
 
 inline std::ostream &operator <<(std::ostream &os, const inv_k3 &k3)
