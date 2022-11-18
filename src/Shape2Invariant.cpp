@@ -17,8 +17,8 @@ string sh =
   "Computes shape invariants, input should be in OFF format.";
 string eh = "";
 string ex = "Shape2Invariant 20 shape.off                   Computes the invariants of shape.off up to order 20\n"
-            "Shape2Zernike -t4 -o result.si 20 shape.off    Same running on four threads with results written to file\n"
-            "Shape2Zernike -e --cube 20                     Exact invariants of a cube";
+            "Shape2Invariant -t4 -o result.si 20 shape.off  Same running on four threads with results written to file\n"
+            "Shape2Invariant -e --cube 20                   Exact invariants of a cube";
 string v_help = "outputs more informations, including progression bars";
 string q_help = "represses all warnings and error messages";
 string o_help = "save output to the given file instead of standard output";
