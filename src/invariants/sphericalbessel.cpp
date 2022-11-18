@@ -4,7 +4,6 @@
 */
 
 #include <cmath>
-#include <iostream>
 #include "sphericalbessel.hpp"
 
 spherical_bessel::spherical_bessel(int n):
@@ -75,7 +74,6 @@ void spherical_bessel::asccending(double ix)
 
 void spherical_bessel::descending(double ix, int lmax)
 {
-  std::cout << "descending " << lmax << "\n";
   const double j0 = bsl[0];
   const double j1 = bsl[1];
 
