@@ -118,7 +118,7 @@ target_link_libraries(Shape2Invariant invariants)
 
 # install executables
 
-install(TARGETS MakeShape Zernike2Shape Shape2Zernike DESTINATION bin)
+install(TARGETS MakeShape Zernike2Shape Shape2Zernike Shape2Invariant DESTINATION bin)
 
 # testing
 
