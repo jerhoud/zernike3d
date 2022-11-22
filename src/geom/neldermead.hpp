@@ -9,6 +9,6 @@
 #include <functional>
 #include "vec.hpp"
 
-vec minimize(std::function<double(const vec &)> f, const vec &start, double start_scale, double fthresh, double vthresh, int itermax);
+vec minimize(std::function<double(const vec &)> f, const vec &start, double start_scale, double thresh, int itermax);
 
 #endif

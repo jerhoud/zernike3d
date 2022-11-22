@@ -52,9 +52,9 @@ int insert4(vecval *&v1, vecval *&v2, vecval *&v3, vecval *&v4, const vecval &nv
   return 1;
 }
 
-vec minimize(std::function<double(const vec &)> f, const vec &start, double scale, double fthresh, double vthresh, int itermax)
+vec minimize(std::function<double(const vec &)> f, const vec &start, double scale, double thresh, int itermax)
 {
-  vthresh *= vthresh;
+  thresh *= thresh;
   
   vecval va(start, f);
   vecval vb(start + vec{2 * scale, 0, 0}, f);
@@ -64,7 +64,7 @@ vec minimize(std::function<double(const vec &)> f, const vec &start, double scal
   vecval *v1 = &va, *v2 = &vb, *v3 = &vc, *v4 = &vd;
   sort4(v1, v2, v3, v4);
 
-  while (itermax-- != 0 && (v1->v - v4->v).length_square() > vthresh && fabs(v1->val - v4->val) > fthresh) {
+  while (itermax-- != 0 && (v1->v - v4->v).length_square() > thresh) {
     vec b = (v1->v + v2->v + v3->v) / 3;
     vec d = b - v4->v;
 

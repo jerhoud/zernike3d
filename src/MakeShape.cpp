@@ -172,7 +172,7 @@ int main (int argc, char *argv[])
         start = {0, 0, 0};
       else
         start = mc;
-      m -= minimize(std::bind(&cloud::radius_from, m, std::placeholders::_1), start, 0.1, 1e-8, 1e-12, 1000);
+      m -= minimize(std::bind(&cloud::radius_from, m, std::placeholders::_1), start, 0.1, 1e-8, 1000);
     }
     else if (n == "r")
       m *= double_dat[opt.pos] / m.radius();
