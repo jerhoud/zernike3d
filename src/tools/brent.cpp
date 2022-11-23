@@ -3,6 +3,8 @@
   \author J. Houdayer
 */
 
+#include <iostream>
+#include <iomanip>
 #include <cmath>
 #include <utility>
 #include "brent.hpp"
@@ -15,43 +17,74 @@ public:
   { x = v; fx = f(v); }
 };
 
-constexpr double g = 0.381966011250105; // (3 - sqrt(5)) / 2
+
+void descending(xval *&v1, xval *&v2, xval *&v3, std::function<double(double)> f)
+{
+  std::cout << "descending: {" << v1->x << ", " << v2->x << ", " << v3->x << "} -> " << v2->fx << "\n";
+  double x = 3 * v3->x - 2 * v2->x;
+  v1->set(x, f);
+  xval *tmp = v1;
+  v1 = v2;
+  v2 = v3;
+  v3 = tmp;
+}
+
+bool insert(xval *&v1, xval *&v2, xval *&v3, double d, std::function<double(double)> f)
+{
+  xval vc(v2->x + d, f);
+
+  if (vc.fx < v2->fx) { //new point is better, put it in the middle
+    std::cout << "better\n";
+    if (vc.x < v2->x) {
+      *v3 = vc;
+      std::swap(v2, v3);
+    }
+    else {
+      *v1 = vc;
+      std::swap(v2, v1);
+    }
+    return true;
+  }
+  else { // new point is not better, put it on the side
+    if (vc.x < v2->x)
+      *v1 = vc;
+    else
+      *v3 = vc;
+    return false;
+  }
+}
 
 double minimize(std::function<double(double)> f, double start, double scale, double thresh)
 {
-  xval va(start, f), vb(start + scale, f);
-  xval *v1 = NULL, *v2 = NULL;
+  const double g = 0.381966011250105; // (3 - sqrt(5)) / 2
   
-  double d;
+  std::cout << std::setprecision(12);
+
+  xval va(start, f), vb(start + scale, f), vc(vb);
+  xval *v1 = NULL, *v2 = NULL, *v3 = &vc;
+  
   if (va.fx > vb.fx) {
     v1 = &va;
     v2 = &vb;
-    d = 2 * scale;
+    v3->set(start + 3 * scale, f);
   }
   else {
     v1 = &vb;
     v2 = &va;
-    d = -scale;
+    v3->set(start - 2 * scale, f);
   }
   // descending
-  xval vc(start + d, f);
-  xval *v3 = &vc;
-  while (v3->fx < v2->fx && fabs(v1->x - v3->x) > thresh) {
-    d *= 2;
-    v1->set(v2->x + d, f);
-    xval *tmp = v1;
-    v1 = v2;
-    v2 = v3;
-    v3 = tmp;
-  }
+  while (v3->fx < v2->fx)
+    descending(v1, v2, v3, f);
 
   if (v1->x > v3->x)
     std::swap(v1, v3);
 
-  double e1 = v3->x - v1->x;
-  double e0 = e1;
+  int m = 3;
+  double e1 = v3->x - v1->x, e0 = e1;
 
   while (e1 > thresh) {
+    std::cout << "reducing: {" << v1->x << ", " << v2->x << ", " << v3->x << "} -> " << v2->fx << "\n";
     // compute quadratic interpolation
     const double d1 = v1->x - v2->x;
     double df1 = v1->fx - v2->fx;
@@ -59,40 +92,34 @@ double minimize(std::function<double(double)> f, double start, double scale, dou
     double df3 = v3->fx - v2->fx;
     df1 *= d3;
     df3 *= d1;
-    const double p = d1 * df3 - d3 * df1;
-    const double q = 2 * (df3 - df1);
-    double d = p / q;; // quadratic interpolation step
-    const double e2 = e1;
+    double d = (d1 * df3 - d3 * df1) / (2 * (df3 - df1)); // quadratic interpolation
+    double emax = e1 / 2;
     e1 = e0;
     e0 = fabs(d);
-    if (!(e0 < e2 / 2 && d >= d1 && d <= d3)) { // change too large, golden ratio step instead
+    bool inter = m-- != 0 && e0 < emax && d >= d1 && d <= d3;
+    if (!inter) { // golden ratio step
       if (-d1 > d3) {
         d = g * d1;
-        e1 = -d1;
-        e0 = -d; 
+        e0 = -d;
+        std::cout << "right ratio:\n";
       }
       else {
         d = g * d3;
-        e1 = d3;
         e0 = d;
+        std::cout << "left ratio\n";
       }
     }
-    xval vc(v2->x + d, f);
-    if (vc.fx <= v2->fx) { //new point is better, put it in the middle
-      if (vc.x < v2->x) {
-        *v3 = vc;
-        std::swap(v2, v3);
-      }
-      else {
-        *v1 = vc;
-        std::swap(v2, v1);
-      }
-    }
-    else { // new point is not better, put it on the side
-      if (vc.x < v2->x)
-        *v1 = vc;
+    else
+      std::cout << "interpolation\n";
+    if (fabs(d) < thresh)
+      d = (d < 0) ? -thresh : thresh;
+
+    bool better = insert(v1, v2, v3, d, f);
+    if (!inter) {
+      if (better)
+        m = 0;
       else
-        *v3 = vc;
+        m = 3;
     }
   }
   return v2->x;

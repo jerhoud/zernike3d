@@ -116,6 +116,9 @@ target_link_libraries(Shape2Zernike zernike)
 add_executable(Shape2Invariant Shape2Invariant.cpp)
 target_link_libraries(Shape2Invariant invariants)
 
+add_executable(Essai essai.cpp)
+target_link_libraries(Essai invariants)
+
 # install executables
 
 install(TARGETS MakeShape Zernike2Shape Shape2Zernike Shape2Invariant DESTINATION bin)
