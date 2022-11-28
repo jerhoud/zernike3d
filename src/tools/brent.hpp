@@ -8,6 +8,6 @@
 
 #include <functional>
 
-double minimize(std::function<double(double)> f, double start, double start_scale, double thresh);
+double brent(std::function<double(double)> f, double start, double start_scale, double thresh);
 
 #endif

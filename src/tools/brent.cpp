@@ -3,8 +3,6 @@
   \author J. Houdayer
 */
 
-#include <iostream>
-#include <iomanip>
 #include <cmath>
 #include <utility>
 #include "brent.hpp"
@@ -17,110 +15,85 @@ public:
   { x = v; fx = f(v); }
 };
 
-
-void descending(xval *&v1, xval *&v2, xval *&v3, std::function<double(double)> f)
+void set_cycle(xval &v1, xval &v2, const xval &v)
 {
-  std::cout << "descending: {" << v1->x << ", " << v2->x << ", " << v3->x << "} -> " << v2->fx << "\n";
-  double x = 3 * v3->x - 2 * v2->x;
-  v1->set(x, f);
-  xval *tmp = v1;
+  v1 = v2;
+  v2 = v;
+}
+
+void set_cycle(xval &v1, xval &v2, xval &v3, const xval &v)
+{
   v1 = v2;
   v2 = v3;
-  v3 = tmp;
+  v3 = v;
 }
 
-bool insert(xval *&v1, xval *&v2, xval *&v3, double d, std::function<double(double)> f)
-{
-  xval vc(v2->x + d, f);
-
-  if (vc.fx < v2->fx) { //new point is better, put it in the middle
-    std::cout << "better\n";
-    if (vc.x < v2->x) {
-      *v3 = vc;
-      std::swap(v2, v3);
-    }
-    else {
-      *v1 = vc;
-      std::swap(v2, v1);
-    }
-    return true;
-  }
-  else { // new point is not better, put it on the side
-    if (vc.x < v2->x)
-      *v1 = vc;
-    else
-      *v3 = vc;
-    return false;
-  }
-}
-
-double minimize(std::function<double(double)> f, double start, double scale, double thresh)
-{
-  const double g = 0.381966011250105; // (3 - sqrt(5)) / 2
+double brent(std::function<double(double)> f, double start, double scale, double thresh)
+{ 
+  xval vb(start, f), v1(start + scale, f);
   
-  std::cout << std::setprecision(12);
+  if (vb.fx > v1.fx)
+    std::swap(vb, v1);
 
-  xval va(start, f), vb(start + scale, f), vc(vb);
-  xval *v1 = NULL, *v2 = NULL, *v3 = &vc;
-  
-  if (va.fx > vb.fx) {
-    v1 = &va;
-    v2 = &vb;
-    v3->set(start + 3 * scale, f);
-  }
-  else {
-    v1 = &vb;
-    v2 = &va;
-    v3->set(start - 2 * scale, f);
-  }
+  xval v2(vb.x + 2 * (vb.x - v1.x), f);
+
   // descending
-  while (v3->fx < v2->fx)
-    descending(v1, v2, v3, f);
+  while (v2.fx < vb.fx) {
+    double x = v2.x + 2 * (v2.x - vb.x);
+    set_cycle(v1, vb, v2, xval(x, f));
+  }
 
-  if (v1->x > v3->x)
-    std::swap(v1, v3);
+  if (v1.x > v2.x)
+    std::swap(v1, v2);
 
-  int m = 3;
-  double e1 = v3->x - v1->x, e0 = e1;
+  int m = 2;
 
-  while (e1 > thresh) {
-    std::cout << "reducing: {" << v1->x << ", " << v2->x << ", " << v3->x << "} -> " << v2->fx << "\n";
-    // compute quadratic interpolation
-    const double d1 = v1->x - v2->x;
-    double df1 = v1->fx - v2->fx;
-    const double d3 = v3->x - v2->x;
-    double df3 = v3->fx - v2->fx;
-    df1 *= d3;
-    df3 *= d1;
-    double d = (d1 * df3 - d3 * df1) / (2 * (df3 - df1)); // quadratic interpolation
-    double emax = e1 / 2;
-    e1 = e0;
-    e0 = fabs(d);
-    bool inter = m-- != 0 && e0 < emax && d >= d1 && d <= d3;
-    if (!inter) { // golden ratio step
-      if (-d1 > d3) {
-        d = g * d1;
-        e0 = -d;
-        std::cout << "right ratio:\n";
-      }
-      else {
-        d = g * d3;
-        e0 = d;
-        std::cout << "left ratio\n";
-      }
+  while (v2.x - v1.x > 2 * thresh) {
+    double d;
+    bool split = true;
+    const double d1 = v1.x - vb.x;
+    const double d2 = v2.x - vb.x;
+    if (m-- != 0) {
+      // compute quadratic interpolation
+      const double df1 = d2 * (v1.fx - vb.fx);
+      const double df2 = d1 * (v2.fx - vb.fx);
+      d = (d1 * df2 - d2 * df1) / (2 * (df2 - df1)); // quadratic interpolation
+      split = !(d >= d1 && d <= d2);
     }
-    else
-      std::cout << "interpolation\n";
-    if (fabs(d) < thresh)
-      d = (d < 0) ? -thresh : thresh;
-
-    bool better = insert(v1, v2, v3, d, f);
-    if (!inter) {
-      if (better)
-        m = 0;
+    if (split) { // perfect ratio step
+      if (d2 + d1 > 0)
+        d = d1 + sqrt(d1 * (d1 - d2));
       else
-        m = 3;
+        d = d2 - sqrt(d2 * (d2 - d1));
+    }
+    
+    if (fabs(d) < thresh)
+      d = 0.5 * ((d < 0) ? -thresh : thresh);
+    if (d - d1 < thresh)
+      d = d1 + thresh;
+    else if (d2 - d < thresh)
+      d = d2 - thresh;
+
+    xval vn(vb.x + d, f);
+
+    if (vn.fx < vb.fx) { //new point is better, put it in the middle
+      if (vn.x < vb.x)
+        set_cycle(v2, vb, vn);
+      else
+        set_cycle(v1, vb, vn);
+      if (split)
+        m = 0;
+    }
+    else { // new point is not better, put it on the side
+      if (vn.x < vb.x)
+        v1 = vn;
+      else
+        v2 = vn;
+      if (split)
+        m = 2;
+      else if (m == 1)
+        m = 0;
     }
   }
-  return v2->x;
+  return vb.x;
 }
