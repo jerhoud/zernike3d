@@ -11,22 +11,7 @@ class xval {
 public:
   double x, fx;
   xval(double v, std::function<double(double)> f): x(v), fx(f(v)) {}
-  void set(double v, std::function<double(double)> f)
-  { x = v; fx = f(v); }
 };
-
-void set_cycle(xval &v1, xval &v2, const xval &v)
-{
-  v1 = v2;
-  v2 = v;
-}
-
-void set_cycle(xval &v1, xval &v2, xval &v3, const xval &v)
-{
-  v1 = v2;
-  v2 = v3;
-  v3 = v;
-}
 
 double brent(std::function<double(double)> f, double start, double scale, double thresh)
 { 
@@ -40,7 +25,9 @@ double brent(std::function<double(double)> f, double start, double scale, double
   // descending
   while (v2.fx < vb.fx) {
     double x = v2.x + 2 * (v2.x - vb.x);
-    set_cycle(v1, vb, v2, xval(x, f));
+    v1 = vb;
+    vb = v2;
+    v2 = xval(x, f);
   }
 
   if (v1.x > v2.x)
@@ -78,9 +65,10 @@ double brent(std::function<double(double)> f, double start, double scale, double
 
     if (vn.fx < vb.fx) { //new point is better, put it in the middle
       if (vn.x < vb.x)
-        set_cycle(v2, vb, vn);
+        v2 = vb;
       else
-        set_cycle(v1, vb, vn);
+        v1 = vb;
+      vb = vn;
       if (split)
         m = 0;
     }
