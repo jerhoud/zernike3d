@@ -159,6 +159,11 @@ set_tests_properties(NanShape2Zernike PROPERTIES
     FAIL_REGULAR_EXPRESSION "nan;NAN;Nan"
 )
 
+add_test(NAME MissingShape2Zernike COMMAND Shape2Zernike 5 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
+set_tests_properties(MissingShape2Zernike PROPERTIES
+    PASS_REGULAR_EXPRESSION "5 3 0.*5 3 1.*5 3 2.*5 3 3"
+)
+
 # Testing Zernike2Shape
 
 add_test(NAME RunZernike2Shape COMMAND Zernike2Shape -t0 10 30 ${CMAKE_SOURCE_DIR}/testdata/blork.zm)
