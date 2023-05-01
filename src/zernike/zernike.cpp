@@ -223,13 +223,13 @@ void zernike_int2::eval_zr(double r, double weight)
   zr[0] = rn / 3;
   zr[1] = r * rn / 4;
   rn *= r2;
-  for (int n2 = 1, i = 2 ; n2 <= N / 2 ; n2++, rn *= r2, i++) {
-    for (int l = 0 ; l <= 2 * n2 - 2 ; l++, i++) {
+  for (int n2 = 1, i = 2 ; n2 <= N / 2 ; n2++, rn *= r2) {
+    for (int l = 0 ; l <= 2 * n2 - 1 ; l++, i++) {
       h = &(help[i]);
       zr[i] = h->c1 * zr0[i + 2 * n2 + 2] + h->c2 * zr0[i] + h->c3 * zr0[i - 2 * n2];
     }
-    zr[++i] = rn / (double) (2 * n2 + 3);
-    zr[++i] = r * rn / (double) (2 * n2 + 4);
+    zr[i++] = rn / (double) (2 * n2 + 3);
+    zr[i++] = r * rn / (double) (2 * n2 + 4);
   }
 }
 
@@ -582,8 +582,7 @@ std::ostream &operator <<(std::ostream &os, const zernike &zm)
           double z = zm.get(n, l, m);
           if (flip && (m & 1))
             z = -z;
-          if (z != 0)
-            os << n << " " << l << " " << m << " " << z << std::endl;
+          os << n << " " << l << " " << m << " " << z << std::endl;
         }
       else {
         const double z0 = zm.get(n, l, 0);
@@ -596,8 +595,7 @@ std::ostream &operator <<(std::ostream &os, const zernike &zm)
             r = -r;
             i = -i;
           }
-          if (r != 0 || i != 0)
-            os << n << " " << l << " " << m << " " << r << " " << i << std::endl;
+          os << n << " " << l << " " << m << " " << r << " " << i << std::endl;
         }
       }
     }
