@@ -142,6 +142,11 @@ set_tests_properties(EmptyCenterMakeShape PROPERTIES
     PASS_REGULAR_EXPRESSION "-c: cannot center a shape of zero volume"
 )
 
+add_test(NAME BadOutputMakeShape COMMAND MakeShape --cube -o /nonexistent_dir/x.off)
+set_tests_properties(BadOutputMakeShape PROPERTIES
+    PASS_REGULAR_EXPRESSION "Cannot open output file: /nonexistent_dir/x.off"
+)
+
 # Testing Shape2Zernike
 
 add_test(NAME RunShape2Zernike COMMAND Shape2Zernike 0 ${CMAKE_SOURCE_DIR}/testdata/blork.off)

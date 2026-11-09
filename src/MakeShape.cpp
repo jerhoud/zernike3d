@@ -136,7 +136,7 @@ int main (int argc, char *argv[])
     else if (n == "o") {
       smart_output out(string_dat[opt.pos]);
       if (!out)
-        p.die(bad_output_msg + n + " (" + strerror(errno) + ")");
+        p.die(bad_output_msg + string_dat[opt.pos] + " (" + strerror(errno) + ")");
       out << setprecision(digit) << m;
     }
     else if (n == "sphere") {
