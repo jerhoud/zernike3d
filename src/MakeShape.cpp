@@ -51,6 +51,8 @@ string rec_help = "adds the shape memorized under NAME to the current shape";
 string clear_help = "starts with a fresh empty shape";
 string bad_output_msg = "Cannot open output file: ";
 string bad_recall_msg = "--recall: no such memory name: ";
+string polygon_warning =
+  "Warning: facets with more than 3 vertices were split into triangles around their center. Largest relative non-planarity: ";
 
 int main (int argc, char *argv[])
 {
@@ -120,6 +122,11 @@ int main (int argc, char *argv[])
       string err = read_file(string_dat[opt.pos], m0);
       if (!err.empty())
         p.die(err);
+      if (m0.polygons > 0) {
+        ostringstream w;
+        w << m0.max_nonplanarity;
+        p.warn(polygon_warning + w.str());
+      }
       m.add(m0);
     }
     else if (n == "o") {

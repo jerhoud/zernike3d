@@ -256,21 +256,59 @@ vec mesh::mass_center() const
   return sum / (4 * sum_v);
 }
 
-/** Reads one triangle and adds it to the mesh.
+/** Relative non-planarity of a polygon: largest distance of its vertices to the plane
+ through their center normal to Newell's vector, divided by the polygon diameter.
+*/
+static double nonplanarity(const std::vector<vec> &p)
+{
+  vec c, n;
+  for (size_t i = 0 ; i < p.size() ; i++) {
+    c += p[i];
+    n += cross(p[i], p[(i + 1) % p.size()]);
+  }
+  c /= p.size();
+  double d2 = 0;
+  for (size_t i = 0 ; i < p.size() ; i++)
+    for (size_t j = i + 1 ; j < p.size() ; j++)
+      d2 = std::max(d2, (p[i] - p[j]).length_square());
+  const double nl = n.length();
+  if (nl == 0 || d2 == 0) // degenerate polygon
+    return 0;
+  double h = 0;
+  for (auto &v: p)
+    h = std::max(h, fabs(dot(v - c, n)) / nl);
+  return h / sqrt(d2);
+}
+
+/** Reads one facet in OFF format and adds it to the mesh.
+ Facets with more than 3 vertices are split into triangles around their center (see add_polygon).
  @param n_points Number of vertices in the file, vertex indices must be smaller.
 */
 void mesh::read_triangle(smart_input &is, size_t n_points)
 {
   std::istringstream s;
-  if (is.next_line(s)) {
-    int dummy;
-    t_mesh t;
-    s >> dummy >> t;
-    if (s && t.i1 < n_points && t.i2 < n_points && t.i3 < n_points)
-      add_triangle(t);
-    else
-      is.failed();
+  if (!is.next_line(s))
+    return;
+  int k = 0;
+  s >> k;
+  std::vector<size_t> f;
+  size_t j;
+  while ((int) f.size() < k && s >> j && j < n_points)
+    f.push_back(j);
+  if (k < 3 || (int) f.size() != k) {
+    is.failed();
+    return;
   }
+  if (k == 3) {
+    add_triangle({f[0], f[1], f[2]});
+    return;
+  }
+  std::vector<vec> pts;
+  for (auto i: f)
+    pts.push_back(points[i]);
+  polygons++;
+  max_nonplanarity = std::max(max_nonplanarity, nonplanarity(pts));
+  add_polygon(f);
 }
 
 /** concats two meshes.*/

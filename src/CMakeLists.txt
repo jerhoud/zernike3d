@@ -169,6 +169,11 @@ set_tests_properties(ApproxWarnShape2Zernike PROPERTIES
     PASS_REGULAR_EXPRESSION "Allowed error by facet: 2.5"
 )
 
+add_test(NAME PolygonShape2Zernike COMMAND Shape2Zernike -d10 0 ${CMAKE_SOURCE_DIR}/testdata/quadcube.off)
+set_tests_properties(PolygonShape2Zernike PROPERTIES
+    PASS_REGULAR_EXPRESSION "Polygons: 6 facets.*0 0 0 0.1055381426"
+)
+
 add_test(NAME NanShape2Zernike COMMAND Shape2Zernike 10 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
 set_tests_properties(NanShape2Zernike PROPERTIES
     FAIL_REGULAR_EXPRESSION "nan;NAN;Nan"

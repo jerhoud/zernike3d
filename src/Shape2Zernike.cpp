@@ -45,6 +45,8 @@ string radius_warning =
   "Warning: shape radius is larger than one. Risks of imprecisions.";
 string volume_warning =
   "Warning: shape volume is negative, facets are probably oriented inward. Moments change sign.";
+string polygon_warning =
+  "Warning: facets with more than 3 vertices were split into triangles around their center. Largest relative non-planarity: ";
 string approx_warning = "Warning; requested precision is very small, program may not halt. Allowed error by facet: ";
 string die_unknown_format = "Unknown file format (should be OFF or ZM): ";
 string bad_output_msg = "Cannot open output file: ";
@@ -193,6 +195,13 @@ int main (int argc, char *argv[])
     out << "# Mesh: " << m.points.size() << " vertices, "
         << m.triangles.size() << " facets, "
         << "radius: " << rad << "\n";
+    if (m.polygons > 0) {
+      out << "# Polygons: " << m.polygons << " facets split around their center, "
+          << "largest relative non-planarity: " << m.max_nonplanarity << "\n";
+      ostringstream w;
+      w << m.max_nonplanarity;
+      p.warn(polygon_warning + w.str());
+    }
     if (rad > 1.001)
       p.warn(radius_warning);
     if (m.volume() < 0)

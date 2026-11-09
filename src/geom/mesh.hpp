@@ -94,6 +94,8 @@ class mesh: public cloud
 {
 public:
   std::vector<t_mesh> triangles; /**< the triangles. */
+  size_t polygons = 0; /**< Number of facets with more than 3 vertices read by read_triangle. */
+  double max_nonplanarity = 0; /**< Largest relative non-planarity of these facets. */
 
   double volume() const;
   double area() const;
