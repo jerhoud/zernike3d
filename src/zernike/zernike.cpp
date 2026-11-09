@@ -762,7 +762,7 @@ smart_input &operator >>(smart_input &is, rotational_invariants &ri)
   if (!s || n0 < 0)
     return is.failed();
   rotational_invariants ri0(n0);
-  ri.norm = norm;
+  ri0.norm = norm;
   while(is.next_line(s)) {
     int n1, n2, l;
     double z;
@@ -842,7 +842,7 @@ smart_input &operator >>(smart_input &is, signature_invariants &si)
   if (!s || n0 < 0)
     return is.failed();
   signature_invariants si0(n0);
-  si.norm = norm;
+  si0.norm = norm;
   while(is.next_line(s)) {
     int n;
     double z;
