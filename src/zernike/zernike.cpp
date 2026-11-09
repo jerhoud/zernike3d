@@ -629,7 +629,7 @@ smart_input &operator >>(smart_input &is, zernike &z)
     int n, l, m;
     double r, i;
     s >> n >> l >> m >> r;
-    if (!s || n < 0 || n > n0 || l < 0 || l > n || (l ^ n) == 1
+    if (!s || n < 0 || n > n0 || l < 0 || l > n || ((l ^ n) & 1)
         || m < -l || m > l)
       return is.failed();
     if (flip && (m & 1))

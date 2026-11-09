@@ -203,6 +203,11 @@ set_tests_properties(PolygonShape2Zernike PROPERTIES
     PASS_REGULAR_EXPRESSION "Polygons: 6 facets.*0 0 0 0.1055381426"
 )
 
+add_test(NAME BadParityShape2Zernike COMMAND Shape2Zernike 3 ${CMAKE_SOURCE_DIR}/testdata/badparity.zm)
+set_tests_properties(BadParityShape2Zernike PROPERTIES
+    PASS_REGULAR_EXPRESSION "Cannot read file .*badparity.zm at line 4"
+)
+
 add_test(NAME NanShape2Zernike COMMAND Shape2Zernike 10 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
 set_tests_properties(NanShape2Zernike PROPERTIES
     FAIL_REGULAR_EXPRESSION "nan;NAN;Nan"
