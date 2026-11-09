@@ -22,7 +22,7 @@ string eh = "Currently works up to N = " + n_exact
             "No limit for N when using -a.\n"
             "The shape must fit into the unit ball (no implicit centering or rescaling, use MakeShape to do this).";
 string ex = "Shape2Zernike 50 shape.off                     Computes the Zernike moments of shape.off up to order 50\n"
-            "Shape2Zernike -a 8 -o result.zm 50 shape.off   Same using approximate algorithm with 8 digit precision and results written to file\n"
+            "Shape2Zernike -a 8 -o result.zm 50 shape.off   Same using the approximate algorithm (target absolute error 1e-8) and results written to file\n"
             "Shape2Zernike -vt 4 50 shape.off               Same running on four threads, with progression bar";
 string v_help = "outputs more informations, including progression bars";
 string q_help = "represses all warnings and error messages";
@@ -30,11 +30,11 @@ string o_help = "save output to the given file instead of standard output";
 string t_help = "number of threads to use in parallel, use 0 to adapt to the machine";
 string tests_help = "runs internal sanity checks and exits";
 string n_help = "multiplies the moments by sqrt(3/4pi)";
-string a_help = "computes the moments using approximate methods to get the required correct DIGITS";
+string a_help = "computes the moments with an adaptive method, targeting an absolute error below 10^-DIGITS on each moment";
 string r_help = "the Zernike moments are output in real form instead of complex";
 string p_help = "multiplies the moments by the phase factor (-1)^m";
 string diff_help = "reads Zernike moments in ZM format and substract them from the computed moments";
-string d_help = "number of significant digits printed in the output (default is 8)";
+string d_help = "number of significant digits printed in the output (default is 8, or DIGITS+1 with -a)";
 
 string FILE_help = "reads FILE in OFF or ZM format (default is standard input)";
 string N_help = "the maximum order of Zernike moments computed";
