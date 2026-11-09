@@ -51,6 +51,8 @@ string rec_help = "adds the shape memorized under NAME to the current shape";
 string clear_help = "starts with a fresh empty shape";
 string bad_output_msg = "Cannot open output file: ";
 string bad_recall_msg = "--recall: no such memory name: ";
+string die_r_msg = "-r: R must be positive.";
+string die_r0_msg = "-r: cannot rescale a shape of zero radius.";
 string polygon_warning =
   "Warning: facets with more than 3 vertices were split into triangles around their center. Largest relative non-planarity: ";
 
@@ -169,8 +171,14 @@ int main (int argc, char *argv[])
     
     if (n == "c")
       m -= m.mass_center();
-    else if (n == "r")
-      m *= double_dat[opt.pos] / m.radius();
+    else if (n == "r") {
+      if (double_dat[opt.pos] <= 0)
+        p.die(die_r_msg);
+      const double rad = m.radius();
+      if (rad == 0)
+        p.die(die_r0_msg);
+      m *= double_dat[opt.pos] / rad;
+    }
     else if (n == "e")
       m.apply(diag_mat(vec_dat[opt.pos]));
     else if (n == "a")

@@ -127,6 +127,11 @@ set_tests_properties(MirrorMakeShape PROPERTIES
     PASS_REGULAR_EXPRESSION "Volume: 2.53615"
 )
 
+add_test(NAME NegRadiusMakeShape COMMAND MakeShape --cube -r -1)
+set_tests_properties(NegRadiusMakeShape PROPERTIES
+    PASS_REGULAR_EXPRESSION "-r: R must be positive"
+)
+
 # Testing Shape2Zernike
 
 add_test(NAME RunShape2Zernike COMMAND Shape2Zernike 0 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
