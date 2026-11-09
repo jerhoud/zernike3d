@@ -214,7 +214,8 @@ int main (int argc, char *argv[])
     else if (n == "clear")
       m = mesh();
     else if (n == "i") {
-      const vec mc = m.mass_center();
+      const bool zero_vol = zero_volume(m);
+      const vec mc = zero_vol ? vec() : m.mass_center();
       m -= mc;
       edge_report r = m.edges();
       cout << setprecision(digit);
@@ -230,8 +231,14 @@ int main (int argc, char *argv[])
       if (r.strange != 0)
         cout << "There are " << r.strange << " edges connected to more than 2 facets." << endl;
       cout << endl;
-      cout << "Center of mass: " << mc << endl;
-      cout << "Radius from center of mass: " << m.radius() << endl;
+      if (zero_vol) {
+        cout << "Center of mass: undefined (zero volume)" << endl;
+        cout << "Radius from origin: " << m.radius() << endl;
+      }
+      else {
+        cout << "Center of mass: " << mc << endl;
+        cout << "Radius from center of mass: " << m.radius() << endl;
+      }
       cout << "Diameter: " << m.diameter() << endl;
       cout << "Area: " << m.area() << endl;
       cout << "Volume: " << m.volume() << endl;

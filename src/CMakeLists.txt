@@ -152,6 +152,11 @@ set_tests_properties(FlatCenterMakeShape PROPERTIES
     PASS_REGULAR_EXPRESSION "-c: cannot center a shape of zero volume"
 )
 
+add_test(NAME FlatInfoMakeShape COMMAND MakeShape --cube -e "1 1 0" -i)
+set_tests_properties(FlatInfoMakeShape PROPERTIES
+    PASS_REGULAR_EXPRESSION "Center of mass: undefined \\(zero volume\\).*Radius from origin: 0.81649"
+)
+
 # Testing Shape2Zernike
 
 add_test(NAME RunShape2Zernike COMMAND Shape2Zernike 0 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
