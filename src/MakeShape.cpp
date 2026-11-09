@@ -58,6 +58,12 @@ string die_center_msg = "-c: cannot center a shape of zero volume.";
 string polygon_warning =
   "Warning: facets with more than 3 vertices were split into triangles around their center. Largest relative non-planarity: ";
 
+/** Whether the volume of the mesh is zero up to rounding.
+ The rounding error on the volume is of order 1e-16 * area * radius.
+*/
+bool zero_volume(const mesh &m)
+{ return fabs(m.volume()) <= 1e-12 * m.area() * m.radius(); }
+
 int main (int argc, char *argv[])
 {
   int digit = 6;
@@ -172,7 +178,7 @@ int main (int argc, char *argv[])
       m.add(make_dodecahedron());
     
     if (n == "c") {
-      if (m.volume() == 0)
+      if (zero_volume(m))
         p.die(die_center_msg);
       m -= m.mass_center();
     }
