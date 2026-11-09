@@ -43,6 +43,8 @@ string die_N_msg ="N must be positive and no more than "
 string warn_N_msg = "N larger than maximum moment available. Adapting.";
 string radius_warning =
   "Warning: shape radius is larger than one. Risks of imprecisions.";
+string volume_warning =
+  "Warning: shape volume is negative, facets are probably oriented inward. Moments change sign.";
 string approx_warning = "Warning; requested precision is very small, program may not halt. Allowed error by facet: ";
 string die_unknown_format = "Unknown file format (should be OFF or ZM): ";
 string bad_output_msg = "Cannot open output file: ";
@@ -193,6 +195,8 @@ int main (int argc, char *argv[])
         << "radius: " << rad << "\n";
     if (rad > 1.001)
       p.warn(radius_warning);
+    if (m.volume() < 0)
+      p.warn(volume_warning);
 
     // compute moments
     if (p("a")) {

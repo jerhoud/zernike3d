@@ -159,6 +159,11 @@ set_tests_properties(BadIndexShape2Zernike PROPERTIES
     PASS_REGULAR_EXPRESSION "Cannot read file .*badindex.off at line 7"
 )
 
+add_test(NAME InwardShape2Zernike COMMAND Shape2Zernike 0 ${CMAKE_SOURCE_DIR}/testdata/blork_inward.off)
+set_tests_properties(InwardShape2Zernike PROPERTIES
+    PASS_REGULAR_EXPRESSION "volume is negative.*0 0 0 -0.052117"
+)
+
 add_test(NAME NanShape2Zernike COMMAND Shape2Zernike 10 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
 set_tests_properties(NanShape2Zernike PROPERTIES
     FAIL_REGULAR_EXPRESSION "nan;NAN;Nan"
