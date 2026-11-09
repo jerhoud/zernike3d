@@ -164,9 +164,13 @@ set_tests_properties(InwardShape2Zernike PROPERTIES
     PASS_REGULAR_EXPRESSION "volume is negative.*0 0 0 -0.052117"
 )
 
-add_test(NAME ApproxWarnShape2Zernike COMMAND Shape2Zernike -a14 2 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
+add_test(NAME ApproxWarnShape2Zernike COMMAND Shape2Zernike -a14 102 ${CMAKE_SOURCE_DIR}/testdata/flat.off)
 set_tests_properties(ApproxWarnShape2Zernike PROPERTIES
-    PASS_REGULAR_EXPRESSION "Allowed error by facet: 2.5"
+    PASS_REGULAR_EXPRESSION "Allowed error by facet: 1.0"
+)
+add_test(NAME ApproxNoWarnShape2Zernike COMMAND Shape2Zernike -a14 2 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
+set_tests_properties(ApproxNoWarnShape2Zernike PROPERTIES
+    FAIL_REGULAR_EXPRESSION "Allowed error by facet"
 )
 
 add_test(NAME PolygonShape2Zernike COMMAND Shape2Zernike -d10 0 ${CMAKE_SOURCE_DIR}/testdata/quadcube.off)

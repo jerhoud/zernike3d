@@ -47,7 +47,8 @@ string volume_warning =
   "Warning: shape volume is negative, facets are probably oriented inward. Moments change sign.";
 string polygon_warning =
   "Warning: facets with more than 3 vertices were split into triangles around their center. Largest relative non-planarity: ";
-string approx_warning = "Warning; requested precision is very small, program may not halt. Allowed error by facet: ";
+string approx_warning = "Warning: requested precision is very small, computation may fail to reach it. Allowed error by facet: ";
+string not_converged_msg = " facets did not reach the requested precision, use a smaller -a DIGITS or split the facets";
 string die_unknown_format = "Unknown file format (should be OFF or ZM): ";
 string bad_output_msg = "Cannot open output file: ";
 
@@ -210,12 +211,15 @@ int main (int argc, char *argv[])
     // compute moments
     if (p("a")) {
       const double facet_error = approx_err / m.triangles.size(); // as in mesh_approx_integrate
-      if (facet_error < 1e-13) {
+      if (N > N_exact && facet_error < 1e-13) { // N <= N_exact always ends on an exact rule
         ostringstream out;
         out << scientific << facet_error;
         p.warn(approx_warning + out.str());
       }
-      zm = mesh_approx_integrate(m, N, approx_err, triquad_schemes, nt, p("v"));
+      size_t failures;
+      zm = mesh_approx_integrate(m, N, approx_err, triquad_schemes, failures, nt, p("v"));
+      if (failures > 0)
+        p.die(to_string(failures) + not_converged_msg);
       out << "# approximation error estimate: " << zm.get_error() << "\n";
     }
     else {

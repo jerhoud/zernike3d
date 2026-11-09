@@ -1,0 +1,7 @@
+# single facet in a plane through the origin (zero volume)
+OFF
+3 1 0
+0.5 0 0
+0 0.5 0
+-0.5 0 0
+3 0 1 2
