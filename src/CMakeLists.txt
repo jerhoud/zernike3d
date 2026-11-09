@@ -149,6 +149,11 @@ set_tests_properties(ZmLargeNShape2Zernike PROPERTIES
     PASS_REGULAR_EXPRESSION "N larger than maximum moment available.*ORTHO 10 COMPLEX\n0 0 0 0.052117"
 )
 
+add_test(NAME DiffShape2Zernike COMMAND Shape2Zernike -n -p --diff ${CMAKE_SOURCE_DIR}/testdata/blork.zm 3 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
+set_tests_properties(DiffShape2Zernike PROPERTIES
+    PASS_REGULAR_EXPRESSION "ORTHO_N 3 COMPLEX_P\n0 0 0 [0-9.]+e-1[0-9]\n"
+)
+
 add_test(NAME NanShape2Zernike COMMAND Shape2Zernike 10 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
 set_tests_properties(NanShape2Zernike PROPERTIES
     FAIL_REGULAR_EXPRESSION "nan;NAN;Nan"

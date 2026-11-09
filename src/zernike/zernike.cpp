@@ -553,6 +553,7 @@ zernike operator -(const zernike &z1, const zernike &z2)
   int n = (n1 < n2) ? n1 : n2;
   zernike z(n);
   z.norm = z1.norm;
+  z.output = z1.output;
   for (size_t i = 0 ; i<z.zm.size() ; i++)
     z.zm[i] = z1.zm[i] - z2.zm[i];
   z.finish();

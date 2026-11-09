@@ -227,7 +227,7 @@ int main (int argc, char *argv[])
     string err = read_file(zm_filename, zm2, p("v"));
     if (!err.empty())
       p.die(err);
-    zm2.normalize(zm_norm::ortho);
+    zm2.normalize(zm.get_norm());
     out << "# Substracted data from file " << zm_filename << "\n";
     zm = zm - zm2;
   }
