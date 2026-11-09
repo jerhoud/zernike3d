@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -19,10 +19,10 @@ jobs:
       - name: Configure
         run: cmake -S src -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build
-        run: cmake --build build --parallel 4
+        run: cmake --build build --config Release --parallel 4  # --config for multi-config generators (Visual Studio)
       - name: Test
         working-directory: build
-        run: ctest --output-on-failure --no-tests=error
+        run: ctest -C Release --output-on-failure --no-tests=error
 
   sanitizers:
     name: Address and undefined behavior sanitizers
