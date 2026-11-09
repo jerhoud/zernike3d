@@ -768,7 +768,7 @@ smart_input &operator >>(smart_input &is, rotational_invariants &ri)
     double z;
     s >> n1 >> n2 >> l >> z;
     if (!s || n1 < 0 || n1 > n0 || n2 < 0 || n2 > n1 || l < 0 || l > n2
-        || (n1 | n2) == 1 || (l | n2) ==1)
+        || ((n1 ^ n2) & 1) || ((l ^ n2) & 1))
       return is.failed();
     ri0.ri[ri0.index(n1, n2, l)] = z;
   }
