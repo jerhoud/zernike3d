@@ -506,9 +506,9 @@ double zernike::operator()(const vec &v) const
 */
 void zernike::finish()
 {
-  if (odd_clean || (N & 1) == 1 || N == 0) return;
-  int n = N - 1;
-  int idx = 2 * (n / 2 + 1) * (n / 2 + 2) * (2 * (n / 2) + 3) / 3;
+  if (odd_clean || (N & 1) == 1) return;
+  const int n2 = N / 2 - 1; // idx starts after the storage of orders up to N - 1
+  int idx = 2 * (n2 + 1) * (n2 + 2) * (2 * n2 + 3) / 3;
     for (int l = 0 ; l <= N + 1 ; l++) {
       if ((l & 1) == 0)
         idx += 2 * l + 1;

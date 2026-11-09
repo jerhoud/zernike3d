@@ -126,6 +126,12 @@ set_tests_properties(ManyMakeShape PROPERTIES
 
 add_test(NAME RunShape2Zernike COMMAND Shape2Zernike 0 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
 
+add_test(NAME ZeroShape2Zernike COMMAND Shape2Zernike 0 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
+add_test(NAME ZeroApproxShape2Zernike COMMAND Shape2Zernike -a6 0 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
+set_tests_properties(ZeroShape2Zernike ZeroApproxShape2Zernike PROPERTIES
+    PASS_REGULAR_EXPRESSION "ORTHO 0 COMPLEX\n0 0 0 0.052117"
+)
+
 add_test(NAME BlorkShape2Zernike COMMAND Shape2Zernike 5 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
 add_test(NAME BlorkApproxShape2Zernike COMMAND Shape2Zernike -a6 5 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
 set_tests_properties(BlorkShape2Zernike BlorkApproxShape2Zernike PROPERTIES

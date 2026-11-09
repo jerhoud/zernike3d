@@ -31,7 +31,7 @@ public:
 */
 zernike cloud_integrate(const cloud &c, int n, int nt, bool verbose)
 {
-  if (n <= 0)
+  if (n < 0)
     return zernike();
   cloud_sumer sumer(n);
   return parallel_collect(nt, c.points, sumer, verbose);
@@ -42,7 +42,7 @@ zernike cloud_integrate(const cloud &c, int n, int nt, bool verbose)
 */
 zernike cloud_integrate(const w_cloud &c, int n, int nt, bool verbose)
 {
-  if (n <= 0)
+  if (n < 0)
     return zernike();
   cloud_sumer sumer(n);
   return parallel_collect(nt, c.points, sumer, verbose);
@@ -74,7 +74,7 @@ public:
 */
 zernike mesh_exact_integrate(const mesh &m, int n, const triquad_selector &ts, int nt, bool verbose)
 {
-  if (n <= 0)
+  if (n < 0)
     return zernike();
   
   mesh_exact_sumer sumer(n, m, ts.get_scheme(n));
@@ -144,7 +144,7 @@ public:
 
 zernike mesh_approx_integrate(const mesh &m, int n, double error, const triquad_selector &ts, int nt, bool verbose)
 {
-  if (n <= 0)
+  if (n < 0)
     return zernike();
   mesh_approx_sumer sumer(n,m, ts, error);
   return parallel_collect(nt, m.triangles, sumer, verbose);
