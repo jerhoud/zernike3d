@@ -217,7 +217,7 @@ set_tests_properties(MissingShape2Zernike PROPERTIES
 
 add_test(NAME RunZernike2Shape COMMAND Zernike2Shape -t0 10 30 ${CMAKE_SOURCE_DIR}/testdata/blork.zm)
 set_tests_properties(RunZernike2Shape PROPERTIES
-    PASS_REGULAR_EXPRESSION "OFF.*553 422 0"
+    PASS_REGULAR_EXPRESSION "OFF.*213 422 0"
 )
 
 add_test(NAME BadResZernike2Shape COMMAND Zernike2Shape 10 0 ${CMAKE_SOURCE_DIR}/testdata/blork.zm)

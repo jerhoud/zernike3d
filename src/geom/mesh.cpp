@@ -825,8 +825,11 @@ mesh marching_tetrahedra(const mt_coord &sx, const mt_coord &sy, const mt_coord 
       int n = count_bit(sig);
       if (regularized && n >= 2 && n <=12) {
         auto it = components.find(sig);
-        if (it != components.end())
+        if (it != components.end()) {
           node.groups = it->second;
+          for (auto c: node.groups)
+            sig ^= c;
+        }
         else {
           int n_in;
           std::vector<sigtr_t> compo = ngh.component(sig, n_in);
