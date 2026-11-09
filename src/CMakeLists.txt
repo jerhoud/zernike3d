@@ -163,7 +163,7 @@ add_test(NAME RunShape2Zernike COMMAND Shape2Zernike 0 ${CMAKE_SOURCE_DIR}/testd
 
 add_test(NAME ZeroApproxShape2Zernike COMMAND Shape2Zernike -a6 0 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
 set_tests_properties(RunShape2Zernike ZeroApproxShape2Zernike PROPERTIES
-    PASS_REGULAR_EXPRESSION "ORTHO 0 COMPLEX\n0 0 0 0.052117"
+    PASS_REGULAR_EXPRESSION "ORTHO 0 COMPLEX\r?\n0 0 0 0.052117"
 )
 
 add_test(NAME BlorkShape2Zernike COMMAND Shape2Zernike 5 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
@@ -180,12 +180,12 @@ set_tests_properties(CubeShape2Zernike CubeApproxShape2Zernike PROPERTIES
 
 add_test(NAME ZmLargeNShape2Zernike COMMAND Shape2Zernike 12 ${CMAKE_SOURCE_DIR}/testdata/blork.zm)
 set_tests_properties(ZmLargeNShape2Zernike PROPERTIES
-    PASS_REGULAR_EXPRESSION "N larger than maximum moment available.*ORTHO 10 COMPLEX\n0 0 0 0.052117"
+    PASS_REGULAR_EXPRESSION "N larger than maximum moment available.*ORTHO 10 COMPLEX\r?\n0 0 0 0.052117"
 )
 
 add_test(NAME DiffShape2Zernike COMMAND Shape2Zernike -n -p --diff ${CMAKE_SOURCE_DIR}/testdata/blork.zm 3 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
 set_tests_properties(DiffShape2Zernike PROPERTIES
-    PASS_REGULAR_EXPRESSION "ORTHO_N 3 COMPLEX_P\n0 0 0 [0-9.]+e-1[0-9]\n"
+    PASS_REGULAR_EXPRESSION "ORTHO_N 3 COMPLEX_P\r?\n0 0 0 [0-9.]+e-1[0-9]\r?\n"
 )
 
 add_test(NAME BadIndexShape2Zernike COMMAND Shape2Zernike 1 ${CMAKE_SOURCE_DIR}/testdata/badindex.off)
@@ -220,12 +220,12 @@ set_tests_properties(BadParityShape2Zernike PROPERTIES
 add_test(NAME InvariantsShape2Zernike COMMAND Shape2Zernike -i -d10 6 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
 add_test(NAME RotatedInvariantsShape2Zernike COMMAND Shape2Zernike -i -d10 6 ${CMAKE_SOURCE_DIR}/testdata/blork_rotated.off)
 set_tests_properties(InvariantsShape2Zernike RotatedInvariantsShape2Zernike PROPERTIES
-    PASS_REGULAR_EXPRESSION "ZRI\nORTHO 6\n0 0 0 0.002716244362\n1 1 1 0.001230798227\n2 0 0 -0.003889811061"
+    PASS_REGULAR_EXPRESSION "ZRI\r?\nORTHO 6\r?\n0 0 0 0.002716244362\r?\n1 1 1 0.001230798227\r?\n2 0 0 -0.003889811061"
 )
 add_test(NAME SignaturesShape2Zernike COMMAND Shape2Zernike -s -d10 6 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
 add_test(NAME RotatedSignaturesShape2Zernike COMMAND Shape2Zernike -s -d10 6 ${CMAKE_SOURCE_DIR}/testdata/blork_rotated.off)
 set_tests_properties(SignaturesShape2Zernike RotatedSignaturesShape2Zernike PROPERTIES
-    PASS_REGULAR_EXPRESSION "ZSI\nORTHO 6\n0 0.002716244362\n1 0.001230798227"
+    PASS_REGULAR_EXPRESSION "ZSI\r?\nORTHO 6\r?\n0 0.002716244362\r?\n1 0.001230798227"
 )
 
 add_test(NAME NanShape2Zernike COMMAND Shape2Zernike 10 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
