@@ -215,7 +215,7 @@ int main (int argc, char *argv[])
 
     // compute moments
     if (p("a")) {
-      const double facet_error = approx_err / m.triangles.size(); // as in mesh_approx_integrate
+      const double facet_error = facet_tolerance(approx_err, m);
       if (N > N_exact && facet_error < 1e-13) { // N <= N_exact always ends on an exact rule
         ostringstream out;
         out << scientific << facet_error;

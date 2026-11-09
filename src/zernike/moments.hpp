@@ -12,6 +12,7 @@
 zernike cloud_integrate(const cloud &c, int n, int nt = 1, bool verbose = false);
 zernike cloud_integrate(const w_cloud &c, int n, int nt = 1, bool verbose = false);
 zernike mesh_exact_integrate(const mesh &m, int n, const triquad_selector &ts, int nt = 1, bool verbose = false);
+double facet_tolerance(double error, const mesh &m);
 zernike mesh_approx_integrate(const mesh &m, int n, double error, const triquad_selector &ts, size_t &failures, int nt = 1, bool verbose = false);
 
 #endif

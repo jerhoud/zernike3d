@@ -125,6 +125,12 @@ int facet_approx_integrate(const triangle &t, double error, const triquad_select
   return 0;
 }
 
+/** Error allowed on each facet by mesh_approx_integrate to reach the global error.
+  If every facet error is below it, the total stays below error even if the facet errors are correlated.
+*/
+double facet_tolerance(double error, const mesh &m)
+{ return error / m.triangles.size(); }
+
 class mesh_approx_sumer:
 public zernike
 {
@@ -136,7 +142,7 @@ public:
   size_t failures = 0; /**< Number of facets where the precision was not reached. */
 
   mesh_approx_sumer(int n, const mesh &m, const triquad_selector &s, double e):
-  zernike(n), msh(m), sel(s), err(e / m.triangles.size()), z1(n), z2(n) {}
+  zernike(n), msh(m), sel(s), err(facet_tolerance(e, m)), z1(n), z2(n) {}
   std::string collect(const t_mesh &i)
   {
     const triangle t = i.get_triangle(msh);
