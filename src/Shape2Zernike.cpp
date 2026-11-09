@@ -40,6 +40,7 @@ string FILE_help = "reads FILE in OFF or ZM format (default is standard input)";
 string N_help = "the maximum order of Zernike moments computed";
 string die_N_msg ="N must be positive and no more than "
                        + n_exact + " for exact computation of the moments";
+string warn_N_msg = "N larger than maximum moment available. Adapting.";
 string radius_warning =
   "Warning: shape radius is larger than one. Risks of imprecisions.";
 string approx_warning = "Warning; requested precision is very small, program may not halt. Allowed error by facet: ";
@@ -169,6 +170,10 @@ int main (int argc, char *argv[])
     string err = read_object(is, zm2, p("v"));
     if (!err.empty())
       p.die(err);
+    if (N > zm2.order()) {
+      p.warn(warn_N_msg);
+      N = zm2.order();
+    }
     zm = zernike(N, zm2);
   }
   // it is an OFF file, compute moments

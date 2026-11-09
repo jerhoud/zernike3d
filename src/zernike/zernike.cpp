@@ -375,12 +375,12 @@ zm(2 * (n / 2 + 1) * (n / 2 + 2) * (2 * (n / 2) + 3) / 3, 0)
 
 /** Constructor.
   @param n Maximum order needed. Should be positive.
-  @param source Moments to copy from (truncated at N = n.).
+  @param source Moments to copy from (truncated at N = n, n is capped at the order of source).
 */
 zernike::zernike(int n, const zernike &source):
 variance(0), output(source.output),
-N(n), norm(source.norm), odd_clean(false),
-zm(2 * (n / 2 + 1) * (n / 2 + 2) * (2 * (n / 2) + 3) / 3, 0)
+N(std::min(n, source.order())), norm(source.norm), odd_clean(false),
+zm(2 * (N / 2 + 1) * (N / 2 + 2) * (2 * (N / 2) + 3) / 3, 0)
 {
   std::copy(source.get_zm().begin(), source.get_zm().begin() + zm.size(),
   zm.begin());
