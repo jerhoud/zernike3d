@@ -100,6 +100,7 @@ public:
   double volume() const;
   double area() const;
   vec mass_center() const;
+  mesh &apply(const mat &m);
 
   /** Adds a triangle to the mesh, by giving the indices of the vertices.
    @param t the triangle to add

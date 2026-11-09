@@ -256,6 +256,19 @@ vec mesh::mass_center() const
   return sum / (4 * sum_v);
 }
 
+/** Applies a matrix to the mesh, reversing the facets if the matrix reverses orientation.
+  @param m The matrix to apply.
+  @return The transformed mesh.
+*/
+mesh &mesh::apply(const mat &m)
+{
+  cloud::apply(m);
+  if (dot(m.mx, cross(m.my, m.mz)) < 0)
+    for (auto &t: triangles)
+      std::swap(t.i2, t.i3);
+  return *this;
+}
+
 /** Relative non-planarity of a polygon: largest distance of its vertices to the plane
  through their center normal to Newell's vector, divided by the polygon diameter.
 */

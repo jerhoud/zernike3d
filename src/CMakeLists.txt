@@ -122,6 +122,11 @@ set_tests_properties(ManyMakeShape PROPERTIES
     PASS_REGULAR_EXPRESSION "Center of mass: 1 2 3.*Radius from center of mass: 2.*Area: 49.31.*Volume: 32.37"
 )
 
+add_test(NAME MirrorMakeShape COMMAND MakeShape --icosahedron -e "-1 1 1" -i)
+set_tests_properties(MirrorMakeShape PROPERTIES
+    PASS_REGULAR_EXPRESSION "Volume: 2.53615"
+)
+
 # Testing Shape2Zernike
 
 add_test(NAME RunShape2Zernike COMMAND Shape2Zernike 0 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
