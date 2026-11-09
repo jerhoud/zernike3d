@@ -158,7 +158,7 @@ void zernike_r::eval_zr(double r, double weight)
   @param n Maximum order needed. Should be positive.
 */
 zernike_int0::zernike_int0(int n):
-zernike_radial(n), help((N / 2 + 1) * (N / 2 + 2), {0, 0}), base_r(n + 2) // eval_zr reads R up to order n + 4
+zernike_radial(n), help((N / 2 + 1) * (N / 2 + 2), {0, 0}), base_r(n + 2) // eval_zr reads R up to order n + 2
 {
   int i = 0;
   for (int n2 = 0 ; n2 <= N / 2 ; n2++)
