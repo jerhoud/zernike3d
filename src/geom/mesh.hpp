@@ -115,7 +115,7 @@ public:
   void add_polygon(const std::vector<size_t> &p);
   void add_strip(const std::vector<size_t> &l1, const std::vector<size_t> &l2, bool rev);
 
-  void read_triangle(smart_input &is);
+  void read_triangle(smart_input &is, size_t n_points);
   void add(const mesh &m);
   mesh split() const;
   edge_report edges() const;

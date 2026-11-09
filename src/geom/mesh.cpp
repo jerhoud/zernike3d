@@ -256,15 +256,17 @@ vec mesh::mass_center() const
   return sum / (4 * sum_v);
 }
 
-/** Reads one triangle and adds it to the mesh. */
-void mesh::read_triangle(smart_input &is)
+/** Reads one triangle and adds it to the mesh.
+ @param n_points Number of vertices in the file, vertex indices must be smaller.
+*/
+void mesh::read_triangle(smart_input &is, size_t n_points)
 {
   std::istringstream s;
   if (is.next_line(s)) {
     int dummy;
     t_mesh t;
     s >> dummy >> t;
-    if (s)
+    if (s && t.i1 < n_points && t.i2 < n_points && t.i3 < n_points)
       add_triangle(t);
     else
       is.failed();
@@ -416,7 +418,7 @@ smart_input &operator >>(smart_input &is, mesh &m)
   for (size_t i = 0 ; i < n_points ; i++)
     m0.read_point(is);
   for (size_t i = 0 ; i < n_faces ; i++)
-    m0.read_triangle(is);
+    m0.read_triangle(is, n_points);
   if (is)
     m = m0;
   return is;

@@ -154,6 +154,11 @@ set_tests_properties(DiffShape2Zernike PROPERTIES
     PASS_REGULAR_EXPRESSION "ORTHO_N 3 COMPLEX_P\n0 0 0 [0-9.]+e-1[0-9]\n"
 )
 
+add_test(NAME BadIndexShape2Zernike COMMAND Shape2Zernike 1 ${CMAKE_SOURCE_DIR}/testdata/badindex.off)
+set_tests_properties(BadIndexShape2Zernike PROPERTIES
+    PASS_REGULAR_EXPRESSION "Cannot read file .*badindex.off at line 7"
+)
+
 add_test(NAME NanShape2Zernike COMMAND Shape2Zernike 10 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
 set_tests_properties(NanShape2Zernike PROPERTIES
     FAIL_REGULAR_EXPRESSION "nan;NAN;Nan"
