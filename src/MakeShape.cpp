@@ -53,6 +53,7 @@ string bad_output_msg = "Cannot open output file: ";
 string bad_recall_msg = "--recall: no such memory name: ";
 string die_r_msg = "-r: R must be positive.";
 string die_r0_msg = "-r: cannot rescale a shape of zero radius.";
+string die_axis_msg = "-a: the rotation axis must be non-zero.";
 string polygon_warning =
   "Warning: facets with more than 3 vertices were split into triangles around their center. Largest relative non-planarity: ";
 
@@ -181,9 +182,12 @@ int main (int argc, char *argv[])
     }
     else if (n == "e")
       m.apply(diag_mat(vec_dat[opt.pos]));
-    else if (n == "a")
+    else if (n == "a") {
+      if (wvec_dat[opt.pos].v.length() == 0)
+        p.die(die_axis_msg);
       m.apply(rotation_mat(wvec_dat[opt.pos].v.normalize(),
               wvec_dat[opt.pos].weight * 3.141592653589793238 / 180));
+    }
     else if (n == "t")
       m += vec_dat[opt.pos];
     

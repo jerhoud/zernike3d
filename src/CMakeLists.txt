@@ -132,6 +132,11 @@ set_tests_properties(NegRadiusMakeShape PROPERTIES
     PASS_REGULAR_EXPRESSION "-r: R must be positive"
 )
 
+add_test(NAME ZeroAxisMakeShape COMMAND MakeShape --cube -a "0 0 0 30")
+set_tests_properties(ZeroAxisMakeShape PROPERTIES
+    PASS_REGULAR_EXPRESSION "-a: the rotation axis must be non-zero"
+)
+
 # Testing Shape2Zernike
 
 add_test(NAME RunShape2Zernike COMMAND Shape2Zernike 0 ${CMAKE_SOURCE_DIR}/testdata/blork.off)
