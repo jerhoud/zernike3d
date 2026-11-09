@@ -29,11 +29,13 @@ string q_help = "represses all warnings and error messages";
 string o_help = "save output to the given file instead of standard output";
 string t_help = "number of threads to use in parallel, use 0 to adapt to the machine";
 string tests_help = "runs internal sanity checks and exits";
+string i_help = "computes Zernike rotational invariants instead of moments";
+string s_help = "computes signature invariants instead of moments";
 string n_help = "multiplies the moments by sqrt(3/4pi)";
 string a_help = "computes the moments with an adaptive method, targeting an absolute error below 10^-DIGITS on each moment";
 string r_help = "the Zernike moments are output in real form instead of complex";
 string p_help = "multiplies the moments by the phase factor (-1)^m";
-string diff_help = "reads Zernike moments in ZM format and substract them from the computed moments";
+string diff_help = "reads Zernike moments in ZM format and substract them (or their invariants with -i or -s) from the computed ones";
 string d_help = "number of significant digits printed in the output (default is 8, or DIGITS+1 with -a)";
 
 string FILE_help = "reads FILE in OFF or ZM format (default is standard input)";
@@ -80,6 +82,8 @@ int main (int argc, char *argv[])
   p.option("d", "digits", "DIGITS", digit, d_help);
 
   p.hidden(true);
+  p.flag("i", "invariants", i_help);
+  p.flag("s", "signatures", s_help);
   p.flag("r", "real", r_help);
   p.flag("n", "normalize", n_help);
   p.flag("p", "phase", p_help);
@@ -91,6 +95,7 @@ int main (int argc, char *argv[])
 
   p.quiet("q");
   p.exclusion({"v", "q"});
+  p.exclusion({"i", "s"});
 
   // Parse command line
 
@@ -237,22 +242,45 @@ int main (int argc, char *argv[])
   zm.normalize(make_norm(false, false, p("n")));
   zm.output = make_output(!p("r"), p("p"));
 
-  // option -d read a secondary zm file
+  // option --diff read a secondary zm file
 
+  zernike zm2;
   if (p("diff")) {
-    zernike zm2;
     string err = read_file(zm_filename, zm2, p("v"));
     if (!err.empty())
       p.die(err);
     zm2.normalize(zm.get_norm());
     out << "# Substracted data from file " << zm_filename << "\n";
-    zm = zm - zm2;
   }
 
 
-  // write result
+  // write result: rotational invariants (-i), signature invariants (-s) or moments
 
-  out << zm;
+  if (p("i")) {
+    rotational_invariants ri(zm.order());
+    ri.eval_ri(zm);
+    if (p("diff")) {
+      rotational_invariants ri2(zm2.order());
+      ri2.eval_ri(zm2);
+      ri = ri - ri2;
+    }
+    out << ri;
+  }
+  else if (p("s")) {
+    signature_invariants si(zm.order());
+    si.eval_si(zm);
+    if (p("diff")) {
+      signature_invariants si2(zm2.order());
+      si2.eval_si(zm2);
+      si = si - si2;
+    }
+    out << si;
+  }
+  else {
+    if (p("diff"))
+      zm = zm - zm2;
+    out << zm;
+  }
 
   // ciao !
 
