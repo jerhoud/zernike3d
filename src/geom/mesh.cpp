@@ -3,6 +3,7 @@
   \author J. Houdayer
 */
 
+#include <cstdint>
 #include <unordered_map>
 #include <algorithm>
 #include "mesh.hpp"
@@ -638,7 +639,7 @@ const tetrahedron tetras[24] = { // the 24 tetrahedron around a point of the lat
 
 
 
-typedef u_int16_t sigtr_t;
+typedef std::uint16_t sigtr_t;
 
 inline bool out(sigtr_t sig, int n)
 { return sig & (1 << n); }
