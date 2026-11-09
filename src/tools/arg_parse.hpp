@@ -553,14 +553,13 @@ void parser::show_help(ostream &os) const
       arg->show(os, w_arg);
   }
   if (!opts.empty()) {
-    int grp_idx = 0;
-    size_t grp = group_pos[grp_idx];
+    size_t grp_idx = 0;
     for (size_t i = 0 ; i < opts.size() ; i++) {
-      if (i == grp) {
+      if (grp_idx < group_pos.size() && i == (size_t) group_pos[grp_idx]) {
         if (group_names[grp_idx] == "Hidden" && (!hidden_visible || !operator()("hidden")))
           break;
         os << endl << group_names[grp_idx] << ":" << endl;
-        grp = group_pos[++grp_idx];
+        grp_idx++;
       }
       opts[i]->show(os, w_short, w_long);
     }
