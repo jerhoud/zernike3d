@@ -200,7 +200,7 @@ int main (int argc, char *argv[])
 
     // compute moments
     if (p("a")) {
-      const double facet_error = approx_err / sqrt(m.triangles.size());
+      const double facet_error = approx_err / m.triangles.size(); // as in mesh_approx_integrate
       if (facet_error < 1e-13) {
         ostringstream out;
         out << scientific << facet_error;
