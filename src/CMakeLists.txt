@@ -195,3 +195,7 @@ set_tests_properties(RunZernike2Shape PROPERTIES
     PASS_REGULAR_EXPRESSION "OFF.*553 422 0"
 )
 
+add_test(NAME BadResZernike2Shape COMMAND Zernike2Shape 10 0 ${CMAKE_SOURCE_DIR}/testdata/blork.zm)
+set_tests_properties(BadResZernike2Shape PROPERTIES
+    PASS_REGULAR_EXPRESSION "RES must be positive"
+)

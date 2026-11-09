@@ -32,6 +32,7 @@ string N_help = "The maximum order of Zernike moments to use (if available)";
 string RES_help = "Resolution of the mesh (i.e. number of intervals between -1 and 1)";
 string FILE_help = "Reads FILE in ZM format (default is standard input)";
 string die_N_msg = "N must be positive.";
+string die_res_msg = "RES must be positive.";
 string warn_N_msg = "N larger than maximum moment available. Adapting.";
 string bad_output_msg = "Cannot open output file: ";
 
@@ -65,6 +66,8 @@ int main (int argc, char *argv[])
 
   if (N < 0)
     p.die(die_N_msg);
+  if (res <= 0)
+    p.die(die_res_msg);
 
   smart_output out(output);
   if (!out)
