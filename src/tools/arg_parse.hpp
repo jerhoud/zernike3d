@@ -5,6 +5,7 @@
 
 #include <cstring>
 #include <vector>
+#include <memory>
 #include <sstream>
 #include <iomanip>
 #include <iostream>
@@ -151,6 +152,8 @@ public:
   string short_usage, short_print, long_print;
   bool used;
 
+  virtual ~option_desc_base() {}
+
   option_desc_base(const string &s, const string &l, const string &arg_name, const string &h):
   short_name(s), long_name(l), want_arg(!arg_name.empty()), help(h), used(false)
   {
@@ -287,6 +290,8 @@ public:
   const string help;
   bool used;
 
+  virtual ~arg_desc_base() {}
+
   arg_desc_base(const string &a, bool n, bool r, const string &h):
   need(n), rest(r), arg_name(a), help(h) , used(false) {}
 
@@ -337,8 +342,8 @@ public:
   string prog_name, missing_arg, quiet_option;
   bool chatty, hide, hidden_visible;
   vector<token> toks;
-  vector<option_desc_base *> opts;
-  vector<arg_desc_base *> args;
+  vector<std::unique_ptr<option_desc_base> > opts;
+  vector<std::unique_ptr<arg_desc_base> > args;
   vector<vector<string> > exclusions;
   vector<vector<string> > selections;
   vector<string> group_names;
@@ -350,6 +355,9 @@ public:
     @param eh The help string written after the arg / opt descriptions
     @param v The version string (for opt --version) default is macro VERSION
    */
+  parser(const parser &) = delete;
+  parser &operator=(const parser &) = delete;
+
   parser(const string &sh, const string &eh, const string &ex="", const string &v=stringify(VERSION)):
   start_help(sh), end_help(eh), example_help(ex), version_text(v), chatty(true), hide(false)
   {
@@ -367,19 +375,19 @@ public:
 
   /** returns true if any of the given options was met on the command line.*/
   bool any(const vector<string> &s) const
-  { return any_of(s.begin(), s.end(), *this); }
+  { return any_of(s.begin(), s.end(), [this](const string &o) { return (*this)(o); }); }
 
   /** returns true if all of the given options were met on the command line.*/
   bool all(const vector<string> &s) const
-  { return all_of(s.begin(), s.end(), *this); }
+  { return all_of(s.begin(), s.end(), [this](const string &o) { return (*this)(o); }); }
 
   /** returns true if none of the given options was met on the command line.*/
   bool none(const vector<string> &s) const
-  { return none_of(s.begin(), s.end(), *this); }
+  { return none_of(s.begin(), s.end(), [this](const string &o) { return (*this)(o); }); }
 
   /** counts how many of the given options were met on the command line.*/
   int count(const vector<string> &s) const
-  { return count_if(s.begin(), s.end(), *this); }
+  { return count_if(s.begin(), s.end(), [this](const string &o) { return (*this)(o); }); }
 
   void show_usage(ostream &os) const;
   void show_help(ostream &os) const;
@@ -411,26 +419,26 @@ public:
 
   /** adds a yes / no option to the parser.*/
   void flag(const string &s, const string &l, const string &h)
-  { opts.push_back(new option_desc_base(s, l, "", h)); }
+  { opts.emplace_back(new option_desc_base(s, l, "", h)); }
 
   /** adds a yes / no recorded option to the parser.*/
   void rec_flag(const string &s, const string &l, vector<opt_recorder> &r, const string &h)
-  { opts.push_back(new rec_flag_desc(s, l, r, h)); }
+  { opts.emplace_back(new rec_flag_desc(s, l, r, h)); }
 
   /** adds an option with an argument to the parser.*/
   template<typename T>
   void option(const string &s, const string &l, const string &a, T &v, const string &h)
-  { opts.push_back(new set_option_desc<T>(s, l, a, v, h)); }
+  { opts.emplace_back(new set_option_desc<T>(s, l, a, v, h)); }
 
   /** adds a repeatable option with an argument to the parser.*/
   template<typename T>
   void list_option(const string &s, const string &l, const string &a, vector<T> &v, const string &h)
-  { opts.push_back(new list_option_desc<T>(s, l, a, v, h)); }
+  { opts.emplace_back(new list_option_desc<T>(s, l, a, v, h)); }
 
   /** adds a repeatable recorded option with an argument to the parser.*/
   template<typename T>
   void rec_list_option(const string &s, const string &l, const string &a, vector<T> &v, vector<opt_recorder> &r, const string &h)
-  { opts.push_back(new rec_list_option_desc<T>(s, l, a, v, r, h)); }
+  { opts.emplace_back(new rec_list_option_desc<T>(s, l, a, v, r, h)); }
 
   /** adds a positional argument to the parser.*/
   template<typename T>
@@ -438,18 +446,18 @@ public:
   {
     if (!args.empty() && !args.back()->need)
       die(bad_opt_arg + a);
-    args.push_back(new pos_arg_desc<T>(a, v, true, h));
+    args.emplace_back(new pos_arg_desc<T>(a, v, true, h));
   }
 
   /** adds an optional positional argument to the parser, should be at the end.*/
   template<typename T>
   void opt_arg(const string &a, T &v, const string &h)
-  { args.push_back(new pos_arg_desc<T>(a, v, false, h)); }
+  { args.emplace_back(new pos_arg_desc<T>(a, v, false, h)); }
 
   /** adds a list of arguments to the parser, should be at the end.*/
   template<typename T>
   void rest_arg(const string &a, std::vector<T> &v, const string &h)
-  { args.push_back(new rest_arg_desc<T>(a, v, h)); }
+  { args.emplace_back(new rest_arg_desc<T>(a, v, h)); }
 
   /** sets mutally exclusive options or arguments.*/
   void exclusion(const vector<string> &s)
@@ -593,7 +601,7 @@ void parser::analysis()
     if (tk.tp == tok_arg) {
       if (j >= mj)
         die(unwanted_arg_msg + tk.s);
-      arg_desc_base *arg = args[j];
+      arg_desc_base *arg = args[j].get();
       if (!arg->process(tk.s))
         die(invalid_arg_msg + arg->arg_name + ": " + tk.s);
       if (!arg->rest)
@@ -606,7 +614,7 @@ void parser::analysis()
         die(missing_opt_name_msg + toks[i + 1].s);
       for (auto &o: opts)
         if (o->short_name == tk.s) {
-          opt = o;
+          opt = o.get();
           break;
         }
     }
@@ -616,7 +624,7 @@ void parser::analysis()
           if (opt)
             die(ambiguous_opt_msg + tk.s);
           else
-            opt = o;
+            opt = o.get();
         }
     }
     if (!opt)
