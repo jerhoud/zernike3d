@@ -137,6 +137,11 @@ set_tests_properties(ZeroAxisMakeShape PROPERTIES
     PASS_REGULAR_EXPRESSION "-a: the rotation axis must be non-zero"
 )
 
+add_test(NAME EmptyCenterMakeShape COMMAND MakeShape -c)
+set_tests_properties(EmptyCenterMakeShape PROPERTIES
+    PASS_REGULAR_EXPRESSION "-c: cannot center a shape of zero volume"
+)
+
 # Testing Shape2Zernike
 
 add_test(NAME RunShape2Zernike COMMAND Shape2Zernike 0 ${CMAKE_SOURCE_DIR}/testdata/blork.off)

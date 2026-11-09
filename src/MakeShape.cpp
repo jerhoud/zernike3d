@@ -54,6 +54,7 @@ string bad_recall_msg = "--recall: no such memory name: ";
 string die_r_msg = "-r: R must be positive.";
 string die_r0_msg = "-r: cannot rescale a shape of zero radius.";
 string die_axis_msg = "-a: the rotation axis must be non-zero.";
+string die_center_msg = "-c: cannot center a shape of zero volume.";
 string polygon_warning =
   "Warning: facets with more than 3 vertices were split into triangles around their center. Largest relative non-planarity: ";
 
@@ -170,8 +171,11 @@ int main (int argc, char *argv[])
     else if (n == "dodecahedron")
       m.add(make_dodecahedron());
     
-    if (n == "c")
+    if (n == "c") {
+      if (m.volume() == 0)
+        p.die(die_center_msg);
       m -= m.mass_center();
+    }
     else if (n == "r") {
       if (double_dat[opt.pos] <= 0)
         p.die(die_r_msg);
